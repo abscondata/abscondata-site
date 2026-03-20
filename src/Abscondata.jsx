@@ -18,7 +18,7 @@ export default function Abscondata() {
         "Tracking every quote sent and nudging the ones that went quiet",
         "Making sure new leads get a response within hours, not days",
         "Checking what actually came in against what should have",
-        "Catching money you didn't realize you were missing",
+        "Flagging jobs completed but never invoiced",
       ],
       outcome:
         "Less money slipping through the cracks. More of what you earned actually collected.",
@@ -30,7 +30,7 @@ export default function Abscondata() {
       tasks: [
         "Managing scheduling so nothing double-books or gets missed",
         "Coordinating handoffs between team members cleanly",
-        "Keeping client communications responsive and on-time",
+        "Flagging unanswered client messages before they go stale",
         "Making sure recurring tasks actually happen on schedule",
         "Handling vendor coordination and follow-up",
       ],
@@ -43,7 +43,7 @@ export default function Abscondata() {
       tasks: [
         "Keeping contracts, agreements, and key documents filed and findable",
         "Tracking renewal dates so nothing expires without warning",
-        "Maintaining financial records so tax season isn't a disaster",
+        "Keeping receipts, statements, and financial docs organized so tax season isn't a disaster",
         "Organizing operational records by client, project, or vendor",
         "Making sure nothing important is only in someone's inbox",
       ],
