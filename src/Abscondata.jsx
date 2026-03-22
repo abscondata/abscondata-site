@@ -3,14 +3,6 @@ export default function Abscondata() {
   const EMAIL = "abscondata@gmail.com";
   const PHONE = "(772) 486-8112";
 
-  const services = [
-    "Invoicing and accounts receivable management",
-    "Scheduling and calendar coordination",
-    "Customer communication and follow-up",
-    "Document organization and record maintenance",
-    "Vendor and supplier coordination",
-    "Operational reporting",
-  ];
 
   return (
     <div className="min-h-screen bg-cream text-charcoal font-sans">
@@ -57,27 +49,50 @@ export default function Abscondata() {
 
       {/* Services */}
       <section className="max-w-[1140px] mx-auto px-6 sm:px-10 py-20 sm:py-28">
-        <div className="grid sm:grid-cols-[280px_1fr] gap-12 sm:gap-20">
-          <h2 className="font-serif text-2xl sm:text-3xl font-medium text-navy leading-snug">
-            Services
-          </h2>
-          <div>
-            <p className="text-gray leading-relaxed mb-10">
-              Abscondata provides ongoing administrative and operational
-              support to small service businesses on a monthly basis.
-            </p>
-            <div className="space-y-0">
-              {services.map((service, i) => (
-                <div
-                  key={service}
-                  className={`py-4 ${i < services.length - 1 ? "border-b border-rule" : ""}`}
-                >
-                  <p className="text-charcoal">{service}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <h2 className="font-serif text-2xl sm:text-3xl font-medium text-navy mb-6">
+          Services
+        </h2>
+        <p className="text-gray leading-relaxed mb-16 sm:mb-20 max-w-[680px]">
+          Abscondata provides operational support across three areas,
+          engaged individually or in combination.
+        </p>
+
+        <div className="grid sm:grid-cols-[280px_1fr] gap-6 sm:gap-20 pb-14 sm:pb-16 border-b border-rule">
+          <h3 className="font-serif text-xl sm:text-2xl font-medium text-charcoal leading-snug">
+            Revenue Operations
+          </h3>
+          <p className="text-gray leading-relaxed">
+            Invoicing and accounts receivable management. Payment follow-up
+            on outstanding balances. Quote and estimate tracking. Revenue
+            reporting.
+          </p>
         </div>
+
+        <div className="grid sm:grid-cols-[280px_1fr] gap-6 sm:gap-20 py-14 sm:py-16 border-b border-rule">
+          <h3 className="font-serif text-xl sm:text-2xl font-medium text-charcoal leading-snug">
+            Scheduling and Coordination
+          </h3>
+          <p className="text-gray leading-relaxed">
+            Appointment and job scheduling. Confirmation and reminder
+            communication. Vendor and supplier coordination. Customer
+            follow-up after completed work.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-[280px_1fr] gap-6 sm:gap-20 pt-14 sm:pt-16 mb-16 sm:mb-20">
+          <h3 className="font-serif text-xl sm:text-2xl font-medium text-charcoal leading-snug">
+            Records and Reporting
+          </h3>
+          <p className="text-gray leading-relaxed">
+            Document organization and filing. Contract and renewal tracking.
+            Operational reporting on a weekly or monthly basis. Financial
+            record preparation for tax and accounting purposes.
+          </p>
+        </div>
+
+        <p className="text-gray leading-relaxed">
+          Scope and pricing are determined during an initial consultation.
+        </p>
       </section>
 
       <hr className="border-rule max-w-[1140px] mx-auto" />
