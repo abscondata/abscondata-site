@@ -286,7 +286,7 @@ const styles = {
   },
 };
 
-const CALENDLY_URL = "https://calendly.com/abscondata";
+const CALENDLY_URL = "https://calendly.com";
 
 const ServiceItem = ({ text }) => (
   <div style={styles.serviceItem}>
