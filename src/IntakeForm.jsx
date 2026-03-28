@@ -349,10 +349,10 @@ const IntakeForm = () => {
           <div style={s.errorBanner}>
             Something went wrong. Please try again or email us directly at{" "}
             <a
-              href="mailto:robin@abscondata.com"
+              href="mailto:info@abscondata.com"
               style={{ color: COLORS.error }}
             >
-              robin@abscondata.com
+              info@abscondata.com
             </a>
             .
           </div>
@@ -373,10 +373,10 @@ const IntakeForm = () => {
       <footer style={s.footer}>
         <div>© 2026 Abscondata</div>
         <a
-          href="mailto:robin@abscondata.com"
+          href="mailto:info@abscondata.com"
           style={{ color: COLORS.warmGray, textDecoration: "none" }}
         >
-          robin@abscondata.com
+          info@abscondata.com
         </a>
       </footer>
     </div>

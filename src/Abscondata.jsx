@@ -27,34 +27,28 @@ export default function AbscondataLanding() {
   const modules = [
     {
       title: "Revenue Operations",
-      description:
-        "End-to-end management of the billing cycle, from invoice generation through payment collection, quote tracking, and accounts receivable reporting.",
       services: [
-        "Invoice generation and delivery",
-        "Payment follow-up on outstanding balances",
+        "Invoice cycle management",
+        "Accounts receivable follow-up",
         "Quote and estimate tracking",
         "Accounts receivable reporting",
       ],
     },
     {
       title: "Scheduling & Coordination",
-      description:
-        "Systematic handling of appointments, confirmations, and customer communication so nothing falls through the cracks.",
       services: [
-        "Appointment and job scheduling",
-        "Confirmation and reminder messages",
+        "Appointment coordination",
+        "Confirmation and reminder management",
         "Reschedule and cancellation handling",
-        "Post-completion follow-up and review requests",
+        "Post-service follow-up and review generation",
       ],
     },
     {
       title: "Records & Reporting",
-      description:
-        "Structured document management, contract oversight, and regular operational reporting that gives you full visibility into your business.",
       services: [
-        "Document organization and filing",
+        "Document management",
         "Contract and renewal tracking",
-        "Weekly and monthly operational reporting",
+        "Weekly and monthly reporting",
       ],
     },
   ];
@@ -94,29 +88,27 @@ export default function AbscondataLanding() {
 
       {/* Hero */}
       <header style={styles.hero}>
-        <p style={styles.heroLabel}>Managed Back-Office Operations</p>
         <h1 style={styles.heroHeading}>
-          Everything an office manager would do.
-          <br />
-          Without the hire.
+          Managed Back-Office Operations
         </h1>
         <p style={styles.heroSub}>
-          Dedicated operational support for service businesses — invoicing,
-          scheduling, records, and reporting.
+          Abscondata provides retained operational support for service
+          companies. Invoicing, scheduling, coordination, records, and
+          reporting, handled on your behalf.
         </p>
         <div style={styles.heroCtas}>
-          <Link to="/intake" style={styles.ctaButton}>
-            Start Intake
-          </Link>
           <a
             href={CALENDLY_URL}
             target="_blank"
             rel="noopener noreferrer"
-            style={styles.ctaSecondary}
+            style={styles.ctaButton}
           >
-            Schedule a Consultation
+            Schedule a Call
           </a>
         </div>
+        <Link to="/intake" style={{ ...styles.ctaSecondary, marginTop: "16px", display: "inline-block" }}>
+          Begin Intake
+        </Link>
       </header>
 
       <div style={styles.dividerLine} />
@@ -137,7 +129,6 @@ export default function AbscondataLanding() {
               }}
             >
               <h3 style={styles.moduleTitle}>{m.title}</h3>
-              <p style={styles.moduleDesc}>{m.description}</p>
               <div style={styles.serviceList}>
                 {m.services.map((s, j) => (
                   <div key={j} style={styles.serviceItem}>
@@ -158,9 +149,11 @@ export default function AbscondataLanding() {
         <div style={styles.sectionInner}>
           <p style={styles.sectionLabel}>About</p>
           <p style={styles.sectionBody}>
-            Abscondata is a managed operations firm based in Florida. We
-            provide dedicated back-office support to service businesses on a
-            retained basis.
+            Abscondata is a managed operations firm providing retained
+            back-office support to service businesses. Engagements are scoped
+            during an initial consultation, executed on a fixed weekly
+            schedule, and documented through weekly reporting. All work is
+            performed inside the client's existing tools and systems.
           </p>
         </div>
       </section>
@@ -175,19 +168,19 @@ export default function AbscondataLanding() {
             {[
               {
                 label: "Pricing",
-                value: "Flat monthly rate based on scope, not hours.",
+                value: "Flat monthly rate based on scope.",
               },
               {
                 label: "Commitment",
-                value: "Month-to-month. 30 days notice to cancel.",
+                value: "Month to month. 30-day cancellation.",
               },
               {
                 label: "Onboarding",
-                value: "Services begin within one week of agreement.",
+                value: "Services begin within one week.",
               },
               {
                 label: "Reporting",
-                value: "Weekly summary of completed and flagged items.",
+                value: "Weekly summary of completed work.",
               },
             ].map((term) => (
               <div key={term.label}>
@@ -199,48 +192,24 @@ export default function AbscondataLanding() {
         </div>
       </section>
 
-      {/* CTA Band */}
+      {/* Target Market */}
       <section style={styles.ctaBand}>
         <div style={styles.ctaBandInner}>
           <p style={{ ...styles.sectionLabel, color: COLORS.goldLight }}>
-            Get Started
+            Who We Work With
           </p>
           <h2 style={styles.ctaBandHeading}>
-            Owner-operators spending hours on work
+            Service businesses where operational tasks
             <br />
-            that isn't earning revenue.
+            compete with billable work.
           </h2>
           <p style={styles.ctaBandBody}>
-            Abscondata works with service businesses — trades, construction,
-            facilities, home services, health and wellness — where the owner
-            handles operations because hiring office staff doesn't make sense
-            yet. If you're running a company of one to twenty people and admin
-            work is costing you billable hours, this is built for you.
+            Trades, construction, facilities, home services, health and
+            wellness — companies where the people doing the work are also
+            managing the invoicing, scheduling, and records. Abscondata
+            handles the operational load so revenue-generating time stays
+            protected.
           </p>
-          <div style={styles.heroCtas}>
-            <Link
-              to="/intake"
-              style={{
-                ...styles.ctaButton,
-                backgroundColor: COLORS.white,
-                color: COLORS.navy,
-              }}
-            >
-              Start Intake
-            </Link>
-            <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                ...styles.ctaSecondary,
-                color: "rgba(255,255,255,0.6)",
-                borderBottomColor: "rgba(255,255,255,0.3)",
-              }}
-            >
-              Schedule a Consultation
-            </a>
-          </div>
         </div>
       </section>
 
@@ -250,10 +219,10 @@ export default function AbscondataLanding() {
           <div style={{ color: COLORS.warmGray }}>© 2026 Abscondata</div>
           <div style={styles.footerLinks}>
             <a
-              href="mailto:robin@abscondata.com"
+              href="mailto:info@abscondata.com"
               style={styles.footerLink}
             >
-              robin@abscondata.com
+              info@abscondata.com
             </a>
             <span style={{ color: COLORS.divider }}>·</span>
             <a href="tel:+17724868112" style={styles.footerLink}>
@@ -325,15 +294,6 @@ const styles = {
     margin: "0 auto",
     padding: "120px 48px 100px",
     textAlign: "center",
-  },
-  heroLabel: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: "11px",
-    fontWeight: 500,
-    letterSpacing: "3px",
-    textTransform: "uppercase",
-    color: COLORS.gold,
-    marginBottom: "28px",
   },
   heroHeading: {
     fontFamily: "'Cormorant Garamond', serif",
@@ -437,14 +397,6 @@ const styles = {
     fontWeight: 600,
     color: COLORS.navy,
     marginBottom: "12px",
-  },
-  moduleDesc: {
-    fontSize: "15px",
-    color: COLORS.warmGray,
-    lineHeight: 1.8,
-    fontWeight: 300,
-    maxWidth: "600px",
-    marginBottom: "24px",
   },
   serviceList: {
     display: "grid",
