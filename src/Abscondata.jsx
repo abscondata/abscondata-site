@@ -101,9 +101,8 @@ export default function AbscondataLanding() {
           Without the hire.
         </h1>
         <p style={styles.heroSub}>
-          Abscondata provides dedicated operational support for service
-          businesses — invoicing, scheduling, records, and reporting — on a
-          flat monthly fee, month to month, with 30-day cancellation.
+          Dedicated operational support for service businesses — invoicing,
+          scheduling, records, and reporting.
         </p>
         <div style={styles.heroCtas}>
           <Link to="/intake" style={styles.ctaButton}>
@@ -125,14 +124,6 @@ export default function AbscondataLanding() {
       {/* Services / Practice Areas */}
       <section style={styles.section}>
         <p style={styles.sectionLabel}>Services</p>
-        <h2 style={styles.sectionHeading}>
-          Three practice areas. Eleven managed services.
-        </h2>
-        <p style={styles.sectionBody}>
-          Each module covers a defined set of recurring operational tasks,
-          engaged individually or combined. Scope is fixed at the start of
-          every engagement.
-        </p>
 
         <div style={styles.modulesGrid}>
           {modules.map((m, i) => (
@@ -162,43 +153,15 @@ export default function AbscondataLanding() {
 
       <div style={styles.dividerLine} />
 
-      {/* How We Work */}
-      <section style={{ ...styles.section, backgroundColor: COLORS.white }}>
+      {/* About */}
+      <section style={styles.section}>
         <div style={styles.sectionInner}>
-          <p style={styles.sectionLabel}>Process</p>
-          <h2 style={styles.sectionHeading}>
-            Operational support without the overhead
-          </h2>
+          <p style={styles.sectionLabel}>About</p>
           <p style={styles.sectionBody}>
-            No office space. No payroll. No training. No turnover. Abscondata
-            operates inside your existing tools and systems on a fixed monthly
-            rate.
+            Abscondata is a managed operations firm based in Florida. We
+            provide dedicated back-office support to service businesses on a
+            retained basis.
           </p>
-          <div style={styles.processSteps}>
-            {[
-              {
-                num: "01",
-                title: "Consultation",
-                body: "A short call to understand your operations, current tools, and where time is being lost. We determine scope and fit before anything begins.",
-              },
-              {
-                num: "02",
-                title: "Onboarding",
-                body: "We map your workflows, access your existing systems, and build operating procedures specific to your business. Services begin within one week.",
-              },
-              {
-                num: "03",
-                title: "Execution",
-                body: "Recurring tasks are handled on a fixed weekly schedule. You receive a summary report showing exactly what was completed and what needs your attention.",
-              },
-            ].map((step) => (
-              <div key={step.num}>
-                <div style={styles.stepNumber}>{step.num}</div>
-                <div style={styles.stepTitle}>{step.title}</div>
-                <div style={styles.stepBody}>{step.body}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -208,28 +171,23 @@ export default function AbscondataLanding() {
       <section style={styles.section}>
         <div style={styles.sectionInner}>
           <p style={styles.sectionLabel}>Engagement Terms</p>
-          <h2 style={styles.sectionHeading}>Simple terms. No lock-in.</h2>
           <div style={styles.termsGrid}>
             {[
               {
                 label: "Pricing",
-                value:
-                  "Flat monthly rate determined during consultation. Based on scope, not hours. No surprise invoices.",
+                value: "Flat monthly rate based on scope, not hours.",
               },
               {
                 label: "Commitment",
-                value:
-                  "Month-to-month. Cancel with 30 days written notice. No long-term contracts required.",
+                value: "Month-to-month. 30 days notice to cancel.",
               },
               {
                 label: "Onboarding",
-                value:
-                  "Services begin within one week of signed agreement. Includes system access, workflow mapping, and procedure documentation.",
+                value: "Services begin within one week of agreement.",
               },
               {
                 label: "Reporting",
-                value:
-                  "Weekly summary of completed tasks and flagged items. Full transparency on what's being done and what needs owner input.",
+                value: "Weekly summary of completed and flagged items.",
               },
             ].map((term) => (
               <div key={term.label}>
@@ -511,42 +469,12 @@ const styles = {
     backgroundColor: COLORS.goldLight,
   },
 
-  // Process
-  processSteps: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gap: "48px",
-    marginTop: "56px",
-  },
-  stepNumber: {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: "40px",
-    fontWeight: 300,
-    color: COLORS.divider,
-    marginBottom: "12px",
-    lineHeight: 1,
-  },
-  stepTitle: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: "14px",
-    fontWeight: 600,
-    color: COLORS.navy,
-    marginBottom: "10px",
-    letterSpacing: "0.3px",
-  },
-  stepBody: {
-    fontSize: "14px",
-    color: COLORS.warmGray,
-    lineHeight: 1.75,
-    fontWeight: 300,
-  },
-
   // Terms
   termsGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "40px",
-    marginTop: "48px",
+    gridTemplateColumns: "1fr 1fr 1fr 1fr",
+    gap: "32px",
+    marginTop: "24px",
   },
   termLabel: {
     fontFamily: "'DM Sans', sans-serif",
