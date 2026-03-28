@@ -40,7 +40,7 @@ export default function AbscondataLanding() {
         "Appointment coordination",
         "Confirmation and reminder management",
         "Reschedule and cancellation handling",
-        "Post-service follow-up and review generation",
+        "Post-service follow-up and review requests",
       ],
     },
     {
@@ -80,7 +80,7 @@ export default function AbscondataLanding() {
               Schedule a Call
             </a>
             <Link to="/intake" style={styles.navCta}>
-              Begin Intake
+              Request Consultation
             </Link>
           </div>
         </nav>
@@ -94,7 +94,7 @@ export default function AbscondataLanding() {
         <p style={styles.heroSub}>
           Abscondata provides retained operational support for service
           companies. Invoicing, scheduling, coordination, records, and
-          reporting, handled on your behalf.
+          reporting, executed within your existing systems.
         </p>
         <div style={styles.heroCtas}>
           <a
@@ -107,7 +107,7 @@ export default function AbscondataLanding() {
           </a>
         </div>
         <Link to="/intake" style={{ ...styles.ctaSecondary, marginTop: "16px", display: "inline-block" }}>
-          Begin Intake
+          Request Consultation
         </Link>
       </header>
 
@@ -151,8 +151,8 @@ export default function AbscondataLanding() {
           <p style={styles.sectionBody}>
             Abscondata is a managed operations firm providing retained
             back-office support to service businesses. Engagements are scoped
-            during an initial consultation, executed on a fixed weekly
-            schedule, and documented through weekly reporting. All work is
+            during an initial consultation, executed on a defined weekly
+            cadence, and documented through weekly reporting. All work is
             performed inside the client's existing tools and systems.
           </p>
         </div>
@@ -180,7 +180,7 @@ export default function AbscondataLanding() {
               },
               {
                 label: "Reporting",
-                value: "Weekly summary of completed work.",
+                value: "Weekly summary of completed work, open items, and flags.",
               },
             ].map((term) => (
               <div key={term.label}>
