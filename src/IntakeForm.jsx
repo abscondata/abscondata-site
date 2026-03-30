@@ -15,7 +15,7 @@ const COLORS = {
   errorLight: "#FFF5F5",
 };
 
-const FORMSPREE_ID = "xvzvoqgp";
+const N8N_WEBHOOK_URL = "https://abscondata.app.n8n.cloud/webhook-test/intake-client";
 const CALENDLY_URL = "https://calendly.com/abscondata";
 
 const IntakeForm = () => {
@@ -67,7 +67,7 @@ const IntakeForm = () => {
     };
 
     try {
-      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+      const res = await fetch(N8N_WEBHOOK_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
