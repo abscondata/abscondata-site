@@ -168,7 +168,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"title\": \"Lead: {{ $('Filter Leads').first().json.senderName || $('Filter Leads').first().json.senderEmail }}\",\n  \"workflow_type\": \"NEW_LEAD_RESPONSE\",\n  \"status\": \"NEW\",\n  \"client_id\": 1,\n  \"source_system\": \"gmail\",\n  \"source_record_id\": \"{{ $('Filter Leads').first().json.messageId }}\",\n  \"recipient_email\": \"{{ $('Filter Leads').first().json.senderEmail }}\",\n  \"recipient_name\": \"{{ $('Filter Leads').first().json.senderName }}\",\n  \"task_type\": \"lead_response\",\n  \"priority\": \"high\"\n}",
+        "jsonBody": "={{ JSON.stringify({\n  title: 'Lead: ' + ($('Filter Leads').first().json.senderName || $('Filter Leads').first().json.senderEmail || 'unknown'),\n  workflow_type: 'NEW_LEAD_RESPONSE',\n  status: 'NEW',\n  client_id: 1,\n  source_system: 'gmail',\n  source_record_id: $('Filter Leads').first().json.messageId || '',\n  recipient_email: $('Filter Leads').first().json.senderEmail || '',\n  recipient_name: $('Filter Leads').first().json.senderName || '',\n  task_type: 'lead_response',\n  priority: 'high'\n}) }}",
         "options": {}
       },
       "id": "a1000000-0000-0000-0000-000000000006",
@@ -321,7 +321,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"ai_draft\": {{ JSON.stringify($('Parse AI Response').first().json.draftBody) }},\n  \"subject_line\": {{ JSON.stringify($('Parse AI Response').first().json.subjectLine) }},\n  \"status\": \"READY_FOR_REVIEW\"\n}",
+        "jsonBody": "={{ JSON.stringify({\n  ai_draft: $('Parse AI Response').first().json.draftBody || '',\n  subject_line: $('Parse AI Response').first().json.subjectLine || '',\n  status: 'READY_FOR_REVIEW'\n}) }}",
         "options": {}
       },
       "id": "a1000000-0000-0000-0000-000000000011",
@@ -462,7 +462,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"title\": \"Lead (validation failed): {{ $('Filter Leads').first().json.senderEmail }}\",\n  \"workflow_type\": \"NEW_LEAD_RESPONSE\",\n  \"status\": \"WAITING_ON_MISSING_DATA\",\n  \"client_id\": 1,\n  \"source_system\": \"gmail\",\n  \"source_record_id\": \"{{ $('Filter Leads').first().json.messageId }}\",\n  \"task_type\": \"lead_response\",\n  \"exception_reason_code\": \"VALIDATION_FAILED\",\n  \"exception_description\": \"Missing sender, subject, or body\"\n}",
+        "jsonBody": "={{ JSON.stringify({\n  title: 'Lead (validation failed): ' + ($('Filter Leads').first().json.senderEmail || 'unknown'),\n  workflow_type: 'NEW_LEAD_RESPONSE',\n  status: 'WAITING_ON_MISSING_DATA',\n  client_id: 1,\n  source_system: 'gmail',\n  source_record_id: $('Filter Leads').first().json.messageId || '',\n  task_type: 'lead_response',\n  exception_reason_code: 'VALIDATION_FAILED',\n  exception_description: 'Missing sender, subject, or body'\n}) }}",
         "options": {}
       },
       "id": "a1000000-0000-0000-0000-000000000015",
