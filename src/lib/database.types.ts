@@ -402,7 +402,7 @@ export interface Database {
         };
         Relationships: [];
       };
-      // Abscondata operations tables
+      // ── Abscondata operations tables ──
       profiles: {
         Row: { id: string; email: string; role: "owner" | "va" };
         Insert: { id: string; email: string; role?: "owner" | "va" };
@@ -416,6 +416,8 @@ export interface Database {
           primary_contact_email: string | null; primary_contact_phone: string | null;
           notes: string | null; employee_count: number | null;
           backoffice_tasks: string | null; pain_point: string | null;
+          timezone: string | null; service_area: string | null;
+          business_hours: string | null; escalation_email: string | null;
         };
         Insert: {
           id?: string; created_at?: string; name: string; niche?: string | null;
@@ -423,6 +425,8 @@ export interface Database {
           primary_contact_email?: string | null; primary_contact_phone?: string | null;
           notes?: string | null; employee_count?: number | null;
           backoffice_tasks?: string | null; pain_point?: string | null;
+          timezone?: string | null; service_area?: string | null;
+          business_hours?: string | null; escalation_email?: string | null;
         };
         Update: {
           id?: string; created_at?: string; name?: string; niche?: string | null;
@@ -430,30 +434,62 @@ export interface Database {
           primary_contact_email?: string | null; primary_contact_phone?: string | null;
           notes?: string | null; employee_count?: number | null;
           backoffice_tasks?: string | null; pain_point?: string | null;
+          timezone?: string | null; service_area?: string | null;
+          business_hours?: string | null; escalation_email?: string | null;
         };
         Relationships: [];
       };
       tasks: {
         Row: {
           id: string; created_at: string; client_id: string | null; title: string;
-          task_type: string | null; status: string | null; priority: string | null;
-          due_at: string | null; sop_link: string | null; client_system_link: string | null;
+          task_type: string | null;
+          status: Database["public"]["Enums"]["task_status"] | null;
+          priority: string | null; due_at: string | null;
+          sop_link: string | null; client_system_link: string | null;
           notes: string | null; escalation_required: boolean | null;
           assigned_va: string | null; ai_draft: string | null;
+          workflow_type: string | null; source_system: string | null;
+          source_record_id: string | null; edited_draft: string | null;
+          final_message: string | null; recipient_email: string | null;
+          recipient_name: string | null; subject_line: string | null;
+          approved_at: string | null; sent_at: string | null;
+          failed_at: string | null; rejection_reason: string | null;
+          exception_reason_code: string | null; exception_description: string | null;
+          updated_at: string | null;
         };
         Insert: {
           id?: string; created_at?: string; client_id?: string | null; title: string;
-          task_type?: string | null; status?: string | null; priority?: string | null;
-          due_at?: string | null; sop_link?: string | null; client_system_link?: string | null;
+          task_type?: string | null;
+          status?: Database["public"]["Enums"]["task_status"] | null;
+          priority?: string | null; due_at?: string | null;
+          sop_link?: string | null; client_system_link?: string | null;
           notes?: string | null; escalation_required?: boolean | null;
           assigned_va?: string | null; ai_draft?: string | null;
+          workflow_type?: string | null; source_system?: string | null;
+          source_record_id?: string | null; edited_draft?: string | null;
+          final_message?: string | null; recipient_email?: string | null;
+          recipient_name?: string | null; subject_line?: string | null;
+          approved_at?: string | null; sent_at?: string | null;
+          failed_at?: string | null; rejection_reason?: string | null;
+          exception_reason_code?: string | null; exception_description?: string | null;
+          updated_at?: string | null;
         };
         Update: {
           id?: string; created_at?: string; client_id?: string | null; title?: string;
-          task_type?: string | null; status?: string | null; priority?: string | null;
-          due_at?: string | null; sop_link?: string | null; client_system_link?: string | null;
+          task_type?: string | null;
+          status?: Database["public"]["Enums"]["task_status"] | null;
+          priority?: string | null; due_at?: string | null;
+          sop_link?: string | null; client_system_link?: string | null;
           notes?: string | null; escalation_required?: boolean | null;
           assigned_va?: string | null; ai_draft?: string | null;
+          workflow_type?: string | null; source_system?: string | null;
+          source_record_id?: string | null; edited_draft?: string | null;
+          final_message?: string | null; recipient_email?: string | null;
+          recipient_name?: string | null; subject_line?: string | null;
+          approved_at?: string | null; sent_at?: string | null;
+          failed_at?: string | null; rejection_reason?: string | null;
+          exception_reason_code?: string | null; exception_description?: string | null;
+          updated_at?: string | null;
         };
         Relationships: [{ foreignKeyName: "tasks_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
       };
@@ -462,18 +498,84 @@ export interface Database {
           id: string; created_at: string; client_id: string | null; task_id: string | null;
           issue_type: string | null; severity: string | null;
           description: string | null; resolution_status: string | null;
+          resolved_by: string | null; resolved_at: string | null;
         };
         Insert: {
           id?: string; created_at?: string; client_id?: string | null; task_id?: string | null;
           issue_type?: string | null; severity?: string | null;
           description?: string | null; resolution_status?: string | null;
+          resolved_by?: string | null; resolved_at?: string | null;
         };
         Update: {
           id?: string; created_at?: string; client_id?: string | null; task_id?: string | null;
           issue_type?: string | null; severity?: string | null;
           description?: string | null; resolution_status?: string | null;
+          resolved_by?: string | null; resolved_at?: string | null;
         };
         Relationships: [];
+      };
+      client_configs: {
+        Row: {
+          id: string; client_id: string | null; workflow_type: string;
+          is_enabled: boolean | null; send_window_start: string | null;
+          send_window_end: string | null; send_days: string[] | null;
+          tone_profile: string | null; exclusion_rules_json: Json | null;
+          trigger_rules_json: Json | null; cooldown_rules_json: Json | null;
+          escalation_rules_json: Json | null; created_at: string;
+        };
+        Insert: {
+          id?: string; client_id?: string | null; workflow_type: string;
+          is_enabled?: boolean | null; send_window_start?: string | null;
+          send_window_end?: string | null; send_days?: string[] | null;
+          tone_profile?: string | null; exclusion_rules_json?: Json | null;
+          trigger_rules_json?: Json | null; cooldown_rules_json?: Json | null;
+          escalation_rules_json?: Json | null; created_at?: string;
+        };
+        Update: {
+          id?: string; client_id?: string | null; workflow_type?: string;
+          is_enabled?: boolean | null; send_window_start?: string | null;
+          send_window_end?: string | null; send_days?: string[] | null;
+          tone_profile?: string | null; exclusion_rules_json?: Json | null;
+          trigger_rules_json?: Json | null; cooldown_rules_json?: Json | null;
+          escalation_rules_json?: Json | null; created_at?: string;
+        };
+        Relationships: [{ foreignKeyName: "client_configs_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
+      };
+      task_source_data: {
+        Row: { id: string; task_id: string | null; payload_json: Json | null; normalized_fields_json: Json | null; created_at: string };
+        Insert: { id?: string; task_id?: string | null; payload_json?: Json | null; normalized_fields_json?: Json | null; created_at?: string };
+        Update: { id?: string; task_id?: string | null; payload_json?: Json | null; normalized_fields_json?: Json | null; created_at?: string };
+        Relationships: [{ foreignKeyName: "task_source_data_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }];
+      };
+      task_events: {
+        Row: { id: string; task_id: string | null; event_type: string; actor_type: string | null; actor_id: string | null; notes: string | null; created_at: string };
+        Insert: { id?: string; task_id?: string | null; event_type: string; actor_type?: string | null; actor_id?: string | null; notes?: string | null; created_at?: string };
+        Update: { id?: string; task_id?: string | null; event_type?: string; actor_type?: string | null; actor_id?: string | null; notes?: string | null; created_at?: string };
+        Relationships: [{ foreignKeyName: "task_events_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }];
+      };
+      send_logs: {
+        Row: {
+          id: string; task_id: string | null; channel: string | null;
+          sender: string | null; recipient: string | null; subject_line: string | null;
+          body_snapshot: string | null; delivery_status: string | null;
+          external_message_id: string | null; sent_at: string | null;
+          error_text: string | null; created_at: string;
+        };
+        Insert: {
+          id?: string; task_id?: string | null; channel?: string | null;
+          sender?: string | null; recipient?: string | null; subject_line?: string | null;
+          body_snapshot?: string | null; delivery_status?: string | null;
+          external_message_id?: string | null; sent_at?: string | null;
+          error_text?: string | null; created_at?: string;
+        };
+        Update: {
+          id?: string; task_id?: string | null; channel?: string | null;
+          sender?: string | null; recipient?: string | null; subject_line?: string | null;
+          body_snapshot?: string | null; delivery_status?: string | null;
+          external_message_id?: string | null; sent_at?: string | null;
+          error_text?: string | null; created_at?: string;
+        };
+        Relationships: [{ foreignKeyName: "send_logs_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }];
       };
       files: {
         Row: { id: string; created_at: string; client_id: string | null; file_name: string | null; file_url: string | null; file_type: string | null; notes: string | null };
@@ -502,7 +604,9 @@ export interface Database {
     };
     Views: {};
     Functions: {};
-    Enums: {};
+    Enums: {
+      task_status: "NEW" | "WAITING_ON_MISSING_DATA" | "READY_FOR_REVIEW" | "EXCEPTION" | "APPROVED" | "SENT" | "FAILED" | "CLOSED";
+    };
     CompositeTypes: {};
   };
 }

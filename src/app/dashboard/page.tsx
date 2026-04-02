@@ -27,7 +27,7 @@ export default async function DashboardPage() {
       .from("tasks")
       .select("*")
       .eq("assigned_va", email)
-      .neq("status", "complete")
+      .neq("status", "CLOSED")
       .order("due_at", { ascending: true });
 
     return <VATaskView tasks={tasks ?? []} userEmail={email} />;
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
     { data: reports },
   ] = await Promise.all([
     supabase.from("clients").select("*").order("name"),
-    supabase.from("tasks").select("*").neq("status", "complete").order("due_at", { ascending: true }).limit(20),
+    supabase.from("tasks").select("*").neq("status", "CLOSED").order("due_at", { ascending: true }).limit(20),
     supabase.from("exceptions").select("*").neq("resolution_status", "resolved").order("created_at", { ascending: false }).limit(10),
     supabase.from("weekly_reports").select("*").order("week_start", { ascending: false }).limit(10),
   ]);

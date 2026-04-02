@@ -31,7 +31,7 @@ function TaskCard({ task, userEmail }: { task: Task; userEmail: string }) {
 
   async function handleApprove() {
     setApproving(true);
-    const { error } = await supabase.from("tasks").update({ status: "complete", ai_draft: aiDraft }).eq("id", task.id);
+    const { error } = await supabase.from("tasks").update({ status: "APPROVED", ai_draft: aiDraft }).eq("id", task.id);
     if (error) { setApproving(false); alert("Failed: " + error.message); return; }
     await supabase.from("task_logs").insert({ task_id: task.id, log_type: "completed", message: `Task approved by ${userEmail}`, created_by: userEmail });
     setApproved(true);
