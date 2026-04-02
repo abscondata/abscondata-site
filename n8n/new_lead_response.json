@@ -46,7 +46,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?source_record_id=eq.{{ encodeURIComponent($json.messageId) }}&select=id&limit=1",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/tasks?source_record_id=eq.' + encodeURIComponent($json.messageId || '') + '&select=id&limit=1' }}",
         "authentication": "none",
         "options": {},
         "sendHeaders": true,
@@ -58,7 +58,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_KEY }}"
             }
           ]
         }
@@ -70,8 +70,7 @@
       "position": [
         520,
         300
-      ],
-      "onError": "continueErrorOutput"
+      ]
     },
     {
       "parameters": {
@@ -167,7 +166,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -208,7 +207,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -333,7 +332,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -374,7 +373,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -410,7 +409,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -446,7 +445,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -482,7 +481,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -522,7 +521,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -558,7 +557,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -594,7 +593,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -630,7 +629,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -666,7 +665,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -702,7 +701,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -738,7 +737,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -797,13 +796,6 @@
     },
     "Check Duplicate": {
       "main": [
-        [
-          {
-            "node": "IF Not Duplicate",
-            "type": "main",
-            "index": 0
-          }
-        ],
         [
           {
             "node": "IF Not Duplicate",
