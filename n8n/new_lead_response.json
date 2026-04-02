@@ -19,8 +19,8 @@
       "position": [0, 300],
       "credentials": {
         "gmailOAuth2": {
-          "id": "FILL_IN",
-          "name": "Gmail — Test Client"
+          "id": "",
+          "name": "Gmail OAuth"
         }
       }
     },
@@ -109,7 +109,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"title\": \"Lead: {{ $json._parsed.senderName || $json._parsed.senderEmail }}\",\n  \"workflow_type\": \"NEW_LEAD_RESPONSE\",\n  \"status\": \"NEW\",\n  \"client_id\": FILL_IN_CLIENT_ID,\n  \"source_system\": \"gmail\",\n  \"source_record_id\": \"{{ $json._parsed.messageId }}\",\n  \"recipient_email\": \"{{ $json._parsed.senderEmail }}\",\n  \"recipient_name\": \"{{ $json._parsed.senderName }}\",\n  \"task_type\": \"lead_response\",\n  \"priority\": \"high\"\n}"
+        "jsonBody": "={\n  \"title\": \"Lead: {{ $json._parsed.senderName || $json._parsed.senderEmail }}\",\n  \"workflow_type\": \"NEW_LEAD_RESPONSE\",\n  \"status\": \"NEW\",\n  \"client_id\": 1,\n  \"source_system\": \"gmail\",\n  \"source_record_id\": \"{{ $json._parsed.messageId }}\",\n  \"recipient_email\": \"{{ $json._parsed.senderEmail }}\",\n  \"recipient_name\": \"{{ $json._parsed.senderName }}\",\n  \"task_type\": \"lead_response\",\n  \"priority\": \"high\"\n}"
       },
       "id": "create-task",
       "name": "Create Task",
@@ -153,7 +153,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-api-key", "value": "FILL_IN_ANTHROPIC_API_KEY" },
             { "name": "anthropic-version", "value": "2023-06-01" },
             { "name": "Content-Type", "value": "application/json" }
           ]
@@ -167,6 +166,12 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1580, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Anthropic API"
+        }
+      },
       "onError": "continueErrorOutput"
     },
     {
@@ -232,7 +237,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Validation failed — create task with error status and exception row.\nconst item = $input.first();\nconst parsed = item.json._parsed;\nconst errorReason = item.json._errorReason || 'VALIDATION_FAILED';\nconst errorStatus = item.json._errorStatus || 'EXCEPTION';\n\nreturn [{\n  json: {\n    task: {\n      title: 'Lead: ' + (parsed?.senderName || parsed?.senderEmail || 'unknown'),\n      workflow_type: 'NEW_LEAD_RESPONSE',\n      status: errorStatus,\n      client_id: 'FILL_IN_CLIENT_ID',\n      source_system: 'gmail',\n      source_record_id: parsed?.messageId || '',\n      recipient_email: parsed?.senderEmail || '',\n      recipient_name: parsed?.senderName || '',\n      task_type: 'lead_response',\n      exception_reason_code: errorReason,\n      exception_description: item.json._errorReason\n    },\n    exception: {\n      issue_type: 'validation_failure',\n      severity: 'medium',\n      description: errorReason,\n      resolution_status: 'open'\n    }\n  }\n}];"
+        "jsCode": "// Validation failed — create task with error status and exception row.\nconst item = $input.first();\nconst parsed = item.json._parsed;\nconst errorReason = item.json._errorReason || 'VALIDATION_FAILED';\nconst errorStatus = item.json._errorStatus || 'EXCEPTION';\n\nreturn [{\n  json: {\n    task: {\n      title: 'Lead: ' + (parsed?.senderName || parsed?.senderEmail || 'unknown'),\n      workflow_type: 'NEW_LEAD_RESPONSE',\n      status: errorStatus,\n      client_id: '1',\n      source_system: 'gmail',\n      source_record_id: parsed?.messageId || '',\n      recipient_email: parsed?.senderEmail || '',\n      recipient_name: parsed?.senderName || '',\n      task_type: 'lead_response',\n      exception_reason_code: errorReason,\n      exception_description: item.json._errorReason\n    },\n    exception: {\n      issue_type: 'validation_failure',\n      severity: 'medium',\n      description: errorReason,\n      resolution_status: 'open'\n    }\n  }\n}];"
       },
       "id": "build-error-payload",
       "name": "Build Error Payload",
