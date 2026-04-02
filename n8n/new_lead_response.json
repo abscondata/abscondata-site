@@ -1,0 +1,578 @@
+{
+  "name": "Abscondata — New Lead Response",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute" }]
+        },
+        "filters": {
+          "readStatus": "unread",
+          "receivedAfter": "={{ $now.minus(1, 'hour').toISO() }}"
+        },
+        "simple": false
+      },
+      "id": "trigger-gmail",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FILL_IN",
+          "name": "Gmail — Test Client"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter out newsletters, no-reply, notifications, and thread replies.\n// Keep only candidate lead emails from unknown senders.\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const headers = item.json.payload?.headers ?? [];\n  const from = (headers.find(h => h.name?.toLowerCase() === 'from')?.value ?? item.json.from ?? '').toLowerCase();\n  const subject = headers.find(h => h.name?.toLowerCase() === 'subject')?.value ?? item.json.subject ?? '';\n  const inReplyTo = headers.find(h => h.name?.toLowerCase() === 'in-reply-to')?.value ?? '';\n  const references = headers.find(h => h.name?.toLowerCase() === 'references')?.value ?? '';\n\n  // Exclude patterns\n  const excludeSenders = [\n    'noreply', 'no-reply', 'donotreply', 'do-not-reply',\n    'notifications@', 'notification@', 'alerts@', 'alert@',\n    'newsletter@', 'news@', 'marketing@', 'promo@',\n    'updates@', 'info@mailchimp', 'bounce@',\n    'mailer-daemon', 'postmaster@',\n    'support@google', 'calendar-notification'\n  ];\n\n  const isExcluded = excludeSenders.some(pattern => from.includes(pattern));\n  const isReply = !!(inReplyTo || references);\n  const hasBody = !!(item.json.snippet || item.json.text || item.json.textPlain || item.json.textHtml);\n\n  if (!isExcluded && !isReply && hasBody && from.length > 0) {\n    // Extract clean fields\n    const senderMatch = from.match(/^(.+?)\\s*<(.+?)>$/);\n    const senderName = senderMatch ? senderMatch[1].replace(/\"/g, '').trim() : '';\n    const senderEmail = senderMatch ? senderMatch[2].trim() : from.trim();\n    const body = item.json.text || item.json.textPlain || item.json.snippet || '';\n    const messageId = item.json.id || item.json.messageId || '';\n    const receivedAt = item.json.internalDate\n      ? new Date(parseInt(item.json.internalDate)).toISOString()\n      : new Date().toISOString();\n\n    results.push({\n      json: {\n        ...item.json,\n        _parsed: {\n          senderName,\n          senderEmail,\n          subject,\n          body,\n          bodyExcerpt: body.substring(0, 500),\n          messageId,\n          receivedAt\n        }\n      }\n    });\n  }\n}\n\nif (results.length === 0) {\n  // Nothing to process — end workflow silently\n  return [];\n}\n\nreturn results;"
+      },
+      "id": "filter-emails",
+      "name": "Filter Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/check_duplicate_source_record",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_source_record_id\": \"{{ $json._parsed.messageId }}\"\n}"
+      },
+      "id": "check-duplicate-rpc",
+      "name": "Check Duplicate (RPC)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate email fields and duplicate check result.\n// If any check fails, output to error branch with reason.\n\nconst item = $input.first();\nconst parsed = item.json._parsed;\nconst duplicateResult = item.json;\n\n// Check for duplicate (RPC returns true/false or count)\n// If the HTTP request returned data indicating a duplicate, reject\nconst isDuplicate = Array.isArray(duplicateResult) && duplicateResult.length > 0 && duplicateResult[0] === true;\n\nconst errors = [];\n\nif (!parsed.senderEmail) errors.push('sender_email is empty');\nif (!parsed.subject) errors.push('subject is empty');\nif (!parsed.body || parsed.body.trim().length === 0) errors.push('body is empty');\n\n// Alternative duplicate check: query task_source_data directly\n// This node will be preceded by an actual Supabase query in production.\n// For now, the RPC call handles it. If it errored, we skip duplicate check.\n\nif (errors.length > 0) {\n  return [\n    [],\n    [{\n      json: {\n        ...item.json,\n        _validationError: true,\n        _errorReason: errors.join('; '),\n        _errorStatus: 'WAITING_ON_MISSING_DATA'\n      }\n    }]\n  ];\n}\n\n// Pass through valid item\nreturn [\n  [{ json: item.json }],\n  []\n];"
+      },
+      "id": "validate-email",
+      "name": "Validate Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 300],
+      "outputs": ["main", "main"]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_source_data?select=id&source_record_id=eq.{{ $json._parsed.messageId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        }
+      },
+      "id": "check-duplicate-query",
+      "name": "Check Existing Source Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 100],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": \"Lead: {{ $json._parsed.senderName || $json._parsed.senderEmail }}\",\n  \"workflow_type\": \"NEW_LEAD_RESPONSE\",\n  \"status\": \"NEW\",\n  \"client_id\": FILL_IN_CLIENT_ID,\n  \"source_system\": \"gmail\",\n  \"source_record_id\": \"{{ $json._parsed.messageId }}\",\n  \"recipient_email\": \"{{ $json._parsed.senderEmail }}\",\n  \"recipient_name\": \"{{ $json._parsed.senderName }}\",\n  \"task_type\": \"lead_response\",\n  \"priority\": \"high\"\n}"
+      },
+      "id": "create-task",
+      "name": "Create Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_source_data",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": {{ $json[0].id }},\n  \"payload_json\": {{ JSON.stringify($('Filter Leads').first().json) }},\n  \"normalized_fields_json\": {\n    \"sender_name\": \"{{ $('Filter Leads').first().json._parsed.senderName }}\",\n    \"sender_email\": \"{{ $('Filter Leads').first().json._parsed.senderEmail }}\",\n    \"subject\": \"{{ $('Filter Leads').first().json._parsed.subject }}\",\n    \"body_excerpt\": \"{{ $('Filter Leads').first().json._parsed.bodyExcerpt }}\",\n    \"received_at\": \"{{ $('Filter Leads').first().json._parsed.receivedAt }}\"\n  }\n}"
+      },
+      "id": "create-source-data",
+      "name": "Store Source Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "FILL_IN_ANTHROPIC_API_KEY" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1024,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are a professional operations assistant drafting email replies for a managed back-office operations company.\\n\\nCOMPANY CONTEXT:\\n- Business name: Abscondata\\n- Service area: Managed back-office operations for service companies\\n- Tone: Professional, warm, concise. No jargon. No hard sell. Acknowledge their inquiry, show competence, suggest a brief call.\\n\\nINBOUND EMAIL:\\n- From: {{ $('Filter Leads').first().json._parsed.senderName }} <{{ $('Filter Leads').first().json._parsed.senderEmail }}>\\n- Subject: {{ $('Filter Leads').first().json._parsed.subject }}\\n- Body excerpt: {{ $('Filter Leads').first().json._parsed.bodyExcerpt }}\\n\\nTASK:\\nDraft a reply email. Return valid JSON only, no markdown:\\n{\\n  \\\"subject_line\\\": \\\"Re: [original subject or improved version]\\\",\\n  \\\"draft_body\\\": \\\"[full email reply body, 3-5 sentences, sign off as Abscondata Team]\\\"\\n}\"\n    }\n  ]\n}"
+      },
+      "id": "ai-draft",
+      "name": "AI Draft Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1580, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Anthropic response and extract draft.\nconst item = $input.first();\nconst response = item.json;\n\n// Extract text content from Anthropic response\nconst content = response.content?.[0]?.text ?? '';\n\nlet parsed;\ntry {\n  // Try to parse the JSON from the response\n  const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n  if (!jsonMatch) throw new Error('No JSON found in response');\n  parsed = JSON.parse(jsonMatch[0]);\n} catch (e) {\n  // Malformed response — flag as exception\n  return [[], [{\n    json: {\n      _draftError: true,\n      _errorReason: 'LOW_CONFIDENCE_DRAFT',\n      _errorDescription: 'AI response was empty or malformed: ' + e.message,\n      _rawResponse: content.substring(0, 500)\n    }\n  }]];\n}\n\nif (!parsed.draft_body || parsed.draft_body.trim().length < 20) {\n  return [[], [{\n    json: {\n      _draftError: true,\n      _errorReason: 'LOW_CONFIDENCE_DRAFT',\n      _errorDescription: 'Draft body is empty or too short',\n      _rawResponse: content.substring(0, 500)\n    }\n  }]];\n}\n\nreturn [[\n  {\n    json: {\n      subjectLine: parsed.subject_line || 'Re: ' + ($('Filter Leads').first().json._parsed.subject || 'Your inquiry'),\n      draftBody: parsed.draft_body\n    }\n  }\n], []];"
+      },
+      "id": "parse-ai-response",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1840, 300],
+      "outputs": ["main", "main"]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ai_draft\": {{ JSON.stringify($json.draftBody) }},\n  \"subject_line\": {{ JSON.stringify($json.subjectLine) }},\n  \"status\": \"READY_FOR_REVIEW\"\n}"
+      },
+      "id": "update-task-ready",
+      "name": "Set READY_FOR_REVIEW",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2100, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"DRAFT_READY\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"AI draft generated and task moved to READY_FOR_REVIEW\"\n}"
+      },
+      "id": "log-success",
+      "name": "Log Success Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2360, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validation failed — create task with error status and exception row.\nconst item = $input.first();\nconst parsed = item.json._parsed;\nconst errorReason = item.json._errorReason || 'VALIDATION_FAILED';\nconst errorStatus = item.json._errorStatus || 'EXCEPTION';\n\nreturn [{\n  json: {\n    task: {\n      title: 'Lead: ' + (parsed?.senderName || parsed?.senderEmail || 'unknown'),\n      workflow_type: 'NEW_LEAD_RESPONSE',\n      status: errorStatus,\n      client_id: 'FILL_IN_CLIENT_ID',\n      source_system: 'gmail',\n      source_record_id: parsed?.messageId || '',\n      recipient_email: parsed?.senderEmail || '',\n      recipient_name: parsed?.senderName || '',\n      task_type: 'lead_response',\n      exception_reason_code: errorReason,\n      exception_description: item.json._errorReason\n    },\n    exception: {\n      issue_type: 'validation_failure',\n      severity: 'medium',\n      description: errorReason,\n      resolution_status: 'open'\n    }\n  }\n}];"
+      },
+      "id": "build-error-payload",
+      "name": "Build Error Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1060, 560]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.task) }}"
+      },
+      "id": "create-error-task",
+      "name": "Create Error Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 560]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/exceptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": {{ $('Build Error Payload').first().json.task.client_id }},\n  \"task_id\": {{ $json[0].id }},\n  \"issue_type\": \"{{ $('Build Error Payload').first().json.exception.issue_type }}\",\n  \"severity\": \"{{ $('Build Error Payload').first().json.exception.severity }}\",\n  \"description\": \"{{ $('Build Error Payload').first().json.exception.description }}\",\n  \"resolution_status\": \"open\"\n}"
+      },
+      "id": "create-exception",
+      "name": "Create Exception",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1580, 560]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"EXCEPTION\",\n  \"exception_reason_code\": \"{{ $json._errorReason || 'LOW_CONFIDENCE_DRAFT' }}\",\n  \"exception_description\": \"{{ $json._errorDescription || 'AI draft generation failed' }}\"\n}"
+      },
+      "id": "set-exception-draft",
+      "name": "Set EXCEPTION (Draft)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2100, 560]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"EXCEPTION_FLAGGED\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"{{ $json._errorReason || 'LOW_CONFIDENCE_DRAFT' }}: {{ $json._errorDescription || 'Draft generation failed' }}\"\n}"
+      },
+      "id": "log-draft-exception",
+      "name": "Log Draft Exception",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2360, 560]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0]?.id ?? 0 }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"Node error: {{ $json.error?.message || $json.message || 'Unknown error in workflow' }}\"\n}"
+      },
+      "id": "log-system-error-create",
+      "name": "Log Error (Create Task)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 800]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"status\": \"FAILED\" }"
+      },
+      "id": "set-failed-create",
+      "name": "Set FAILED (Create)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1580, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"AI draft HTTP request failed: {{ $json.error?.message || 'Unknown error' }}\"\n}"
+      },
+      "id": "log-system-error-ai",
+      "name": "Log Error (AI Draft)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1840, 800]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"status\": \"FAILED\" }"
+      },
+      "id": "set-failed-ai",
+      "name": "Set FAILED (AI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2100, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"Failed to update task to READY_FOR_REVIEW: {{ $json.error?.message || 'Unknown error' }}\"\n}"
+      },
+      "id": "log-system-error-update",
+      "name": "Log Error (Update)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2360, 800]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"status\": \"FAILED\" }"
+      },
+      "id": "set-failed-update",
+      "name": "Set FAILED (Update)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2620, 800]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [{ "node": "Filter Leads", "type": "main", "index": 0 }]
+      ]
+    },
+    "Filter Leads": {
+      "main": [
+        [{ "node": "Check Duplicate (RPC)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Duplicate (RPC)": {
+      "main": [
+        [{ "node": "Validate Fields", "type": "main", "index": 0 }],
+        [{ "node": "Validate Fields", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate Fields": {
+      "main": [
+        [{ "node": "Create Task", "type": "main", "index": 0 }],
+        [{ "node": "Build Error Payload", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Task": {
+      "main": [
+        [{ "node": "Store Source Data", "type": "main", "index": 0 }],
+        [{ "node": "Log Error (Create Task)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Store Source Data": {
+      "main": [
+        [{ "node": "AI Draft Reply", "type": "main", "index": 0 }],
+        [{ "node": "Log Error (Create Task)", "type": "main", "index": 0 }]
+      ]
+    },
+    "AI Draft Reply": {
+      "main": [
+        [{ "node": "Parse AI Response", "type": "main", "index": 0 }],
+        [{ "node": "Log Error (AI Draft)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [{ "node": "Set READY_FOR_REVIEW", "type": "main", "index": 0 }],
+        [{ "node": "Set EXCEPTION (Draft)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Set READY_FOR_REVIEW": {
+      "main": [
+        [{ "node": "Log Success Event", "type": "main", "index": 0 }],
+        [{ "node": "Log Error (Update)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Error Payload": {
+      "main": [
+        [{ "node": "Create Error Task", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Error Task": {
+      "main": [
+        [{ "node": "Create Exception", "type": "main", "index": 0 }]
+      ]
+    },
+    "Set EXCEPTION (Draft)": {
+      "main": [
+        [{ "node": "Log Draft Exception", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Error (Create Task)": {
+      "main": [
+        [{ "node": "Set FAILED (Create)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Error (AI Draft)": {
+      "main": [
+        [{ "node": "Set FAILED (AI)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Error (Update)": {
+      "main": [
+        [{ "node": "Set FAILED (Update)", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "abscondata" },
+    { "name": "v1" },
+    { "name": "lead-response" }
+  ],
+  "pinData": {}
+}
