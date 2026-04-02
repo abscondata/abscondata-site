@@ -17,17 +17,20 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  if (!profile) redirect("/login");
+  // Don't redirect to /login if profile is missing — that causes a loop.
+  // The layout already tries to auto-create the profile.
+  const role = profile?.role ?? "va";
+  const email = profile?.email ?? user.email ?? "";
 
-  if (profile.role === "va") {
+  if (role === "va") {
     const { data: tasks } = await supabase
       .from("tasks")
       .select("*")
-      .eq("assigned_va", profile.email)
+      .eq("assigned_va", email)
       .neq("status", "complete")
       .order("due_at", { ascending: true });
 
-    return <VATaskView tasks={tasks ?? []} userEmail={profile.email} />;
+    return <VATaskView tasks={tasks ?? []} userEmail={email} />;
   }
 
   const [

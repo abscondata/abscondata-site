@@ -23,13 +23,24 @@ export default async function CoursePage({
 
   const { data: course } = await supabase
     .from("courses")
-    .select("id, title, description, program:programs(id, title)")
+    .select(
+      "id, title, description, code, department_or_domain, credits_or_weight, level, learning_outcomes, syllabus, status, program:programs(id, title), domain:domains(id, title, code)"
+    )
     .eq("id", id)
     .single();
 
   if (!course) {
     notFound();
   }
+
+  const { data: prerequisites } = await supabase
+    .from("course_prerequisites")
+    .select("prerequisite:prerequisite_course_id(id, title, code)")
+    .eq("course_id", id);
+
+  const prerequisiteCourses = (prerequisites ?? [])
+    .map((item) => item.prerequisite)
+    .filter(Boolean);
 
   const { data: modules } = await supabase
     .from("modules")
@@ -144,6 +155,96 @@ export default async function CoursePage({
             </span>
           </div>
         </header>
+
+        <section className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+          <div className="space-y-6">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Course Profile</h2>
+                <Link
+                  href={`/courses/${course.id}/edit`}
+                  className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]"
+                >
+                  Edit
+                </Link>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 text-sm text-[var(--muted)]">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em]">Code</p>
+                  <p>{course.code ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em]">Status</p>
+                  <p>{course.status}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em]">Domain</p>
+                  <p>
+                    {course.domain
+                      ? `${course.domain.code ? `${course.domain.code} — ` : ""}${course.domain.title}`
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em]">Department or Domain</p>
+                  <p>{course.department_or_domain ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em]">Level</p>
+                  <p>{course.level ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em]">Credits or Weight</p>
+                  <p>{course.credits_or_weight ?? "—"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3">
+              <h2 className="text-lg font-semibold">Prerequisites</h2>
+              {prerequisiteCourses.length ? (
+                <ul className="space-y-2 text-sm text-[var(--muted)]">
+                  {prerequisiteCourses.map((prereq) => (
+                    <li key={prereq.id}>
+                      {prereq.code ? `${prereq.code} — ` : ""}
+                      {prereq.title}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-[var(--muted)]">No prerequisites.</p>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3">
+              <h2 className="text-lg font-semibold">Learning Outcomes</h2>
+              <p className="text-sm text-[var(--muted)] whitespace-pre-wrap">
+                {course.learning_outcomes ?? "No learning outcomes recorded."}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3">
+              <h2 className="text-lg font-semibold">Syllabus</h2>
+              <p className="text-sm text-[var(--muted)] whitespace-pre-wrap">
+                {course.syllabus ?? "No syllabus recorded."}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3">
+              <h2 className="text-lg font-semibold">Academic Links</h2>
+              <div className="flex flex-col gap-2 text-sm">
+                <Link href="/domains/new" className="text-[var(--muted)]">
+                  Create domain
+                </Link>
+                <Link href="/concepts/new" className="text-[var(--muted)]">
+                  Add concept
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">

@@ -109,7 +109,7 @@ export interface Database {
           is_active?: boolean;
           created_at?: string;
         };
-        Relationships: [{ foreignKeyName: "courses_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] }];
+        Relationships: [{ foreignKeyName: "courses_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] }, { foreignKeyName: "courses_domain_id_fkey"; columns: ["domain_id"]; isOneToOne: false; referencedRelation: "domains"; referencedColumns: ["id"] }];
       };
       domains: {
         Row: {
@@ -160,7 +160,7 @@ export interface Database {
           created_by?: string;
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [{ foreignKeyName: "course_prerequisites_prerequisite_course_id_fkey"; columns: ["prerequisite_course_id"]; isOneToOne: false; referencedRelation: "courses"; referencedColumns: ["id"] }];
       };
       modules: {
         Row: {
