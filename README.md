@@ -1,52 +1,16 @@
-﻿# Devine
+# React + Vite
 
-Private academic platform MVP built with Next.js (App Router), Supabase, and Vercel AI SDK.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Setup
+Currently, two official plugins are available:
 
-1. Install dependencies:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-```bash
-npm install
-```
+## React Compiler
 
-2. Configure environment variables:
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-```bash
-# copy and fill in values
-cp .env.example .env.local
-```
+## Expanding the ESLint configuration
 
-3. Create the database schema in Supabase:
-
-- Open your Supabase project SQL editor.
-- Run the SQL in `supabase/schema.sql`.
-
-4. Start the dev server:
-
-```bash
-npm run dev
-```
-
-## AI Critique Configuration
-
-The critique system uses the Vercel AI SDK with AI Gateway by default.
-
-- `AI_GATEWAY_API_KEY` is required for local development.
-- `AI_MODEL` defaults to `openai/gpt-5.4` if not set.
-
-On Vercel, you can use OIDC-based credentials through the AI Gateway instead of local API keys.
-
-## Project Structure
-
-- `src/app/(protected)` — authenticated routes
-- `src/app/login` — auth UI
-- `src/legacy/dashboard` — previous dashboard implementation (kept for reference)
-- `src/app/(protected)/programs/new` — create program
-- `src/app/(protected)/courses/new` — create course
-- `src/app/(protected)/modules/new` — create module
-- `src/app/(protected)/assignments/new` — create assignment
-- `src/lib/actions.ts` — server actions
-- `src/lib/ai/critique.ts` — critique generation logic
-- `src/lib/supabase` — Supabase clients
-- `supabase/schema.sql` — database schema and policies
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
