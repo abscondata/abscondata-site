@@ -24,8 +24,8 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Devine",
-  description: "Private academic platform",
+  title: "Abscondata",
+  description: "Managed back-office operations",
 };
 
 export default function RootLayout({
