@@ -46,22 +46,14 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL + '/rest/v1/tasks?source_record_id=eq.' + encodeURIComponent($json.messageId || '') + '&select=id&limit=1' }}",
-        "authentication": "none",
+        "url": "={{ 'https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?source_record_id=eq.' + encodeURIComponent($json.messageId || '') + '&select=id&limit=1' }}",
+        "authentication": "genericCredentialType",
         "options": {},
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_KEY }}"
-            }
-          ]
-        }
+          "parameters": []
+        },
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000003",
       "name": "Check Duplicate",
@@ -70,7 +62,13 @@
       "position": [
         520,
         300
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
@@ -155,19 +153,11 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -181,7 +171,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({\n  title: 'Lead: ' + ($('Filter Leads').first().json.senderName || $('Filter Leads').first().json.senderEmail || 'unknown'),\n  workflow_type: 'NEW_LEAD_RESPONSE',\n  status: 'NEW',\n  client_id: 1,\n  source_system: 'gmail',\n  source_record_id: $('Filter Leads').first().json.messageId || '',\n  recipient_email: $('Filter Leads').first().json.senderEmail || '',\n  recipient_name: $('Filter Leads').first().json.senderName || '',\n  task_type: 'lead_response',\n  priority: 'high'\n}) }}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000006",
       "name": "Create Task",
@@ -191,24 +182,22 @@
         1300,
         300
       ],
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_source_data",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_source_data",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -222,7 +211,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"task_id\": {{ $json[0].id }},\n  \"payload_json\": {{ JSON.stringify($('Filter Leads').first().json.rawEmail) }},\n  \"normalized_fields_json\": {\n    \"sender_name\": {{ JSON.stringify($('Filter Leads').first().json.senderName) }},\n    \"sender_email\": {{ JSON.stringify($('Filter Leads').first().json.senderEmail) }},\n    \"subject\": {{ JSON.stringify($('Filter Leads').first().json.subject) }},\n    \"body_excerpt\": {{ JSON.stringify($('Filter Leads').first().json.bodyExcerpt) }},\n    \"received_at\": {{ JSON.stringify($('Filter Leads').first().json.receivedAt) }}\n  }\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000007",
       "name": "Store Source Data",
@@ -232,7 +222,13 @@
         1560,
         300
       ],
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
@@ -321,19 +317,11 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -347,7 +335,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({\n  ai_draft: $('Parse AI Response').first().json.draftBody || '',\n  subject_line: $('Parse AI Response').first().json.subjectLine || '',\n  status: 'READY_FOR_REVIEW'\n}) }}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000011",
       "name": "Update Task READY",
@@ -357,24 +346,22 @@
         2600,
         200
       ],
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -384,7 +371,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"DRAFT_READY\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"AI draft generated. Task set to READY_FOR_REVIEW.\"\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000012",
       "name": "Log Success",
@@ -393,24 +381,22 @@
       "position": [
         2860,
         200
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -420,7 +406,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"status\": \"EXCEPTION\",\n  \"exception_reason_code\": {{ JSON.stringify($('Parse AI Response').first().json.errorReason || 'LOW_CONFIDENCE_DRAFT') }},\n  \"exception_description\": {{ JSON.stringify($('Parse AI Response').first().json.errorDescription || 'AI draft failed') }}\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000013",
       "name": "Set EXCEPTION Draft",
@@ -429,24 +416,22 @@
       "position": [
         2600,
         500
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -456,7 +441,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": {{ JSON.stringify('LOW_CONFIDENCE_DRAFT: ' + ($('Parse AI Response').first().json.errorDescription || 'AI draft failed')) }}\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000014",
       "name": "Log Draft Exception",
@@ -465,24 +451,22 @@
       "position": [
         2860,
         500
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -496,7 +480,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({\n  title: 'Lead (validation failed): ' + ($('Filter Leads').first().json.senderEmail || 'unknown'),\n  workflow_type: 'NEW_LEAD_RESPONSE',\n  status: 'WAITING_ON_MISSING_DATA',\n  client_id: 1,\n  source_system: 'gmail',\n  source_record_id: $('Filter Leads').first().json.messageId || '',\n  task_type: 'lead_response',\n  exception_reason_code: 'VALIDATION_FAILED',\n  exception_description: 'Missing sender, subject, or body'\n}) }}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000015",
       "name": "Create Validation Error Task",
@@ -505,24 +490,22 @@
       "position": [
         1300,
         600
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/exceptions",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/exceptions",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -532,7 +515,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"client_id\": 1,\n  \"task_id\": {{ $json[0].id }},\n  \"issue_type\": \"validation_failure\",\n  \"severity\": \"medium\",\n  \"description\": \"Lead email missing required fields (sender, subject, or body)\",\n  \"resolution_status\": \"open\"\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000016",
       "name": "Create Validation Exception",
@@ -541,24 +525,22 @@
       "position": [
         1560,
         600
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -568,7 +550,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"Create Task or Store Source Data failed\"\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000017",
       "name": "Log Error Create",
@@ -577,24 +560,22 @@
       "position": [
         1560,
         800
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -604,7 +585,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"status\": \"FAILED\" }",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000018",
       "name": "Set FAILED Create",
@@ -613,24 +595,22 @@
       "position": [
         1820,
         800
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -640,7 +620,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"AI Draft Reply HTTP request failed\"\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000019",
       "name": "Log Error AI",
@@ -649,24 +630,22 @@
       "position": [
         2080,
         800
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -676,7 +655,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"status\": \"FAILED\" }",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000020",
       "name": "Set FAILED AI",
@@ -685,24 +665,22 @@
       "position": [
         2340,
         800
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/task_events",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -712,7 +690,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"Failed to update task to READY_FOR_REVIEW\"\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000021",
       "name": "Log Error Update",
@@ -721,24 +700,22 @@
       "position": [
         2860,
         800
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
-        "authentication": "none",
+        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -748,7 +725,8 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"status\": \"FAILED\" }",
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "a1000000-0000-0000-0000-000000000022",
       "name": "Set FAILED Update",
@@ -757,7 +735,13 @@
       "position": [
         3120,
         800
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Supabase Auth"
+        }
+      }
     },
     {
       "parameters": {},
