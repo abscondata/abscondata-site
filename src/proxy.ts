@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+﻿import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
@@ -10,7 +10,9 @@ export async function proxy(request: NextRequest) {
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
-        setAll: (cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) => {
+        setAll: (
+          cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]
+        ) => {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
@@ -29,10 +31,9 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Allow access to login page without auth
+  // Login: redirect to dashboard if already authenticated
   if (pathname === "/login") {
     if (user) {
-      // Already logged in — redirect to dashboard
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);
@@ -40,13 +41,16 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Protect all authenticated routes
+  // Protected routes: redirect to login if not authenticated
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/programs") ||
+    pathname.startsWith("/domains") ||
     pathname.startsWith("/courses") ||
     pathname.startsWith("/modules") ||
-    pathname.startsWith("/assignments")
+    pathname.startsWith("/assignments") ||
+    pathname.startsWith("/readings") ||
+    pathname.startsWith("/concepts")
   ) {
     if (!user) {
       const url = request.nextUrl.clone();
@@ -56,6 +60,7 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // Everything else (landing page, etc.) passes through — no auth required
   return supabaseResponse;
 }
 
@@ -64,8 +69,11 @@ export const config = {
     "/login",
     "/dashboard/:path*",
     "/programs/:path*",
+    "/domains/:path*",
     "/courses/:path*",
     "/modules/:path*",
     "/assignments/:path*",
+    "/readings/:path*",
+    "/concepts/:path*",
   ],
 };

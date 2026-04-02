@@ -35,6 +35,31 @@ alter table program_members
 
 create index if not exists idx_program_members_user on program_members(user_id);
 
+-- Academic domains (top-level divisions)
+create table if not exists domains (
+  id uuid primary key default gen_random_uuid(),
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  code text,
+  title text not null,
+  description text,
+  status text not null default 'active',
+  created_at timestamptz not null default now()
+);
+
+alter table domains add column if not exists created_by uuid references auth.users(id);
+alter table domains add column if not exists status text;
+alter table domains alter column created_by set default auth.uid();
+alter table domains alter column created_by set not null;
+alter table domains alter column status set default 'active';
+alter table domains alter column status set not null;
+
+alter table domains drop constraint if exists domains_status_check;
+alter table domains
+  add constraint domains_status_check
+  check (status in ('active', 'inactive', 'archived'));
+
+create index if not exists idx_domains_created_by on domains(created_by);
+
 -- Courses
 create table if not exists courses (
   id uuid primary key default gen_random_uuid(),
@@ -42,15 +67,67 @@ create table if not exists courses (
   created_by uuid not null references auth.users(id) default auth.uid(),
   title text not null,
   description text,
+  code text,
+  department_or_domain text,
+  credits_or_weight numeric,
+  level text,
+  learning_outcomes text,
+  syllabus text,
+  status text not null default 'active',
+  domain_id uuid references domains(id) on delete set null,
   is_active boolean not null default true,
   created_at timestamptz not null default now()
 );
 
 alter table courses add column if not exists created_by uuid references auth.users(id);
+alter table courses add column if not exists code text;
+alter table courses add column if not exists department_or_domain text;
+alter table courses add column if not exists credits_or_weight numeric;
+alter table courses add column if not exists level text;
+alter table courses add column if not exists learning_outcomes text;
+alter table courses add column if not exists syllabus text;
+alter table courses add column if not exists status text;
+alter table courses add column if not exists domain_id uuid references domains(id);
 alter table courses alter column created_by set default auth.uid();
 alter table courses alter column created_by set not null;
+alter table courses alter column status set default 'active';
+alter table courses alter column status set not null;
 
 create index if not exists idx_courses_program_id on courses(program_id);
+create index if not exists idx_courses_domain_id on courses(domain_id);
+
+update courses set status = 'active' where status is null;
+
+alter table courses drop constraint if exists courses_status_check;
+alter table courses
+  add constraint courses_status_check
+  check (status in ('active', 'inactive', 'draft', 'archived'));
+
+alter table courses drop constraint if exists courses_credits_check;
+alter table courses
+  add constraint courses_credits_check
+  check (credits_or_weight is null or credits_or_weight >= 0);
+
+-- Course prerequisites
+create table if not exists course_prerequisites (
+  course_id uuid not null references courses(id) on delete cascade,
+  prerequisite_course_id uuid not null references courses(id) on delete cascade,
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now(),
+  primary key (course_id, prerequisite_course_id)
+);
+
+alter table course_prerequisites add column if not exists created_by uuid references auth.users(id);
+alter table course_prerequisites alter column created_by set default auth.uid();
+alter table course_prerequisites alter column created_by set not null;
+
+alter table course_prerequisites drop constraint if exists course_prerequisites_self_check;
+alter table course_prerequisites
+  add constraint course_prerequisites_self_check
+  check (course_id <> prerequisite_course_id);
+
+create index if not exists idx_course_prerequisites_prereq
+  on course_prerequisites(prerequisite_course_id);
 
 -- Modules
 create table if not exists modules (
@@ -80,15 +157,77 @@ create table if not exists assignments (
   created_by uuid not null references auth.users(id) default auth.uid(),
   title text not null,
   instructions text not null,
+  assignment_type text not null default 'general',
   due_at timestamptz,
   created_at timestamptz not null default now()
 );
 
 alter table assignments add column if not exists created_by uuid references auth.users(id);
+alter table assignments add column if not exists assignment_type text;
 alter table assignments alter column created_by set default auth.uid();
 alter table assignments alter column created_by set not null;
+alter table assignments alter column assignment_type set default 'general';
+alter table assignments alter column assignment_type set not null;
+
+alter table assignments drop constraint if exists assignments_type_check;
+alter table assignments
+  add constraint assignments_type_check
+  check (
+    assignment_type in (
+      'general',
+      'essay',
+      'analysis',
+      'exegesis',
+      'translation',
+      'problem_set',
+      'presentation',
+      'other'
+    )
+  );
 
 create index if not exists idx_assignments_module_id on assignments(module_id);
+
+-- Readings
+create table if not exists readings (
+  id uuid primary key default gen_random_uuid(),
+  module_id uuid not null references modules(id) on delete cascade,
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  title text not null,
+  author text,
+  source_type text,
+  primary_or_secondary text,
+  tradition_or_era text,
+  pages_or_length text,
+  estimated_hours numeric,
+  reference_url_or_citation text,
+  status text not null default 'not_started',
+  notes text,
+  position integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table readings add column if not exists created_by uuid references auth.users(id);
+alter table readings add column if not exists position integer;
+alter table readings add column if not exists status text;
+alter table readings add column if not exists estimated_hours numeric;
+alter table readings alter column created_by set default auth.uid();
+alter table readings alter column created_by set not null;
+alter table readings alter column status set default 'not_started';
+alter table readings alter column status set not null;
+alter table readings alter column position set default 0;
+alter table readings alter column position set not null;
+
+alter table readings drop constraint if exists readings_position_check;
+alter table readings add constraint readings_position_check check (position >= 0);
+alter table readings drop constraint if exists readings_hours_check;
+alter table readings add constraint readings_hours_check check (estimated_hours is null or estimated_hours >= 0);
+alter table readings drop constraint if exists readings_status_check;
+alter table readings
+  add constraint readings_status_check
+  check (status in ('not_started', 'in_progress', 'complete', 'skipped'));
+
+create unique index if not exists idx_readings_module_position on readings(module_id, position);
+create index if not exists idx_readings_module_id on readings(module_id);
 
 -- Submissions
 create table if not exists submissions (
@@ -171,6 +310,42 @@ alter table critiques
   references submissions(id, version)
   on delete cascade;
 
+-- Concepts
+create table if not exists concepts (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  type text not null default 'term',
+  description text,
+  related_course_id uuid references courses(id) on delete set null,
+  related_module_id uuid references modules(id) on delete set null,
+  status text not null default 'active',
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now()
+);
+
+alter table concepts add column if not exists created_by uuid references auth.users(id);
+alter table concepts add column if not exists status text;
+alter table concepts add column if not exists type text;
+alter table concepts alter column created_by set default auth.uid();
+alter table concepts alter column created_by set not null;
+alter table concepts alter column status set default 'active';
+alter table concepts alter column status set not null;
+alter table concepts alter column type set default 'term';
+alter table concepts alter column type set not null;
+
+alter table concepts drop constraint if exists concepts_type_check;
+alter table concepts
+  add constraint concepts_type_check
+  check (type in ('term', 'thinker', 'council', 'doctrine', 'debate', 'distinction', 'other'));
+
+alter table concepts drop constraint if exists concepts_status_check;
+alter table concepts
+  add constraint concepts_status_check
+  check (status in ('active', 'draft', 'archived'));
+
+create index if not exists idx_concepts_course_id on concepts(related_course_id);
+create index if not exists idx_concepts_module_id on concepts(related_module_id);
+
 -- Submission version integrity
 create or replace function enforce_submission_version()
 returns trigger as $$
@@ -252,11 +427,15 @@ for each row execute function prevent_submission_identity_change();
 -- RLS
 alter table programs enable row level security;
 alter table program_members enable row level security;
+alter table domains enable row level security;
 alter table courses enable row level security;
+alter table course_prerequisites enable row level security;
 alter table modules enable row level security;
 alter table assignments enable row level security;
+alter table readings enable row level security;
 alter table submissions enable row level security;
 alter table critiques enable row level security;
+alter table concepts enable row level security;
 
 -- Drop existing policies for clean re-apply
 Drop policy if exists "Programs are readable by authenticated users" on programs;
@@ -277,10 +456,17 @@ Drop policy if exists "Program members select" on program_members;
 Drop policy if exists "Program members insert" on program_members;
 Drop policy if exists "Program members update" on program_members;
 Drop policy if exists "Program members delete" on program_members;
+Drop policy if exists "Domains select" on domains;
+Drop policy if exists "Domains insert" on domains;
+Drop policy if exists "Domains update" on domains;
+Drop policy if exists "Domains delete" on domains;
 Drop policy if exists "Courses select" on courses;
 Drop policy if exists "Courses insert" on courses;
 Drop policy if exists "Courses update" on courses;
 Drop policy if exists "Courses delete" on courses;
+Drop policy if exists "Course prerequisites select" on course_prerequisites;
+Drop policy if exists "Course prerequisites insert" on course_prerequisites;
+Drop policy if exists "Course prerequisites delete" on course_prerequisites;
 Drop policy if exists "Modules select" on modules;
 Drop policy if exists "Modules insert" on modules;
 Drop policy if exists "Modules update" on modules;
@@ -289,11 +475,19 @@ Drop policy if exists "Assignments select" on assignments;
 Drop policy if exists "Assignments insert" on assignments;
 Drop policy if exists "Assignments update" on assignments;
 Drop policy if exists "Assignments delete" on assignments;
+Drop policy if exists "Readings select" on readings;
+Drop policy if exists "Readings insert" on readings;
+Drop policy if exists "Readings update" on readings;
+Drop policy if exists "Readings delete" on readings;
 Drop policy if exists "Submissions select" on submissions;
 Drop policy if exists "Submissions insert" on submissions;
 Drop policy if exists "Submissions update" on submissions;
 Drop policy if exists "Critiques select" on critiques;
 Drop policy if exists "Critiques insert" on critiques;
+Drop policy if exists "Concepts select" on concepts;
+Drop policy if exists "Concepts insert" on concepts;
+Drop policy if exists "Concepts update" on concepts;
+Drop policy if exists "Concepts delete" on concepts;
 
 -- Programs: owner + members
 create policy "Programs select" on programs
@@ -369,6 +563,40 @@ create policy "Program members delete" on program_members
     )
   );
 
+-- Domains
+create policy "Domains select" on domains
+  for select to authenticated
+  using (
+    created_by = auth.uid()
+    or exists (
+      select 1
+      from courses c
+      join programs p on p.id = c.program_id
+      where c.domain_id = domains.id
+        and p.owner_id = auth.uid()
+    )
+    or exists (
+      select 1
+      from courses c
+      join program_members pm on pm.program_id = c.program_id
+      where c.domain_id = domains.id
+        and pm.user_id = auth.uid()
+    )
+  );
+
+create policy "Domains insert" on domains
+  for insert to authenticated
+  with check (created_by = auth.uid());
+
+create policy "Domains update" on domains
+  for update to authenticated
+  using (created_by = auth.uid())
+  with check (created_by = auth.uid());
+
+create policy "Domains delete" on domains
+  for delete to authenticated
+  using (created_by = auth.uid());
+
 -- Courses
 create policy "Courses select" on courses
   for select to authenticated
@@ -435,6 +663,78 @@ create policy "Courses delete" on courses
       select 1 from programs p
       where p.id = courses.program_id
         and p.owner_id = auth.uid()
+    )
+  );
+
+-- Course prerequisites
+create policy "Course prerequisites select" on course_prerequisites
+  for select to authenticated
+  using (
+    exists (
+      select 1 from courses c
+      join programs p on p.id = c.program_id
+      where c.id = course_prerequisites.course_id
+        and p.owner_id = auth.uid()
+    )
+    or exists (
+      select 1 from courses c
+      join program_members pm on pm.program_id = c.program_id
+      where c.id = course_prerequisites.course_id
+        and pm.user_id = auth.uid()
+    )
+  );
+
+create policy "Course prerequisites insert" on course_prerequisites
+  for insert to authenticated
+  with check (
+    created_by = auth.uid()
+    and (
+      exists (
+        select 1 from courses c
+        join programs p on p.id = c.program_id
+        where c.id = course_prerequisites.course_id
+          and p.owner_id = auth.uid()
+      )
+      or exists (
+        select 1 from courses c
+        join program_members pm on pm.program_id = c.program_id
+        where c.id = course_prerequisites.course_id
+          and pm.user_id = auth.uid()
+          and pm.role in ('owner', 'admin', 'staff')
+      )
+    )
+    and (
+      exists (
+        select 1 from courses c
+        join programs p on p.id = c.program_id
+        where c.id = course_prerequisites.prerequisite_course_id
+          and p.owner_id = auth.uid()
+      )
+      or exists (
+        select 1 from courses c
+        join program_members pm on pm.program_id = c.program_id
+        where c.id = course_prerequisites.prerequisite_course_id
+          and pm.user_id = auth.uid()
+          and pm.role in ('owner', 'admin', 'staff')
+      )
+    )
+  );
+
+create policy "Course prerequisites delete" on course_prerequisites
+  for delete to authenticated
+  using (
+    exists (
+      select 1 from courses c
+      join programs p on p.id = c.program_id
+      where c.id = course_prerequisites.course_id
+        and p.owner_id = auth.uid()
+    )
+    or exists (
+      select 1 from courses c
+      join program_members pm on pm.program_id = c.program_id
+      where c.id = course_prerequisites.course_id
+        and pm.user_id = auth.uid()
+        and pm.role in ('owner', 'admin', 'staff')
     )
   );
 
@@ -600,6 +900,91 @@ create policy "Assignments delete" on assignments
     )
   );
 
+-- Readings
+create policy "Readings select" on readings
+  for select to authenticated
+  using (
+    exists (
+      select 1 from modules m
+      join courses c on c.id = m.course_id
+      join programs p on p.id = c.program_id
+      where m.id = readings.module_id
+        and p.owner_id = auth.uid()
+    )
+    or exists (
+      select 1 from modules m
+      join courses c on c.id = m.course_id
+      join program_members pm on pm.program_id = c.program_id
+      where m.id = readings.module_id
+        and pm.user_id = auth.uid()
+    )
+  );
+
+create policy "Readings insert" on readings
+  for insert to authenticated
+  with check (
+    created_by = auth.uid()
+    and (
+      exists (
+        select 1 from modules m
+        join courses c on c.id = m.course_id
+        join programs p on p.id = c.program_id
+        where m.id = readings.module_id
+          and p.owner_id = auth.uid()
+      )
+      or exists (
+        select 1 from modules m
+        join courses c on c.id = m.course_id
+        join program_members pm on pm.program_id = c.program_id
+        where m.id = readings.module_id
+          and pm.user_id = auth.uid()
+          and pm.role in ('owner', 'admin', 'staff')
+      )
+    )
+  );
+
+create policy "Readings update" on readings
+  for update to authenticated
+  using (
+    exists (
+      select 1 from modules m
+      join courses c on c.id = m.course_id
+      join programs p on p.id = c.program_id
+      where m.id = readings.module_id
+        and p.owner_id = auth.uid()
+    )
+    or exists (
+      select 1 from modules m
+      join courses c on c.id = m.course_id
+      join program_members pm on pm.program_id = c.program_id
+      where m.id = readings.module_id
+        and pm.user_id = auth.uid()
+        and pm.role in ('owner', 'admin', 'staff')
+    )
+  )
+  with check (
+    created_by = auth.uid()
+    or exists (
+      select 1 from modules m
+      join courses c on c.id = m.course_id
+      join programs p on p.id = c.program_id
+      where m.id = readings.module_id
+        and p.owner_id = auth.uid()
+    )
+  );
+
+create policy "Readings delete" on readings
+  for delete to authenticated
+  using (
+    exists (
+      select 1 from modules m
+      join courses c on c.id = m.course_id
+      join programs p on p.id = c.program_id
+      where m.id = readings.module_id
+        and p.owner_id = auth.uid()
+    )
+  );
+
 -- Submissions
 create policy "Submissions select" on submissions
   for select to authenticated
@@ -634,3 +1019,95 @@ create policy "Critiques insert" on critiques
         and s.user_id = auth.uid()
     )
   );
+
+-- Concepts
+create policy "Concepts select" on concepts
+  for select to authenticated
+  using (
+    created_by = auth.uid()
+    or (
+      related_course_id is not null
+      and (
+        exists (
+          select 1 from courses c
+          join programs p on p.id = c.program_id
+          where c.id = concepts.related_course_id
+            and p.owner_id = auth.uid()
+        )
+        or exists (
+          select 1 from courses c
+          join program_members pm on pm.program_id = c.program_id
+          where c.id = concepts.related_course_id
+            and pm.user_id = auth.uid()
+        )
+      )
+    )
+    or (
+      related_module_id is not null
+      and (
+        exists (
+          select 1 from modules m
+          join courses c on c.id = m.course_id
+          join programs p on p.id = c.program_id
+          where m.id = concepts.related_module_id
+            and p.owner_id = auth.uid()
+        )
+        or exists (
+          select 1 from modules m
+          join courses c on c.id = m.course_id
+          join program_members pm on pm.program_id = c.program_id
+          where m.id = concepts.related_module_id
+            and pm.user_id = auth.uid()
+        )
+      )
+    )
+  );
+
+create policy "Concepts insert" on concepts
+  for insert to authenticated
+  with check (
+    created_by = auth.uid()
+    and (
+      related_course_id is null
+      or exists (
+        select 1 from courses c
+        join programs p on p.id = c.program_id
+        where c.id = concepts.related_course_id
+          and p.owner_id = auth.uid()
+      )
+      or exists (
+        select 1 from courses c
+        join program_members pm on pm.program_id = c.program_id
+        where c.id = concepts.related_course_id
+          and pm.user_id = auth.uid()
+          and pm.role in ('owner', 'admin', 'staff')
+      )
+    )
+    and (
+      related_module_id is null
+      or exists (
+        select 1 from modules m
+        join courses c on c.id = m.course_id
+        join programs p on p.id = c.program_id
+        where m.id = concepts.related_module_id
+          and p.owner_id = auth.uid()
+      )
+      or exists (
+        select 1 from modules m
+        join courses c on c.id = m.course_id
+        join program_members pm on pm.program_id = c.program_id
+        where m.id = concepts.related_module_id
+          and pm.user_id = auth.uid()
+          and pm.role in ('owner', 'admin', 'staff')
+      )
+    )
+  );
+
+create policy "Concepts update" on concepts
+  for update to authenticated
+  using (created_by = auth.uid())
+  with check (created_by = auth.uid());
+
+create policy "Concepts delete" on concepts
+  for delete to authenticated
+  using (created_by = auth.uid());

@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "src/app/(protected)", "src/legacy"]
+  "exclude": ["node_modules", "src/app/(protected)", "src/legacy", "src/app/assignments", "src/app/courses", "src/app/modules", "src/app/programs", "src/app/readings"]
 }

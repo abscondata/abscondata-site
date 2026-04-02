@@ -7,112 +7,46 @@ type Task = Database["public"]["Tables"]["tasks"]["Row"];
 type Exception = Database["public"]["Tables"]["exceptions"]["Row"];
 type WeeklyReport = Database["public"]["Tables"]["weekly_reports"]["Row"];
 
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-export function OwnerOverview({
-  clients,
-  tasks,
-  exceptions,
-  reports,
-}: {
-  clients: Client[];
-  tasks: Task[];
-  exceptions: Exception[];
-  reports: WeeklyReport[];
-}) {
-  const activeClients = clients.filter(
-    (c) => c.status?.toLowerCase() === "active"
-  ).length;
-  const highPriorityTasks = tasks.filter(
-    (t) => t.priority?.toLowerCase() === "high"
-  ).length;
+export function OwnerOverview({ clients, tasks, exceptions, reports }: { clients: Client[]; tasks: Task[]; exceptions: Exception[]; reports: WeeklyReport[] }) {
+  const activeClients = clients.filter((c) => c.status?.toLowerCase() === "active").length;
+  const highPriority = tasks.filter((t) => t.priority?.toLowerCase() === "high").length;
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-        Overview
-      </h2>
-
+      <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Overview</h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Total Clients" value={clients.length} />
-        <StatCard label="Active Clients" value={activeClients} />
-        <StatCard label="Open Tasks" value={tasks.length} />
-        <StatCard label="Open Exceptions" value={exceptions.length} />
+        {[["Total Clients", clients.length], ["Active Clients", activeClients], ["Open Tasks", tasks.length], ["Open Exceptions", exceptions.length]].map(([label, value]) => (
+          <div key={String(label)} className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{label}</p>
+            <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{value}</p>
+          </div>
+        ))}
       </div>
-
-      {highPriorityTasks > 0 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-          <p className="text-sm font-medium text-red-700 dark:text-red-400">
-            {highPriorityTasks} high-priority task
-            {highPriorityTasks > 1 ? "s" : ""} need attention
-          </p>
-        </div>
-      )}
-
+      {highPriority > 0 && <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"><p className="text-sm font-medium text-red-700 dark:text-red-400">{highPriority} high-priority task{highPriority > 1 ? "s" : ""} need attention</p></div>}
       {exceptions.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            Open Exceptions
-          </h3>
+          <h3 className="mb-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">Open Exceptions</h3>
           <div className="space-y-2">
             {exceptions.slice(0, 5).map((ex) => (
-              <div
-                key={ex.id}
-                className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
-              >
+              <div key={ex.id} className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-900 dark:text-zinc-100">
-                    {ex.description ?? "No description"}
-                  </span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      ex.severity?.toLowerCase() === "high" ||
-                      ex.severity?.toLowerCase() === "critical"
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                    }`}
-                  >
-                    {ex.severity ?? "—"}
-                  </span>
+                  <span className="text-sm text-zinc-900 dark:text-zinc-100">{ex.description ?? "No description"}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ex.severity?.toLowerCase() === "high" || ex.severity?.toLowerCase() === "critical" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"}`}>{ex.severity ?? "—"}</span>
                 </div>
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {ex.issue_type} · {ex.resolution_status}
-                </p>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{ex.issue_type} · {ex.resolution_status}</p>
               </div>
             ))}
           </div>
         </div>
       )}
-
       {reports.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            Recent Weekly Reports
-          </h3>
+          <h3 className="mb-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">Recent Weekly Reports</h3>
           <div className="space-y-2">
             {reports.slice(0, 3).map((r) => (
-              <div
-                key={r.id}
-                className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
-              >
-                <p className="text-sm text-zinc-900 dark:text-zinc-100">
-                  Week of{" "}
-                  {r.week_start
-                    ? new Date(r.week_start).toLocaleDateString()
-                    : "—"}
-                </p>
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {r.summary ?? "No summary"}
-                </p>
+              <div key={r.id} className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
+                <p className="text-sm text-zinc-900 dark:text-zinc-100">Week of {r.week_start ? new Date(r.week_start).toLocaleDateString() : "—"}</p>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{r.summary ?? "No summary"}</p>
               </div>
             ))}
           </div>

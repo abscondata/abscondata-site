@@ -4,18 +4,10 @@ import { TasksTable } from "../components/tasks-table";
 
 export default async function TasksPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   if (profile?.role !== "owner") redirect("/dashboard");
 
   const [{ data: tasks }, { data: clients }] = await Promise.all([
