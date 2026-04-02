@@ -1,4 +1,4 @@
-﻿import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
@@ -11,14 +11,22 @@ export async function proxy(request: NextRequest) {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (
-          cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]
+          cookiesToSet: {
+            name: string;
+            value: string;
+            options?: Record<string, unknown>;
+          }[]
         ) => {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => {
-            supabaseResponse.cookies.set(name, value, options as Record<string, unknown>);
+            supabaseResponse.cookies.set(
+              name,
+              value,
+              options as Record<string, unknown>
+            );
           });
         },
       },
@@ -41,17 +49,8 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Protected routes: redirect to login if not authenticated
-  if (
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/programs") ||
-    pathname.startsWith("/domains") ||
-    pathname.startsWith("/courses") ||
-    pathname.startsWith("/modules") ||
-    pathname.startsWith("/assignments") ||
-    pathname.startsWith("/readings") ||
-    pathname.startsWith("/concepts")
-  ) {
+  // Dashboard: redirect to login if not authenticated
+  if (pathname.startsWith("/dashboard")) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
@@ -60,20 +59,9 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Everything else (landing page, etc.) passes through — no auth required
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: [
-    "/login",
-    "/dashboard/:path*",
-    "/programs/:path*",
-    "/domains/:path*",
-    "/courses/:path*",
-    "/modules/:path*",
-    "/assignments/:path*",
-    "/readings/:path*",
-    "/concepts/:path*",
-  ],
+  matcher: ["/login", "/dashboard/:path*"],
 };
