@@ -70,7 +70,7 @@ alter table public.exceptions
 -- 5. client_configs table
 create table public.client_configs (
   id uuid primary key default gen_random_uuid(),
-  client_id uuid references public.clients(id),
+  client_id bigint references public.clients(id),
   workflow_type text not null,
   is_enabled boolean default true,
   send_window_start time,
@@ -107,7 +107,7 @@ create policy "VAs can read configs for their assigned clients"
 -- 6. task_source_data table
 create table public.task_source_data (
   id uuid primary key default gen_random_uuid(),
-  task_id uuid references public.tasks(id),
+  task_id bigint references public.tasks(id),
   payload_json jsonb,
   normalized_fields_json jsonb,
   created_at timestamptz default now()
@@ -136,7 +136,7 @@ create policy "VAs can read source data for their assigned tasks"
 -- 7. task_events table
 create table public.task_events (
   id uuid primary key default gen_random_uuid(),
-  task_id uuid references public.tasks(id),
+  task_id bigint references public.tasks(id),
   event_type text not null,
   actor_type text,
   actor_id text,
@@ -176,7 +176,7 @@ create policy "VAs can insert events for their assigned tasks"
 -- 8. send_logs table
 create table public.send_logs (
   id uuid primary key default gen_random_uuid(),
-  task_id uuid references public.tasks(id),
+  task_id bigint references public.tasks(id),
   channel text,
   sender text,
   recipient text,

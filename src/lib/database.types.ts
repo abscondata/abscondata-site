@@ -162,6 +162,66 @@ export interface Database {
         };
         Relationships: [{ foreignKeyName: "course_prerequisites_prerequisite_course_id_fkey"; columns: ["prerequisite_course_id"]; isOneToOne: false; referencedRelation: "courses"; referencedColumns: ["id"] }];
       };
+      requirement_blocks: {
+        Row: {
+          id: string;
+          program_id: string;
+          title: string;
+          description: string | null;
+          category: string | null;
+          minimum_courses_required: number | null;
+          minimum_credits_required: number | null;
+          position: number;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          program_id: string;
+          title: string;
+          description?: string | null;
+          category?: string | null;
+          minimum_courses_required?: number | null;
+          minimum_credits_required?: number | null;
+          position?: number;
+          created_by?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          program_id?: string;
+          title?: string;
+          description?: string | null;
+          category?: string | null;
+          minimum_courses_required?: number | null;
+          minimum_credits_required?: number | null;
+          position?: number;
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [{ foreignKeyName: "requirement_blocks_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] }];
+      };
+      course_requirement_blocks: {
+        Row: {
+          course_id: string;
+          requirement_block_id: string;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          course_id: string;
+          requirement_block_id: string;
+          created_by?: string;
+          created_at?: string;
+        };
+        Update: {
+          course_id?: string;
+          requirement_block_id?: string;
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [{ foreignKeyName: "course_requirement_blocks_requirement_block_id_fkey"; columns: ["requirement_block_id"]; isOneToOne: false; referencedRelation: "requirement_blocks"; referencedColumns: ["id"] }];
+      };
       modules: {
         Row: {
           id: string;
@@ -411,7 +471,7 @@ export interface Database {
       };
       clients: {
         Row: {
-          id: string; created_at: string; name: string; niche: string | null;
+          id: number; created_at: string; name: string; niche: string | null;
           status: string | null; primary_contact_name: string | null;
           primary_contact_email: string | null; primary_contact_phone: string | null;
           notes: string | null; employee_count: number | null;
@@ -420,7 +480,7 @@ export interface Database {
           business_hours: string | null; escalation_email: string | null;
         };
         Insert: {
-          id?: string; created_at?: string; name: string; niche?: string | null;
+          id?: number; created_at?: string; name: string; niche?: string | null;
           status?: string | null; primary_contact_name?: string | null;
           primary_contact_email?: string | null; primary_contact_phone?: string | null;
           notes?: string | null; employee_count?: number | null;
@@ -429,7 +489,7 @@ export interface Database {
           business_hours?: string | null; escalation_email?: string | null;
         };
         Update: {
-          id?: string; created_at?: string; name?: string; niche?: string | null;
+          id?: number; created_at?: string; name?: string; niche?: string | null;
           status?: string | null; primary_contact_name?: string | null;
           primary_contact_email?: string | null; primary_contact_phone?: string | null;
           notes?: string | null; employee_count?: number | null;
@@ -441,7 +501,7 @@ export interface Database {
       };
       tasks: {
         Row: {
-          id: string; created_at: string; client_id: string | null; title: string;
+          id: number; created_at: string; client_id: number | null; title: string;
           task_type: string | null;
           status: Database["public"]["Enums"]["task_status"] | null;
           priority: string | null; due_at: string | null;
@@ -458,7 +518,7 @@ export interface Database {
           updated_at: string | null;
         };
         Insert: {
-          id?: string; created_at?: string; client_id?: string | null; title: string;
+          id?: number; created_at?: string; client_id?: number | null; title: string;
           task_type?: string | null;
           status?: Database["public"]["Enums"]["task_status"] | null;
           priority?: string | null; due_at?: string | null;
@@ -475,7 +535,7 @@ export interface Database {
           updated_at?: string | null;
         };
         Update: {
-          id?: string; created_at?: string; client_id?: string | null; title?: string;
+          id?: number; created_at?: string; client_id?: number | null; title?: string;
           task_type?: string | null;
           status?: Database["public"]["Enums"]["task_status"] | null;
           priority?: string | null; due_at?: string | null;
@@ -495,19 +555,19 @@ export interface Database {
       };
       exceptions: {
         Row: {
-          id: string; created_at: string; client_id: string | null; task_id: string | null;
+          id: number; created_at: string; client_id: number | null; task_id: number | null;
           issue_type: string | null; severity: string | null;
           description: string | null; resolution_status: string | null;
           resolved_by: string | null; resolved_at: string | null;
         };
         Insert: {
-          id?: string; created_at?: string; client_id?: string | null; task_id?: string | null;
+          id?: number; created_at?: string; client_id?: number | null; task_id?: number | null;
           issue_type?: string | null; severity?: string | null;
           description?: string | null; resolution_status?: string | null;
           resolved_by?: string | null; resolved_at?: string | null;
         };
         Update: {
-          id?: string; created_at?: string; client_id?: string | null; task_id?: string | null;
+          id?: number; created_at?: string; client_id?: number | null; task_id?: number | null;
           issue_type?: string | null; severity?: string | null;
           description?: string | null; resolution_status?: string | null;
           resolved_by?: string | null; resolved_at?: string | null;
@@ -516,7 +576,7 @@ export interface Database {
       };
       client_configs: {
         Row: {
-          id: string; client_id: string | null; workflow_type: string;
+          id: string; client_id: number | null; workflow_type: string;
           is_enabled: boolean | null; send_window_start: string | null;
           send_window_end: string | null; send_days: string[] | null;
           tone_profile: string | null; exclusion_rules_json: Json | null;
@@ -524,7 +584,7 @@ export interface Database {
           escalation_rules_json: Json | null; created_at: string;
         };
         Insert: {
-          id?: string; client_id?: string | null; workflow_type: string;
+          id?: string; client_id?: number | null; workflow_type: string;
           is_enabled?: boolean | null; send_window_start?: string | null;
           send_window_end?: string | null; send_days?: string[] | null;
           tone_profile?: string | null; exclusion_rules_json?: Json | null;
@@ -532,7 +592,7 @@ export interface Database {
           escalation_rules_json?: Json | null; created_at?: string;
         };
         Update: {
-          id?: string; client_id?: string | null; workflow_type?: string;
+          id?: string; client_id?: number | null; workflow_type?: string;
           is_enabled?: boolean | null; send_window_start?: string | null;
           send_window_end?: string | null; send_days?: string[] | null;
           tone_profile?: string | null; exclusion_rules_json?: Json | null;
@@ -542,34 +602,34 @@ export interface Database {
         Relationships: [{ foreignKeyName: "client_configs_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
       };
       task_source_data: {
-        Row: { id: string; task_id: string | null; payload_json: Json | null; normalized_fields_json: Json | null; created_at: string };
-        Insert: { id?: string; task_id?: string | null; payload_json?: Json | null; normalized_fields_json?: Json | null; created_at?: string };
-        Update: { id?: string; task_id?: string | null; payload_json?: Json | null; normalized_fields_json?: Json | null; created_at?: string };
+        Row: { id: string; task_id: number | null; payload_json: Json | null; normalized_fields_json: Json | null; created_at: string };
+        Insert: { id?: string; task_id?: number | null; payload_json?: Json | null; normalized_fields_json?: Json | null; created_at?: string };
+        Update: { id?: string; task_id?: number | null; payload_json?: Json | null; normalized_fields_json?: Json | null; created_at?: string };
         Relationships: [{ foreignKeyName: "task_source_data_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }];
       };
       task_events: {
-        Row: { id: string; task_id: string | null; event_type: string; actor_type: string | null; actor_id: string | null; notes: string | null; created_at: string };
-        Insert: { id?: string; task_id?: string | null; event_type: string; actor_type?: string | null; actor_id?: string | null; notes?: string | null; created_at?: string };
-        Update: { id?: string; task_id?: string | null; event_type?: string; actor_type?: string | null; actor_id?: string | null; notes?: string | null; created_at?: string };
+        Row: { id: string; task_id: number | null; event_type: string; actor_type: string | null; actor_id: string | null; notes: string | null; created_at: string };
+        Insert: { id?: string; task_id?: number | null; event_type: string; actor_type?: string | null; actor_id?: string | null; notes?: string | null; created_at?: string };
+        Update: { id?: string; task_id?: number | null; event_type?: string; actor_type?: string | null; actor_id?: string | null; notes?: string | null; created_at?: string };
         Relationships: [{ foreignKeyName: "task_events_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }];
       };
       send_logs: {
         Row: {
-          id: string; task_id: string | null; channel: string | null;
+          id: string; task_id: number | null; channel: string | null;
           sender: string | null; recipient: string | null; subject_line: string | null;
           body_snapshot: string | null; delivery_status: string | null;
           external_message_id: string | null; sent_at: string | null;
           error_text: string | null; created_at: string;
         };
         Insert: {
-          id?: string; task_id?: string | null; channel?: string | null;
+          id?: string; task_id?: number | null; channel?: string | null;
           sender?: string | null; recipient?: string | null; subject_line?: string | null;
           body_snapshot?: string | null; delivery_status?: string | null;
           external_message_id?: string | null; sent_at?: string | null;
           error_text?: string | null; created_at?: string;
         };
         Update: {
-          id?: string; task_id?: string | null; channel?: string | null;
+          id?: string; task_id?: number | null; channel?: string | null;
           sender?: string | null; recipient?: string | null; subject_line?: string | null;
           body_snapshot?: string | null; delivery_status?: string | null;
           external_message_id?: string | null; sent_at?: string | null;
@@ -578,27 +638,27 @@ export interface Database {
         Relationships: [{ foreignKeyName: "send_logs_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }];
       };
       files: {
-        Row: { id: string; created_at: string; client_id: string | null; file_name: string | null; file_url: string | null; file_type: string | null; notes: string | null };
-        Insert: { id?: string; created_at?: string; client_id?: string | null; file_name?: string | null; file_url?: string | null; file_type?: string | null; notes?: string | null };
-        Update: { id?: string; created_at?: string; client_id?: string | null; file_name?: string | null; file_url?: string | null; file_type?: string | null; notes?: string | null };
+        Row: { id: number; created_at: string; client_id: number | null; file_name: string | null; file_url: string | null; file_type: string | null; notes: string | null };
+        Insert: { id?: number; created_at?: string; client_id?: number | null; file_name?: string | null; file_url?: string | null; file_type?: string | null; notes?: string | null };
+        Update: { id?: number; created_at?: string; client_id?: number | null; file_name?: string | null; file_url?: string | null; file_type?: string | null; notes?: string | null };
         Relationships: [];
       };
       sops: {
-        Row: { id: string; created_at: string; client_id: string | null; title: string; trigger: string | null; steps: string | null; escalation_rule: string | null; active: boolean | null };
-        Insert: { id?: string; created_at?: string; client_id?: string | null; title: string; trigger?: string | null; steps?: string | null; escalation_rule?: string | null; active?: boolean | null };
-        Update: { id?: string; created_at?: string; client_id?: string | null; title?: string; trigger?: string | null; steps?: string | null; escalation_rule?: string | null; active?: boolean | null };
+        Row: { id: number; created_at: string; client_id: number | null; title: string; trigger: string | null; steps: string | null; escalation_rule: string | null; active: boolean | null };
+        Insert: { id?: number; created_at?: string; client_id?: number | null; title: string; trigger?: string | null; steps?: string | null; escalation_rule?: string | null; active?: boolean | null };
+        Update: { id?: number; created_at?: string; client_id?: number | null; title?: string; trigger?: string | null; steps?: string | null; escalation_rule?: string | null; active?: boolean | null };
         Relationships: [];
       };
       task_logs: {
-        Row: { id: string; created_at: string; task_id: string | null; log_type: string | null; message: string | null; created_by: string | null };
-        Insert: { id?: string; created_at?: string; task_id?: string | null; log_type?: string | null; message?: string | null; created_by?: string | null };
-        Update: { id?: string; created_at?: string; task_id?: string | null; log_type?: string | null; message?: string | null; created_by?: string | null };
+        Row: { id: number; created_at: string; task_id: number | null; log_type: string | null; message: string | null; created_by: string | null };
+        Insert: { id?: number; created_at?: string; task_id?: number | null; log_type?: string | null; message?: string | null; created_by?: string | null };
+        Update: { id?: number; created_at?: string; task_id?: number | null; log_type?: string | null; message?: string | null; created_by?: string | null };
         Relationships: [];
       };
       weekly_reports: {
-        Row: { id: string; created_at: string; client_id: string | null; week_start: string | null; summary: string | null; open_issues: string | null };
-        Insert: { id?: string; created_at?: string; client_id?: string | null; week_start?: string | null; summary?: string | null; open_issues?: string | null };
-        Update: { id?: string; created_at?: string; client_id?: string | null; week_start?: string | null; summary?: string | null; open_issues?: string | null };
+        Row: { id: number; created_at: string; client_id: number | null; week_start: string | null; summary: string | null; open_issues: string | null };
+        Insert: { id?: number; created_at?: string; client_id?: number | null; week_start?: string | null; summary?: string | null; open_issues?: string | null };
+        Update: { id?: number; created_at?: string; client_id?: number | null; week_start?: string | null; summary?: string | null; open_issues?: string | null };
         Relationships: [];
       };
     };

@@ -7,7 +7,7 @@ import type { Database } from "@/lib/database.types";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 
-export function TasksTable({ tasks, clients }: { tasks: Task[]; clients: { id: string; name: string }[] }) {
+export function TasksTable({ tasks, clients }: { tasks: Task[]; clients: { id: number; name: string }[] }) {
   const [filterClient, setFilterClient] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
@@ -16,7 +16,7 @@ export function TasksTable({ tasks, clients }: { tasks: Task[]; clients: { id: s
   const clientMap = Object.fromEntries(clients.map((c) => [c.id, c.name]));
 
   const filtered = tasks.filter((t) => {
-    if (filterClient && t.client_id !== filterClient) return false;
+    if (filterClient && t.client_id !== Number(filterClient)) return false;
     if (filterStatus && t.status !== filterStatus) return false;
     if (filterPriority && t.priority !== filterPriority) return false;
     return true;
@@ -25,7 +25,7 @@ export function TasksTable({ tasks, clients }: { tasks: Task[]; clients: { id: s
   const statuses = [...new Set(tasks.map((t) => t.status).filter(Boolean))];
   const priorities = [...new Set(tasks.map((t) => t.priority).filter(Boolean))];
 
-  async function handleAssign(taskId: string, vaEmail: string) {
+  async function handleAssign(taskId: number, vaEmail: string) {
     await supabase.from("tasks").update({ assigned_va: vaEmail || null }).eq("id", taskId);
     router.refresh();
   }
