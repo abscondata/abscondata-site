@@ -3,232 +3,147 @@
   "nodes": [
     {
       "parameters": {
-        "pollTimes": {
-          "item": [
-            {
-              "mode": "everyMinute"
-            }
-          ]
-        },
-        "filters": {
-          "readStatus": "unread"
-        },
+        "pollTimes": { "item": [{ "mode": "everyMinute" }] },
+        "filters": { "readStatus": "unread" },
         "simple": false
       },
-      "id": "a1000000-0000-0000-0000-000000000001",
+      "id": "n1",
       "name": "Gmail Trigger",
       "type": "n8n-nodes-base.gmailTrigger",
       "typeVersion": 1.2,
-      "position": [
-        0,
-        300
-      ],
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "",
-          "name": "Gmail OAuth"
-        }
-      }
+      "position": [0, 300],
+      "credentials": { "gmailOAuth2": { "id": "", "name": "Gmail account" } }
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst results = [];\n\nconst excludePatterns = [\n  'noreply', 'no-reply', 'donotreply', 'do-not-reply',\n  'notifications@', 'notification@', 'alerts@', 'alert@',\n  'newsletter@', 'news@', 'marketing@', 'promo@',\n  'updates@', 'info@mailchimp', 'bounce@',\n  'mailer-daemon', 'postmaster@',\n  'support@google', 'calendar-notification'\n];\n\n// Safely convert any value to a string. Handles objects like\n// {name: 'John', email: 'john@x.com'}, arrays, null, undefined.\nfunction toStr(val) {\n  if (val == null) return '';\n  if (typeof val === 'string') return val;\n  if (typeof val === 'object') {\n    // Gmail sometimes returns from as {name, email}\n    if (val.email) return val.name ? (val.name + ' <' + val.email + '>') : val.email;\n    if (val.value) return String(val.value);\n    if (Array.isArray(val)) return val.map(toStr).join(', ');\n  }\n  return String(val);\n}\n\nfor (const item of items) {\n  const d = item.json;\n  const headers = d.payload?.headers ?? [];\n  const getHeader = (name) => {\n    const h = headers.find(h => String(h.name || '').toLowerCase() === name);\n    return h ? toStr(h.value) : '';\n  };\n\n  const rawFrom = toStr(getHeader('from') || d.from || '').toLowerCase();\n  const subject = toStr(getHeader('subject') || d.subject || '');\n  const inReplyTo = toStr(getHeader('in-reply-to'));\n  const references = toStr(getHeader('references'));\n\n  if (!rawFrom) continue;\n  if (excludePatterns.some(p => rawFrom.includes(p))) continue;\n  if (inReplyTo || references) continue;\n\n  const body = toStr(d.text || d.textPlain || d.snippet || '');\n  if (!body.trim()) continue;\n\n  const m = rawFrom.match(/^(.+?)\\s*<(.+?)>$/);\n  const senderName = m ? m[1].replace(/\"/g, '').trim() : '';\n  const senderEmail = m ? m[2].trim() : rawFrom.trim();\n  const messageId = toStr(d.id || d.messageId || '');\n  const receivedAt = d.internalDate\n    ? new Date(parseInt(d.internalDate)).toISOString()\n    : new Date().toISOString();\n\n  results.push({\n    json: {\n      messageId,\n      senderName,\n      senderEmail,\n      subject,\n      body,\n      bodyExcerpt: body.substring(0, 500),\n      receivedAt,\n      rawEmail: d\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "const items = $input.all();\nconst results = [];\nconst exclude = ['noreply','no-reply','donotreply','do-not-reply','notifications@','notification@','alerts@','alert@','newsletter@','news@','marketing@','promo@','updates@','info@mailchimp','bounce@','mailer-daemon','postmaster@','support@google','calendar-notification'];\nfunction toStr(v){if(v==null)return '';if(typeof v==='string')return v;if(typeof v==='object'){if(v.email)return v.name?(v.name+' <'+v.email+'>'):v.email;if(v.value)return String(v.value);if(Array.isArray(v))return v.map(toStr).join(', ');}return String(v);}\nfor(const item of items){\n  const d=item.json;\n  const hdrs=d.payload?.headers??[];\n  const gh=(n)=>{const h=hdrs.find(x=>String(x.name||'').toLowerCase()===n);return h?toStr(h.value):'';};\n  const rawFrom=toStr(gh('from')||d.from||'').toLowerCase();\n  const subject=toStr(gh('subject')||d.subject||'');\n  const inReplyTo=toStr(gh('in-reply-to'));\n  const refs=toStr(gh('references'));\n  if(!rawFrom)continue;\n  if(exclude.some(p=>rawFrom.includes(p)))continue;\n  if(inReplyTo||refs)continue;\n  const body=toStr(d.text||d.textPlain||d.snippet||'');\n  if(!body.trim())continue;\n  const m=rawFrom.match(/^(.+?)\\s*<(.+?)>$/);\n  const senderName=m?m[1].replace(/\"/g,'').trim():'';\n  const senderEmail=m?m[2].trim():rawFrom.trim();\n  const messageId=toStr(d.id||d.messageId||'');\n  const receivedAt=d.internalDate?new Date(parseInt(d.internalDate)).toISOString():new Date().toISOString();\n  results.push({json:{messageId,senderName,senderEmail,subject,body,bodyExcerpt:body.substring(0,500),receivedAt,rawEmail:d}});\n}\nreturn results;"
       },
-      "id": "a1000000-0000-0000-0000-000000000002",
+      "id": "n2",
       "name": "Filter Leads",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        260,
-        300
-      ]
+      "position": [260, 300]
     },
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ 'https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?source_record_id=eq.' + encodeURIComponent($json.messageId || '') + '&select=id&limit=1' }}",
+        "url": "=https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/task_source_data?select=id&limit=1",
         "authentication": "genericCredentialType",
-        "options": {},
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": []
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "payload_json->>messageId",
+              "value": "=eq.{{ $json.messageId }}"
+            }
+          ]
         },
-        "genericAuthType": "httpHeaderAuth"
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000003",
+      "id": "n3",
       "name": "Check Duplicate",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        520,
-        300
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [520, 300],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Supabase GET returns an array. Empty array = no duplicate.\nconst data = $input.first().json;\n// The HTTP node may return the array directly or wrap it.\n// Handle both: if data is an array, check length. If data has a length property (array-like), check it.\nconst arr = Array.isArray(data) ? data : (data.data ? data.data : [data]);\nconst isEmpty = Array.isArray($input.first().json) ? $input.first().json.length === 0 : !$input.first().json.id;\n\n// Actually, n8n HTTP node with array response: each array element becomes a separate item.\n// So if Supabase returns [], n8n passes 0 items. If it returns [{id:1}], n8n passes 1 item.\n// But with a single GET, the response body is the array itself.\n// Let's just check: did we get an item with an id field?\nconst hasDuplicate = !!$input.first().json.id;\n\nreturn [{ json: { ...$('Filter Leads').first().json, _hasDuplicate: hasDuplicate } }];"
+      },
+      "id": "n3b",
+      "name": "Check Duplicate Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
           "conditions": [
             {
               "id": "dup-check",
-              "leftValue": "={{ $json.length }}",
-              "rightValue": "0",
-              "operator": {
-                "type": "number",
-                "operation": "equals"
-              }
+              "leftValue": "={{ $json._hasDuplicate }}",
+              "rightValue": "={{ false }}",
+              "operator": { "type": "boolean", "operation": "false" }
             }
           ],
           "combinator": "and"
         }
       },
-      "id": "a1000000-0000-0000-0000-000000000004",
+      "id": "n4",
       "name": "IF Not Duplicate",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        780,
-        300
-      ]
+      "position": [900, 300]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
           "conditions": [
-            {
-              "id": "val-email",
-              "leftValue": "={{ $('Filter Leads').first().json.senderEmail }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "isNotEmpty"
-              }
-            },
-            {
-              "id": "val-subject",
-              "leftValue": "={{ $('Filter Leads').first().json.subject }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "isNotEmpty"
-              }
-            },
-            {
-              "id": "val-body",
-              "leftValue": "={{ $('Filter Leads').first().json.body }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "isNotEmpty"
-              }
-            }
+            { "id": "v1", "leftValue": "={{ $json.senderEmail }}", "rightValue": "", "operator": { "type": "string", "operation": "isNotEmpty" } },
+            { "id": "v2", "leftValue": "={{ $json.subject }}", "rightValue": "", "operator": { "type": "string", "operation": "isNotEmpty" } },
+            { "id": "v3", "leftValue": "={{ $json.body }}", "rightValue": "", "operator": { "type": "string", "operation": "isNotEmpty" } }
           ],
           "combinator": "and"
         }
       },
-      "id": "a1000000-0000-0000-0000-000000000005",
+      "id": "n5",
       "name": "Validate Fields",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        1040,
-        300
-      ]
+      "position": [1100, 300]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/tasks",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "Prefer", "value": "return=representation" }
+        ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  title: 'Lead: ' + ($('Filter Leads').first().json.senderName || $('Filter Leads').first().json.senderEmail || 'unknown'),\n  workflow_type: 'NEW_LEAD_RESPONSE',\n  status: 'NEW',\n  client_id: 1,\n  source_system: 'gmail',\n  source_record_id: $('Filter Leads').first().json.messageId || '',\n  recipient_email: $('Filter Leads').first().json.senderEmail || '',\n  recipient_name: $('Filter Leads').first().json.senderName || '',\n  task_type: 'lead_response',\n  priority: 'high'\n}) }}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ title: 'Lead: ' + ($json.senderName || $json.senderEmail || 'unknown'), workflow_type: 'NEW_LEAD_RESPONSE', status: 'NEW', client_id: 1, source_system: 'gmail', source_record_id: $json.messageId || '', recipient_email: $json.senderEmail || '', recipient_name: $json.senderName || '', task_type: 'lead_response', priority: 'high' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000006",
+      "id": "n6",
       "name": "Create Task",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1300,
-        300
-      ],
+      "position": [1340, 300],
       "onError": "continueErrorOutput",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_source_data",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/task_source_data",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "Prefer", "value": "return=representation" }
+        ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"task_id\": {{ $json[0].id }},\n  \"payload_json\": {{ JSON.stringify($('Filter Leads').first().json.rawEmail) }},\n  \"normalized_fields_json\": {\n    \"sender_name\": {{ JSON.stringify($('Filter Leads').first().json.senderName) }},\n    \"sender_email\": {{ JSON.stringify($('Filter Leads').first().json.senderEmail) }},\n    \"subject\": {{ JSON.stringify($('Filter Leads').first().json.subject) }},\n    \"body_excerpt\": {{ JSON.stringify($('Filter Leads').first().json.bodyExcerpt) }},\n    \"received_at\": {{ JSON.stringify($('Filter Leads').first().json.receivedAt) }}\n  }\n}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ task_id: $json.id, payload_json: $('Filter Leads').first().json.rawEmail, normalized_fields_json: { sender_name: $('Filter Leads').first().json.senderName, sender_email: $('Filter Leads').first().json.senderEmail, subject: $('Filter Leads').first().json.subject, body_excerpt: $('Filter Leads').first().json.bodyExcerpt, received_at: $('Filter Leads').first().json.receivedAt } }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000007",
+      "id": "n7",
       "name": "Store Source Data",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1560,
-        300
-      ],
+      "position": [1580, 300],
       "onError": "continueErrorOutput",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
@@ -237,764 +152,346 @@
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [
+          { "name": "anthropic-version", "value": "2023-06-01" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1024,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\n        \"You are a professional operations assistant drafting email replies for a managed back-office operations company.\\n\\n\"\n        + \"COMPANY CONTEXT:\\n\"\n        + \"- Business name: Abscondata\\n\"\n        + \"- Service area: Managed back-office operations for service companies\\n\"\n        + \"- Tone: Professional, warm, concise. No jargon. No hard sell. Acknowledge their inquiry, show competence, suggest a brief call.\\n\\n\"\n        + \"INBOUND EMAIL:\\n\"\n        + \"- From: \" + $('Filter Leads').first().json.senderName + \" <\" + $('Filter Leads').first().json.senderEmail + \">\\n\"\n        + \"- Subject: \" + $('Filter Leads').first().json.subject + \"\\n\"\n        + \"- Body excerpt: \" + $('Filter Leads').first().json.bodyExcerpt + \"\\n\\n\"\n        + \"TASK:\\nDraft a reply email. Return valid JSON only, no markdown:\\n{\\n  \\\"subject_line\\\": \\\"Re: [original subject or improved version]\\\",\\n  \\\"draft_body\\\": \\\"[full email reply body, 3-5 sentences, sign off as Abscondata Team]\\\"\\n}\"\n      ) }}\n    }\n  ]\n}",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1024, messages: [{ role: 'user', content: 'You are a professional operations assistant drafting email replies for a managed back-office operations company.\\n\\nCOMPANY CONTEXT:\\n- Business name: Abscondata\\n- Service area: Managed back-office operations for service companies\\n- Tone: Professional, warm, concise. No jargon. No hard sell. Acknowledge their inquiry, show competence, suggest a brief call.\\n\\nINBOUND EMAIL:\\n- From: ' + $('Filter Leads').first().json.senderName + ' <' + $('Filter Leads').first().json.senderEmail + '>\\n- Subject: ' + $('Filter Leads').first().json.subject + '\\n- Body excerpt: ' + $('Filter Leads').first().json.bodyExcerpt + '\\n\\nTASK:\\nDraft a reply email. Return valid JSON only, no markdown:\\n{\\n  \"subject_line\": \"Re: [original subject or improved version]\",\\n  \"draft_body\": \"[full email reply body, 3-5 sentences, sign off as Abscondata Team]\"\\n}' }] }) }}",
         "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000008",
+      "id": "n8",
       "name": "AI Draft Reply",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1820,
-        300
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Anthropic API"
-        }
-      },
-      "onError": "continueErrorOutput"
+      "position": [1840, 300],
+      "onError": "continueErrorOutput",
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account" } }
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first();\nconst content = item.json?.content?.[0]?.text ?? '';\n\nlet parsed;\ntry {\n  const match = content.match(/\\{[\\s\\S]*\\}/);\n  if (!match) throw new Error('No JSON object in response');\n  parsed = JSON.parse(match[0]);\n  if (!parsed.draft_body || parsed.draft_body.trim().length < 20) {\n    throw new Error('Draft body empty or too short');\n  }\n} catch (e) {\n  return [{\n    json: {\n      success: false,\n      errorReason: 'LOW_CONFIDENCE_DRAFT',\n      errorDescription: e.message,\n      rawResponse: content.substring(0, 500)\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    subjectLine: parsed.subject_line || ('Re: ' + ($('Filter Leads').first().json.subject || 'Your inquiry')),\n    draftBody: parsed.draft_body\n  }\n}];"
+        "jsCode": "const item = $input.first();\nconst content = item.json?.content?.[0]?.text ?? '';\ntry {\n  const match = content.match(/\\{[\\s\\S]*\\}/);\n  if (!match) throw new Error('No JSON in response');\n  const parsed = JSON.parse(match[0]);\n  if (!parsed.draft_body || parsed.draft_body.trim().length < 20) throw new Error('Draft too short');\n  return [{ json: { success: true, subjectLine: parsed.subject_line || ('Re: ' + ($('Filter Leads').first().json.subject || 'Your inquiry')), draftBody: parsed.draft_body } }];\n} catch (e) {\n  return [{ json: { success: false, errorReason: 'LOW_CONFIDENCE_DRAFT', errorDescription: e.message } }];\n}"
       },
-      "id": "a1000000-0000-0000-0000-000000000009",
+      "id": "n9",
       "name": "Parse AI Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2080,
-        300
-      ]
+      "position": [2100, 300]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
           "conditions": [
-            {
-              "id": "draft-ok",
-              "leftValue": "={{ $json.success }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true"
-              }
-            }
+            { "id": "ok", "leftValue": "={{ $json.success }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true" } }
           ],
           "combinator": "and"
         }
       },
-      "id": "a1000000-0000-0000-0000-000000000010",
+      "id": "n10",
       "name": "IF Draft Valid",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        2340,
-        300
-      ]
+      "position": [2340, 300]
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "url": "=https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json.id }}",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "Prefer", "value": "return=representation" }
+        ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  ai_draft: $('Parse AI Response').first().json.draftBody || '',\n  subject_line: $('Parse AI Response').first().json.subjectLine || '',\n  status: 'READY_FOR_REVIEW'\n}) }}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ ai_draft: $('Parse AI Response').first().json.draftBody || '', subject_line: $('Parse AI Response').first().json.subjectLine || '', status: 'READY_FOR_REVIEW' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000011",
+      "id": "n11",
       "name": "Update Task READY",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        2600,
-        200
-      ],
+      "position": [2600, 200],
       "onError": "continueErrorOutput",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/task_events",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"DRAFT_READY\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"AI draft generated. Task set to READY_FOR_REVIEW.\"\n}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ task_id: $('Create Task').first().json.id, event_type: 'DRAFT_READY', actor_type: 'system', actor_id: 'n8n:new_lead_response', notes: 'AI draft generated. Task set to READY_FOR_REVIEW.' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000012",
+      "id": "n12",
       "name": "Log Success",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        2860,
-        200
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [2860, 200],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "url": "=https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json.id }}",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"status\": \"EXCEPTION\",\n  \"exception_reason_code\": {{ JSON.stringify($('Parse AI Response').first().json.errorReason || 'LOW_CONFIDENCE_DRAFT') }},\n  \"exception_description\": {{ JSON.stringify($('Parse AI Response').first().json.errorDescription || 'AI draft failed') }}\n}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ status: 'EXCEPTION', exception_reason_code: $('Parse AI Response').first().json.errorReason || 'LOW_CONFIDENCE_DRAFT', exception_description: $('Parse AI Response').first().json.errorDescription || 'AI draft failed' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000013",
+      "id": "n13",
       "name": "Set EXCEPTION Draft",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        2600,
-        500
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [2600, 500],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/task_events",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": {{ JSON.stringify('LOW_CONFIDENCE_DRAFT: ' + ($('Parse AI Response').first().json.errorDescription || 'AI draft failed')) }}\n}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ task_id: $('Create Task').first().json.id, event_type: 'SYSTEM_ERROR', actor_type: 'system', actor_id: 'n8n:new_lead_response', notes: 'LOW_CONFIDENCE_DRAFT: ' + ($('Parse AI Response').first().json.errorDescription || 'AI draft failed') }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000014",
+      "id": "n14",
       "name": "Log Draft Exception",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        2860,
-        500
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [2860, 500],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/tasks",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [
+          { "name": "Content-Type", "value": "application/json" },
+          { "name": "Prefer", "value": "return=representation" }
+        ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  title: 'Lead (validation failed): ' + ($('Filter Leads').first().json.senderEmail || 'unknown'),\n  workflow_type: 'NEW_LEAD_RESPONSE',\n  status: 'WAITING_ON_MISSING_DATA',\n  client_id: 1,\n  source_system: 'gmail',\n  source_record_id: $('Filter Leads').first().json.messageId || '',\n  task_type: 'lead_response',\n  exception_reason_code: 'VALIDATION_FAILED',\n  exception_description: 'Missing sender, subject, or body'\n}) }}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ title: 'Lead (validation failed): ' + ($json.senderEmail || 'unknown'), workflow_type: 'NEW_LEAD_RESPONSE', status: 'WAITING_ON_MISSING_DATA', client_id: 1, source_system: 'gmail', source_record_id: $json.messageId || '', task_type: 'lead_response', exception_reason_code: 'VALIDATION_FAILED', exception_description: 'Missing sender, subject, or body' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000015",
+      "id": "n15",
       "name": "Create Validation Error Task",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1300,
-        600
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [1340, 600],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/exceptions",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/exceptions",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"client_id\": 1,\n  \"task_id\": {{ $json[0].id }},\n  \"issue_type\": \"validation_failure\",\n  \"severity\": \"medium\",\n  \"description\": \"Lead email missing required fields (sender, subject, or body)\",\n  \"resolution_status\": \"open\"\n}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ client_id: 1, task_id: $json.id, issue_type: 'validation_failure', severity: 'medium', description: 'Lead email missing required fields', resolution_status: 'open' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000016",
+      "id": "n16",
       "name": "Create Validation Exception",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1560,
-        600
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [1580, 600],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/task_events",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"Create Task or Store Source Data failed\"\n}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ task_id: $('Create Task').first().json.id, event_type: 'SYSTEM_ERROR', actor_type: 'system', actor_id: 'n8n:new_lead_response', notes: 'Create Task or Store Source Data failed' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000017",
+      "id": "n17",
       "name": "Log Error Create",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1560,
-        800
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [1580, 800],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "url": "=https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json.id }}",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={ \"status\": \"FAILED\" }",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ status: 'FAILED' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000018",
+      "id": "n18",
       "name": "Set FAILED Create",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1820,
-        800
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [1840, 800],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/task_events",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"AI Draft Reply HTTP request failed\"\n}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ task_id: $('Create Task').first().json.id, event_type: 'SYSTEM_ERROR', actor_type: 'system', actor_id: 'n8n:new_lead_response', notes: 'AI Draft Reply HTTP request failed' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000019",
+      "id": "n19",
       "name": "Log Error AI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        2080,
-        800
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [2100, 800],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "url": "=https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json.id }}",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={ \"status\": \"FAILED\" }",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ status: 'FAILED' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000020",
+      "id": "n20",
       "name": "Set FAILED AI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        2340,
-        800
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [2340, 800],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/task_events",
+        "url": "https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/task_events",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"task_id\": {{ $('Create Task').first().json[0].id }},\n  \"event_type\": \"SYSTEM_ERROR\",\n  \"actor_type\": \"system\",\n  \"actor_id\": \"n8n:new_lead_response\",\n  \"notes\": \"Failed to update task to READY_FOR_REVIEW\"\n}",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ task_id: $('Create Task').first().json.id, event_type: 'SYSTEM_ERROR', actor_type: 'system', actor_id: 'n8n:new_lead_response', notes: 'Failed to update task to READY_FOR_REVIEW' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000021",
+      "id": "n21",
       "name": "Log Error Update",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        2860,
-        800
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [2860, 800],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://mvmfpksnbiyirzmrxwbr.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json[0].id }}",
+        "url": "=https://ylbbxspfdnrcundlxqem.supabase.co/rest/v1/tasks?id=eq.{{ $('Create Task').first().json.id }}",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={ \"status\": \"FAILED\" }",
-        "options": {},
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ JSON.stringify({ status: 'FAILED' }) }}",
+        "options": {}
       },
-      "id": "a1000000-0000-0000-0000-000000000022",
+      "id": "n22",
       "name": "Set FAILED Update",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        3120,
-        800
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Supabase Auth"
-        }
-      }
+      "position": [3120, 800],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Header Auth account 2" } }
     },
     {
       "parameters": {},
-      "id": "a1000000-0000-0000-0000-000000000023",
+      "id": "n23",
       "name": "Stop Duplicate",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [
-        1040,
-        600
-      ]
+      "position": [1100, 600]
     }
   ],
   "connections": {
-    "Gmail Trigger": {
-      "main": [
-        [
-          {
-            "node": "Filter Leads",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Filter Leads": {
-      "main": [
-        [
-          {
-            "node": "Check Duplicate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Duplicate": {
-      "main": [
-        [
-          {
-            "node": "IF Not Duplicate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF Not Duplicate": {
-      "main": [
-        [
-          {
-            "node": "Validate Fields",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Stop Duplicate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate Fields": {
-      "main": [
-        [
-          {
-            "node": "Create Task",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Create Validation Error Task",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Task": {
-      "main": [
-        [
-          {
-            "node": "Store Source Data",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log Error Create",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Store Source Data": {
-      "main": [
-        [
-          {
-            "node": "AI Draft Reply",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log Error Create",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Draft Reply": {
-      "main": [
-        [
-          {
-            "node": "Parse AI Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log Error AI",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse AI Response": {
-      "main": [
-        [
-          {
-            "node": "IF Draft Valid",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF Draft Valid": {
-      "main": [
-        [
-          {
-            "node": "Update Task READY",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set EXCEPTION Draft",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Task READY": {
-      "main": [
-        [
-          {
-            "node": "Log Success",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log Error Update",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set EXCEPTION Draft": {
-      "main": [
-        [
-          {
-            "node": "Log Draft Exception",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Validation Error Task": {
-      "main": [
-        [
-          {
-            "node": "Create Validation Exception",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Log Error Create": {
-      "main": [
-        [
-          {
-            "node": "Set FAILED Create",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Log Error AI": {
-      "main": [
-        [
-          {
-            "node": "Set FAILED AI",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Log Error Update": {
-      "main": [
-        [
-          {
-            "node": "Set FAILED Update",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "Gmail Trigger": { "main": [[{ "node": "Filter Leads", "type": "main", "index": 0 }]] },
+    "Filter Leads": { "main": [[{ "node": "Check Duplicate", "type": "main", "index": 0 }]] },
+    "Check Duplicate": { "main": [[{ "node": "Check Duplicate Result", "type": "main", "index": 0 }]] },
+    "Check Duplicate Result": { "main": [[{ "node": "IF Not Duplicate", "type": "main", "index": 0 }]] },
+    "IF Not Duplicate": { "main": [
+      [{ "node": "Validate Fields", "type": "main", "index": 0 }],
+      [{ "node": "Stop Duplicate", "type": "main", "index": 0 }]
+    ]},
+    "Validate Fields": { "main": [
+      [{ "node": "Create Task", "type": "main", "index": 0 }],
+      [{ "node": "Create Validation Error Task", "type": "main", "index": 0 }]
+    ]},
+    "Create Task": { "main": [
+      [{ "node": "Store Source Data", "type": "main", "index": 0 }],
+      [{ "node": "Log Error Create", "type": "main", "index": 0 }]
+    ]},
+    "Store Source Data": { "main": [
+      [{ "node": "AI Draft Reply", "type": "main", "index": 0 }],
+      [{ "node": "Log Error Create", "type": "main", "index": 0 }]
+    ]},
+    "AI Draft Reply": { "main": [
+      [{ "node": "Parse AI Response", "type": "main", "index": 0 }],
+      [{ "node": "Log Error AI", "type": "main", "index": 0 }]
+    ]},
+    "Parse AI Response": { "main": [[{ "node": "IF Draft Valid", "type": "main", "index": 0 }]] },
+    "IF Draft Valid": { "main": [
+      [{ "node": "Update Task READY", "type": "main", "index": 0 }],
+      [{ "node": "Set EXCEPTION Draft", "type": "main", "index": 0 }]
+    ]},
+    "Update Task READY": { "main": [
+      [{ "node": "Log Success", "type": "main", "index": 0 }],
+      [{ "node": "Log Error Update", "type": "main", "index": 0 }]
+    ]},
+    "Set EXCEPTION Draft": { "main": [[{ "node": "Log Draft Exception", "type": "main", "index": 0 }]] },
+    "Create Validation Error Task": { "main": [[{ "node": "Create Validation Exception", "type": "main", "index": 0 }]] },
+    "Log Error Create": { "main": [[{ "node": "Set FAILED Create", "type": "main", "index": 0 }]] },
+    "Log Error AI": { "main": [[{ "node": "Set FAILED AI", "type": "main", "index": 0 }]] },
+    "Log Error Update": { "main": [[{ "node": "Set FAILED Update", "type": "main", "index": 0 }]] }
   },
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "tags": [
-    {
-      "name": "abscondata"
-    },
-    {
-      "name": "v1"
-    },
-    {
-      "name": "lead-response"
-    }
-  ],
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "abscondata" }, { "name": "v1" }, { "name": "lead-response" }],
   "pinData": {}
 }
