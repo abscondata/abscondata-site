@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -9,460 +9,6 @@
 export interface Database {
   public: {
     Tables: {
-      programs: {
-        Row: {
-          id: string;
-          owner_id: string;
-          title: string;
-          description: string | null;
-          is_active: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          owner_id?: string;
-          title: string;
-          description?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          owner_id?: string;
-          title?: string;
-          description?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      program_members: {
-        Row: {
-          program_id: string;
-          user_id: string;
-          role: "owner" | "admin" | "staff" | "member";
-          created_at: string;
-        };
-        Insert: {
-          program_id: string;
-          user_id: string;
-          role?: "owner" | "admin" | "staff" | "member";
-          created_at?: string;
-        };
-        Update: {
-          program_id?: string;
-          user_id?: string;
-          role?: "owner" | "admin" | "staff" | "member";
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      courses: {
-        Row: {
-          id: string;
-          program_id: string;
-          created_by: string;
-          title: string;
-          description: string | null;
-          code: string | null;
-          department_or_domain: string | null;
-          credits_or_weight: number | null;
-          level: string | null;
-          learning_outcomes: string | null;
-          syllabus: string | null;
-          status: string;
-          domain_id: string | null;
-          is_active: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          program_id: string;
-          created_by?: string;
-          title: string;
-          description?: string | null;
-          code?: string | null;
-          department_or_domain?: string | null;
-          credits_or_weight?: number | null;
-          level?: string | null;
-          learning_outcomes?: string | null;
-          syllabus?: string | null;
-          status?: string;
-          domain_id?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          program_id?: string;
-          created_by?: string;
-          title?: string;
-          description?: string | null;
-          code?: string | null;
-          department_or_domain?: string | null;
-          credits_or_weight?: number | null;
-          level?: string | null;
-          learning_outcomes?: string | null;
-          syllabus?: string | null;
-          status?: string;
-          domain_id?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Relationships: [{ foreignKeyName: "courses_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] }, { foreignKeyName: "courses_domain_id_fkey"; columns: ["domain_id"]; isOneToOne: false; referencedRelation: "domains"; referencedColumns: ["id"] }];
-      };
-      domains: {
-        Row: {
-          id: string;
-          created_by: string;
-          code: string | null;
-          title: string;
-          description: string | null;
-          status: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          created_by?: string;
-          code?: string | null;
-          title: string;
-          description?: string | null;
-          status?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          created_by?: string;
-          code?: string | null;
-          title?: string;
-          description?: string | null;
-          status?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      course_prerequisites: {
-        Row: {
-          course_id: string;
-          prerequisite_course_id: string;
-          created_by: string;
-          created_at: string;
-        };
-        Insert: {
-          course_id: string;
-          prerequisite_course_id: string;
-          created_by?: string;
-          created_at?: string;
-        };
-        Update: {
-          course_id?: string;
-          prerequisite_course_id?: string;
-          created_by?: string;
-          created_at?: string;
-        };
-        Relationships: [{ foreignKeyName: "course_prerequisites_prerequisite_course_id_fkey"; columns: ["prerequisite_course_id"]; isOneToOne: false; referencedRelation: "courses"; referencedColumns: ["id"] }];
-      };
-      requirement_blocks: {
-        Row: {
-          id: string;
-          program_id: string;
-          title: string;
-          description: string | null;
-          category: string | null;
-          minimum_courses_required: number | null;
-          minimum_credits_required: number | null;
-          position: number;
-          created_by: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          program_id: string;
-          title: string;
-          description?: string | null;
-          category?: string | null;
-          minimum_courses_required?: number | null;
-          minimum_credits_required?: number | null;
-          position?: number;
-          created_by?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          program_id?: string;
-          title?: string;
-          description?: string | null;
-          category?: string | null;
-          minimum_courses_required?: number | null;
-          minimum_credits_required?: number | null;
-          position?: number;
-          created_by?: string;
-          created_at?: string;
-        };
-        Relationships: [{ foreignKeyName: "requirement_blocks_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] }];
-      };
-      course_requirement_blocks: {
-        Row: {
-          course_id: string;
-          requirement_block_id: string;
-          created_by: string;
-          created_at: string;
-        };
-        Insert: {
-          course_id: string;
-          requirement_block_id: string;
-          created_by?: string;
-          created_at?: string;
-        };
-        Update: {
-          course_id?: string;
-          requirement_block_id?: string;
-          created_by?: string;
-          created_at?: string;
-        };
-        Relationships: [{ foreignKeyName: "course_requirement_blocks_requirement_block_id_fkey"; columns: ["requirement_block_id"]; isOneToOne: false; referencedRelation: "requirement_blocks"; referencedColumns: ["id"] }];
-      };
-      modules: {
-        Row: {
-          id: string;
-          course_id: string;
-          created_by: string;
-          title: string;
-          overview: string | null;
-          position: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          course_id: string;
-          created_by?: string;
-          title: string;
-          overview?: string | null;
-          position?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          course_id?: string;
-          created_by?: string;
-          title?: string;
-          overview?: string | null;
-          position?: number;
-          created_at?: string;
-        };
-        Relationships: [{ foreignKeyName: "modules_course_id_fkey"; columns: ["course_id"]; isOneToOne: false; referencedRelation: "courses"; referencedColumns: ["id"] }];
-      };
-      assignments: {
-        Row: {
-          id: string;
-          module_id: string;
-          created_by: string;
-          title: string;
-          instructions: string;
-          assignment_type: string;
-          due_at: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          module_id: string;
-          created_by?: string;
-          title: string;
-          instructions: string;
-          assignment_type?: string;
-          due_at?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          module_id?: string;
-          created_by?: string;
-          title?: string;
-          instructions?: string;
-          assignment_type?: string;
-          due_at?: string | null;
-          created_at?: string;
-        };
-        Relationships: [{ foreignKeyName: "assignments_module_id_fkey"; columns: ["module_id"]; isOneToOne: false; referencedRelation: "modules"; referencedColumns: ["id"] }];
-      };
-      readings: {
-        Row: {
-          id: string;
-          module_id: string;
-          created_by: string;
-          title: string;
-          author: string | null;
-          source_type: string | null;
-          primary_or_secondary: string | null;
-          tradition_or_era: string | null;
-          pages_or_length: string | null;
-          estimated_hours: number | null;
-          reference_url_or_citation: string | null;
-          status: string;
-          notes: string | null;
-          position: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          module_id: string;
-          created_by?: string;
-          title: string;
-          author?: string | null;
-          source_type?: string | null;
-          primary_or_secondary?: string | null;
-          tradition_or_era?: string | null;
-          pages_or_length?: string | null;
-          estimated_hours?: number | null;
-          reference_url_or_citation?: string | null;
-          status?: string;
-          notes?: string | null;
-          position?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          module_id?: string;
-          created_by?: string;
-          title?: string;
-          author?: string | null;
-          source_type?: string | null;
-          primary_or_secondary?: string | null;
-          tradition_or_era?: string | null;
-          pages_or_length?: string | null;
-          estimated_hours?: number | null;
-          reference_url_or_citation?: string | null;
-          status?: string;
-          notes?: string | null;
-          position?: number;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      submissions: {
-        Row: {
-          id: string;
-          assignment_id: string;
-          user_id: string;
-          content: string;
-          version: number;
-          is_final: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          assignment_id: string;
-          user_id: string;
-          content: string;
-          version?: number;
-          is_final?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          assignment_id?: string;
-          user_id?: string;
-          content?: string;
-          version?: number;
-          is_final?: boolean;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      critiques: {
-        Row: {
-          id: string;
-          submission_id: string;
-          submission_version: number;
-          model: string | null;
-          prompt_version: string | null;
-          overall_verdict: string | null;
-          thesis_strength: string | null;
-          structural_failures: string[];
-          unsupported_claims: string[];
-          vague_terms: string[];
-          strongest_objection: string | null;
-          doctrinal_or_historical_imprecision: string[];
-          rewrite_priorities: string[];
-          score: number | null;
-          critique_json: Json;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          submission_id: string;
-          submission_version?: number;
-          model?: string | null;
-          prompt_version?: string | null;
-          overall_verdict?: string | null;
-          thesis_strength?: string | null;
-          structural_failures?: string[];
-          unsupported_claims?: string[];
-          vague_terms?: string[];
-          strongest_objection?: string | null;
-          doctrinal_or_historical_imprecision?: string[];
-          rewrite_priorities?: string[];
-          score?: number | null;
-          critique_json: Json;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          submission_id?: string;
-          submission_version?: number;
-          model?: string | null;
-          prompt_version?: string | null;
-          overall_verdict?: string | null;
-          thesis_strength?: string | null;
-          structural_failures?: string[];
-          unsupported_claims?: string[];
-          vague_terms?: string[];
-          strongest_objection?: string | null;
-          doctrinal_or_historical_imprecision?: string[];
-          rewrite_priorities?: string[];
-          score?: number | null;
-          critique_json?: Json;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      concepts: {
-        Row: {
-          id: string;
-          title: string;
-          type: string;
-          description: string | null;
-          related_course_id: string | null;
-          related_module_id: string | null;
-          status: string;
-          created_by: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          type?: string;
-          description?: string | null;
-          related_course_id?: string | null;
-          related_module_id?: string | null;
-          status?: string;
-          created_by?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          type?: string;
-          description?: string | null;
-          related_course_id?: string | null;
-          related_module_id?: string | null;
-          status?: string;
-          created_by?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      // ── Abscondata operations tables ──
       profiles: {
         Row: { id: string; email: string; role: "owner" | "va" };
         Insert: { id: string; email: string; role?: "owner" | "va" };
@@ -515,7 +61,7 @@ export interface Database {
           approved_at: string | null; sent_at: string | null;
           failed_at: string | null; rejection_reason: string | null;
           exception_reason_code: string | null; exception_description: string | null;
-          updated_at: string | null;
+          updated_at: string | null; service_key: string | null;
         };
         Insert: {
           id?: number; created_at?: string; client_id?: number | null; title: string;
@@ -532,7 +78,7 @@ export interface Database {
           approved_at?: string | null; sent_at?: string | null;
           failed_at?: string | null; rejection_reason?: string | null;
           exception_reason_code?: string | null; exception_description?: string | null;
-          updated_at?: string | null;
+          updated_at?: string | null; service_key?: string | null;
         };
         Update: {
           id?: number; created_at?: string; client_id?: number | null; title?: string;
@@ -549,7 +95,7 @@ export interface Database {
           approved_at?: string | null; sent_at?: string | null;
           failed_at?: string | null; rejection_reason?: string | null;
           exception_reason_code?: string | null; exception_description?: string | null;
-          updated_at?: string | null;
+          updated_at?: string | null; service_key?: string | null;
         };
         Relationships: [{ foreignKeyName: "tasks_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
       };
@@ -572,6 +118,12 @@ export interface Database {
           description?: string | null; resolution_status?: string | null;
           resolved_by?: string | null; resolved_at?: string | null;
         };
+        Relationships: [];
+      };
+      weekly_reports: {
+        Row: { id: number; created_at: string; client_id: number | null; week_start: string | null; summary: string | null; open_issues: string | null };
+        Insert: { id?: number; created_at?: string; client_id?: number | null; week_start?: string | null; summary?: string | null; open_issues?: string | null };
+        Update: { id?: number; created_at?: string; client_id?: number | null; week_start?: string | null; summary?: string | null; open_issues?: string | null };
         Relationships: [];
       };
       client_configs: {
@@ -655,11 +207,36 @@ export interface Database {
         Update: { id?: number; created_at?: string; task_id?: number | null; log_type?: string | null; message?: string | null; created_by?: string | null };
         Relationships: [];
       };
-      weekly_reports: {
-        Row: { id: number; created_at: string; client_id: number | null; week_start: string | null; summary: string | null; open_issues: string | null };
-        Insert: { id?: number; created_at?: string; client_id?: number | null; week_start?: string | null; summary?: string | null; open_issues?: string | null };
-        Update: { id?: number; created_at?: string; client_id?: number | null; week_start?: string | null; summary?: string | null; open_issues?: string | null };
+      // ── New tables from 004_abscondata_rebuild ──
+      client_services: {
+        Row: { id: string; client_id: number; service_key: string; enabled: boolean; config_json: Json; created_at: string };
+        Insert: { id?: string; client_id: number; service_key: string; enabled?: boolean; config_json?: Json; created_at?: string };
+        Update: { id?: string; client_id?: number; service_key?: string; enabled?: boolean; config_json?: Json; created_at?: string };
+        Relationships: [{ foreignKeyName: "client_services_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
+      };
+      client_platforms: {
+        Row: { id: string; client_id: number; platform_key: string; connection_method: string | null; connection_status: string | null; credentials_ref: string | null; notes: string | null; last_sync_at: string | null; created_at: string };
+        Insert: { id?: string; client_id: number; platform_key: string; connection_method?: string | null; connection_status?: string | null; credentials_ref?: string | null; notes?: string | null; last_sync_at?: string | null; created_at?: string };
+        Update: { id?: string; client_id?: number; platform_key?: string; connection_method?: string | null; connection_status?: string | null; credentials_ref?: string | null; notes?: string | null; last_sync_at?: string | null; created_at?: string };
+        Relationships: [{ foreignKeyName: "client_platforms_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
+      };
+      onboarding_submissions: {
+        Row: { id: string; client_id: number | null; payload_json: Json; status: string; created_at: string };
+        Insert: { id?: string; client_id?: number | null; payload_json: Json; status?: string; created_at?: string };
+        Update: { id?: string; client_id?: number | null; payload_json?: Json; status?: string; created_at?: string };
+        Relationships: [{ foreignKeyName: "onboarding_submissions_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
+      };
+      task_templates: {
+        Row: { id: string; service_key: string; title: string; description: string | null; default_status: string | null; requires_review: boolean | null; sort_order: number | null; created_at: string };
+        Insert: { id?: string; service_key: string; title: string; description?: string | null; default_status?: string | null; requires_review?: boolean | null; sort_order?: number | null; created_at?: string };
+        Update: { id?: string; service_key?: string; title?: string; description?: string | null; default_status?: string | null; requires_review?: boolean | null; sort_order?: number | null; created_at?: string };
         Relationships: [];
+      };
+      imports: {
+        Row: { id: string; client_id: number; import_type: string; source_name: string | null; status: string; storage_key: string | null; summary_json: Json | null; row_count: number | null; created_at: string };
+        Insert: { id?: string; client_id: number; import_type: string; source_name?: string | null; status?: string; storage_key?: string | null; summary_json?: Json | null; row_count?: number | null; created_at?: string };
+        Update: { id?: string; client_id?: number; import_type?: string; source_name?: string | null; status?: string; storage_key?: string | null; summary_json?: Json | null; row_count?: number | null; created_at?: string };
+        Relationships: [{ foreignKeyName: "imports_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
       };
     };
     Views: {};

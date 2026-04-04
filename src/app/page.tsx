@@ -1,107 +1,65 @@
 import Link from "next/link";
 
-const COLORS = {
-  cream: "#F7F5F0",
-  navy: "#1B2A4A",
-  gold: "#B8956A",
-  goldLight: "#D4B896",
-  charcoal: "#2C2C2C",
-  warmGray: "#6B6560",
-  divider: "#E0DCD5",
-  white: "#FFFFFF",
-};
+const services = [
+  {
+    title: "Invoice Operations",
+    description: "Invoice creation, tracking, and status management.",
+    key: "invoice_ops",
+  },
+  {
+    title: "Payment Follow-Up",
+    description: "Overdue account follow-up and collections support.",
+    key: "payment_followup",
+  },
+  {
+    title: "Review Requests",
+    description: "Post-service review request queueing and tracking.",
+    key: "review_requests",
+  },
+  {
+    title: "Weekly Business Summary",
+    description: "Management reporting across all services we run.",
+    key: "weekly_summary",
+  },
+  {
+    title: "Lead & Intake Admin",
+    description: "New inquiry response and intake processing.",
+    key: "lead_intake",
+    addon: true,
+  },
+];
 
-const CALENDLY_URL = "https://calendly.com/abscondata";
+const steps = [
+  { number: "01", title: "We get access to your tools", description: "You share credentials or create user accounts in the systems you already use." },
+  { number: "02", title: "We run your back office on a weekly schedule", description: "Our team logs into your systems, pulls data, drafts communications, and executes tasks on your behalf." },
+  { number: "03", title: "You get a weekly report of everything handled", description: "Every action documented. Full visibility into what was done, what's outstanding, and what needs your attention." },
+];
 
-const modules = [
-  {
-    title: "Revenue Operations",
-    services: [
-      "Invoice cycle management",
-      "Accounts receivable follow-up",
-      "Quote and estimate tracking",
-      "Accounts receivable reporting",
-    ],
-  },
-  {
-    title: "Scheduling & Coordination",
-    services: [
-      "Appointment coordination",
-      "Confirmation and reminder management",
-      "Reschedule and cancellation handling",
-      "Post-service follow-up and review generation",
-    ],
-  },
-  {
-    title: "Records & Reporting",
-    services: [
-      "Document management",
-      "Contract and renewal tracking",
-      "Weekly and monthly reporting",
-    ],
-  },
+const terms = [
+  { label: "Pricing", value: "Flat monthly rate based on scope" },
+  { label: "Commitment", value: "Month-to-month, 30-day cancel" },
+  { label: "Onboarding", value: "Services begin within one week" },
+  { label: "Reporting", value: "Weekly summary of completed work" },
 ];
 
 export default function Home() {
   return (
-    <div
-      style={{
-        fontFamily: "'DM Sans', sans-serif",
-        backgroundColor: COLORS.cream,
-        color: COLORS.charcoal,
-        minHeight: "100vh",
-        lineHeight: 1.7,
-        fontWeight: 400,
-        fontSize: "15px",
-      }}
-    >
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       {/* Nav */}
-      <nav
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "28px 48px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: "22px",
-            fontWeight: 600,
-            color: COLORS.navy,
-            letterSpacing: "0.5px",
-          }}
-        >
+      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-7 md:px-12">
+        <span className="font-[var(--font-serif)] text-xl font-semibold tracking-tight text-[#1B2A4A]">
           Abscondata
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-          <a
-            href={CALENDLY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontSize: "13px",
-              color: COLORS.warmGray,
-              textDecoration: "none",
-            }}
+        </span>
+        <div className="flex items-center gap-8">
+          <Link
+            href="/onboarding"
+            className="text-sm text-[#6B6560] transition-colors hover:text-[var(--text)]"
           >
-            Schedule a Call
-          </a>
+            Get Started
+          </Link>
           <Link
             href="/login"
-            style={{
-              fontSize: "12px",
-              fontWeight: 500,
-              color: COLORS.navy,
-              textDecoration: "none",
-              letterSpacing: "1.8px",
-              textTransform: "uppercase" as const,
-              borderBottom: `1px solid ${COLORS.navy}`,
-              paddingBottom: "2px",
-            }}
+            className="border-b border-[#1B2A4A] pb-0.5 text-xs font-medium uppercase tracking-[0.15em] text-[#1B2A4A]"
           >
             Sign In
           </Link>
@@ -109,352 +67,118 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <header
-        style={{
-          maxWidth: "800px",
-          margin: "0 auto",
-          padding: "120px 48px 100px",
-          textAlign: "center" as const,
-        }}
-      >
-        <h1
-          style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: "50px",
-            fontWeight: 500,
-            color: COLORS.navy,
-            lineHeight: 1.18,
-            marginBottom: "32px",
-          }}
-        >
-          Managed Back-Office Operations
+      <header className="mx-auto max-w-3xl px-6 pb-24 pt-28 text-center md:px-12">
+        <h1 className="text-4xl font-medium leading-tight text-[#1B2A4A] md:text-5xl">
+          Your back office, handled.
         </h1>
-        <p
-          style={{
-            fontSize: "16px",
-            color: COLORS.warmGray,
-            lineHeight: 1.85,
-            maxWidth: "580px",
-            margin: "0 auto 48px",
-            fontWeight: 300,
-          }}
-        >
-          Abscondata provides retained operational support for service
-          companies. Invoicing, scheduling, coordination, records, and
-          reporting, handled on your behalf.
+        <p className="mx-auto mt-8 max-w-xl text-base font-light leading-relaxed text-[#6B6560]">
+          Abscondata runs invoicing, collections, review requests, and reporting
+          for service businesses. You do the work. We handle the rest.
         </p>
-        <a
-          href={CALENDLY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: "inline-block",
-            fontSize: "12px",
-            fontWeight: 500,
-            letterSpacing: "2px",
-            textTransform: "uppercase" as const,
-            color: COLORS.white,
-            backgroundColor: COLORS.navy,
-            padding: "16px 40px",
-            textDecoration: "none",
-          }}
+        <Link
+          href="/onboarding"
+          className="mt-10 inline-block bg-[#1B2A4A] px-10 py-4 text-xs font-medium uppercase tracking-[0.15em] text-white transition-colors hover:bg-[#2a3d66]"
         >
-          Schedule a Call
-        </a>
+          Start Onboarding
+        </Link>
       </header>
 
-      <div
-        style={{
-          width: "60px",
-          height: "1px",
-          backgroundColor: COLORS.gold,
-          margin: "0 auto",
-        }}
-      />
+      {/* Divider */}
+      <div className="mx-auto h-px w-16 bg-[#B8956A]" />
 
       {/* Services */}
-      <section
-        style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-          padding: "96px 48px",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "11px",
-            fontWeight: 500,
-            letterSpacing: "3px",
-            textTransform: "uppercase" as const,
-            color: COLORS.gold,
-            marginBottom: "20px",
-          }}
-        >
+      <section className="mx-auto max-w-5xl px-6 py-24 md:px-12">
+        <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.25em] text-[#B8956A]">
           Services
         </p>
-        <div style={{ marginTop: "56px" }}>
-          {modules.map((m, i) => (
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {services.map((s) => (
             <div
-              key={i}
-              style={{
-                padding: "48px 0",
-                borderBottom:
-                  i < modules.length - 1
-                    ? `1px solid ${COLORS.divider}`
-                    : "none",
-              }}
+              key={s.key}
+              className="rounded-sm border border-[var(--border)] bg-[var(--surface)] p-6"
             >
-              <h3
-                style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "26px",
-                  fontWeight: 600,
-                  color: COLORS.navy,
-                  marginBottom: "12px",
-                }}
-              >
-                {m.title}
-              </h3>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "8px 48px",
-                }}
-              >
-                {m.services.map((s, j) => (
-                  <div
-                    key={j}
-                    style={{
-                      fontSize: "14px",
-                      color: COLORS.charcoal,
-                      lineHeight: 1.6,
-                      paddingLeft: "16px",
-                      position: "relative" as const,
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute" as const,
-                        left: 0,
-                        top: "10px",
-                        width: "4px",
-                        height: "4px",
-                        borderRadius: "50%",
-                        backgroundColor: COLORS.goldLight,
-                      }}
-                    />
-                    {s}
-                  </div>
-                ))}
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-lg font-medium text-[#1B2A4A]">{s.title}</h3>
+                {s.addon && (
+                  <span className="shrink-0 rounded-full bg-[#B8956A]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[#B8956A]">
+                    Add-on
+                  </span>
+                )}
               </div>
+              <p className="mt-2 text-sm font-light leading-relaxed text-[#6B6560]">
+                {s.description}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      <div
-        style={{
-          width: "60px",
-          height: "1px",
-          backgroundColor: COLORS.gold,
-          margin: "0 auto",
-        }}
-      />
+      {/* Divider */}
+      <div className="mx-auto h-px w-16 bg-[#B8956A]" />
 
-      {/* About */}
-      <section
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          padding: "96px 48px",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "11px",
-            fontWeight: 500,
-            letterSpacing: "3px",
-            textTransform: "uppercase" as const,
-            color: COLORS.gold,
-            marginBottom: "20px",
-          }}
-        >
-          About
+      {/* How It Works */}
+      <section className="mx-auto max-w-5xl px-6 py-24 md:px-12">
+        <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.25em] text-[#B8956A]">
+          How It Works
         </p>
-        <p
-          style={{
-            fontSize: "15px",
-            color: COLORS.warmGray,
-            lineHeight: 1.85,
-            maxWidth: "620px",
-            fontWeight: 300,
-          }}
-        >
-          Abscondata is a managed operations firm providing retained back-office
-          support to service businesses. Engagements are scoped during an initial
-          consultation, executed on a fixed weekly schedule, and documented
-          through weekly reporting. All work is performed inside the client's
-          existing tools and systems.
-        </p>
-      </section>
-
-      <div
-        style={{
-          width: "60px",
-          height: "1px",
-          backgroundColor: COLORS.gold,
-          margin: "0 auto",
-        }}
-      />
-
-      {/* Terms */}
-      <section
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          padding: "96px 48px",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "11px",
-            fontWeight: 500,
-            letterSpacing: "3px",
-            textTransform: "uppercase" as const,
-            color: COLORS.gold,
-            marginBottom: "20px",
-          }}
-        >
-          Engagement Terms
-        </p>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr 1fr",
-            gap: "32px",
-            marginTop: "24px",
-          }}
-        >
-          {[
-            { label: "Pricing", value: "Flat monthly rate based on scope." },
-            { label: "Commitment", value: "Month to month. 30-day cancellation." },
-            { label: "Onboarding", value: "Services begin within one week." },
-            { label: "Reporting", value: "Weekly summary of completed work." },
-          ].map((term) => (
-            <div key={term.label}>
-              <div
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: COLORS.navy,
-                  marginBottom: "8px",
-                }}
-              >
-                {term.label}
-              </div>
-              <div
-                style={{
-                  fontSize: "14px",
-                  color: COLORS.warmGray,
-                  lineHeight: 1.75,
-                  fontWeight: 300,
-                }}
-              >
-                {term.value}
-              </div>
+        <div className="mt-12 grid gap-12 md:grid-cols-3">
+          {steps.map((step) => (
+            <div key={step.number}>
+              <span className="text-sm font-medium text-[#B8956A]">{step.number}</span>
+              <h3 className="mt-3 text-lg font-medium text-[#1B2A4A]">{step.title}</h3>
+              <p className="mt-2 text-sm font-light leading-relaxed text-[#6B6560]">
+                {step.description}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Who We Work With */}
-      <section style={{ backgroundColor: COLORS.navy }}>
-        <div
-          style={{
-            maxWidth: "900px",
-            margin: "0 auto",
-            padding: "96px 48px",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "11px",
-              fontWeight: 500,
-              letterSpacing: "3px",
-              textTransform: "uppercase" as const,
-              color: COLORS.goldLight,
-              marginBottom: "20px",
-            }}
-          >
+      <section className="bg-[#1B2A4A]">
+        <div className="mx-auto max-w-4xl px-6 py-24 md:px-12">
+          <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.25em] text-[#D4B896]">
             Who We Work With
           </p>
-          <h2
-            style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "36px",
-              fontWeight: 500,
-              color: COLORS.white,
-              lineHeight: 1.25,
-              marginBottom: "24px",
-            }}
-          >
-            Service businesses where operational tasks
-            <br />
-            compete with billable work.
+          <h2 className="text-3xl font-medium leading-snug text-white md:text-4xl">
+            Service businesses where operational tasks compete with billable work.
           </h2>
-          <p
-            style={{
-              fontSize: "15px",
-              color: "rgba(255,255,255,0.6)",
-              lineHeight: 1.85,
-              maxWidth: "620px",
-              fontWeight: 300,
-            }}
-          >
+          <p className="mt-6 max-w-xl text-base font-light leading-relaxed text-white/60">
             Trades, construction, facilities, home services, health and wellness
-            — companies where the people doing the work are also managing the
-            invoicing, scheduling, and records. Abscondata handles the
-            operational load so revenue-generating time stays protected.
+            — companies with 2-50 employees where the people doing the work are
+            also managing the invoicing, scheduling, and records.
           </p>
         </div>
       </section>
 
+      {/* Divider */}
+      <div className="mx-auto h-px w-16 bg-[#B8956A]" />
+
+      {/* Engagement Terms */}
+      <section className="mx-auto max-w-5xl px-6 py-24 md:px-12">
+        <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.25em] text-[#B8956A]">
+          Engagement Terms
+        </p>
+        <div className="mt-8 grid grid-cols-2 gap-8 md:grid-cols-4">
+          {terms.map((t) => (
+            <div key={t.label}>
+              <p className="text-sm font-semibold text-[#1B2A4A]">{t.label}</p>
+              <p className="mt-2 text-sm font-light leading-relaxed text-[#6B6560]">
+                {t.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer style={{ borderTop: `1px solid ${COLORS.divider}` }}>
-        <div
-          style={{
-            maxWidth: "1100px",
-            margin: "0 auto",
-            padding: "32px 48px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: "13px",
-            fontWeight: 300,
-          }}
-        >
-          <div style={{ color: COLORS.warmGray }}>© 2026 Abscondata</div>
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-              alignItems: "center",
-            }}
-          >
-            <a
-              href="mailto:info@abscondata.com"
-              style={{ color: COLORS.warmGray, textDecoration: "none" }}
-            >
-              info@abscondata.com
-            </a>
-            <span style={{ color: COLORS.divider }}>·</span>
-            <a
-              href="tel:+17724868112"
-              style={{ color: COLORS.warmGray, textDecoration: "none" }}
-            >
-              (772) 486-8112
-            </a>
+      <footer className="border-t border-[var(--border)]">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-8 text-sm font-light text-[#6B6560] md:px-12">
+          <span>&copy; 2026 Abscondata</span>
+          <div className="flex items-center gap-5">
+            <a href="mailto:robin@abscondata.com">robin@abscondata.com</a>
+            <span className="text-[var(--border)]">&middot;</span>
+            <a href="tel:+17724868112">(772) 486-8112</a>
           </div>
         </div>
       </footer>

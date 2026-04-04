@@ -17,10 +17,12 @@ export function DashboardShell({ userEmail, role, children }: { userEmail: strin
 
   const ownerLinks = [
     { href: "/dashboard", label: "Overview" },
-    { href: "/dashboard/tasks", label: "Tasks" },
+    { href: "/dashboard/queue", label: "Queue" },
     { href: "/dashboard/clients", label: "Clients" },
+    { href: "/dashboard/onboarding", label: "Onboarding" },
+    { href: "/dashboard/imports", label: "Imports" },
+    { href: "/dashboard/tasks", label: "Tasks" },
     { href: "/dashboard/exceptions", label: "Exceptions" },
-    { href: "/dashboard/reports", label: "Reports" },
   ];
   const links = role === "owner" ? ownerLinks : [{ href: "/dashboard", label: "My Tasks" }];
 
