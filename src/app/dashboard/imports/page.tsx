@@ -22,27 +22,36 @@ export default async function ImportsPage() {
       <ImportForm clients={clients ?? []} />
 
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Import History</h3>
+        <h3 className="mb-3 text-sm font-semibold text-zinc-900">Import History</h3>
         {(!imports || imports.length === 0) ? (
-          <p className="text-sm text-zinc-500">No imports yet.</p>
+          <p className="text-sm text-zinc-400">No imports yet.</p>
         ) : (
-          <div className="space-y-2">
-            {imports.map((imp) => (
-              <div key={imp.id} className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-                <div>
-                  <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{imp.import_type}</span>
-                  <span className="ml-2 text-xs text-zinc-500">{imp.client_id ? clientMap[imp.client_id] || "" : ""}</span>
-                  {imp.source_name && <span className="ml-2 text-xs text-zinc-400">{imp.source_name}</span>}
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-zinc-500">{imp.row_count} rows</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${imp.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"}`}>
-                    {imp.status}
-                  </span>
-                  <span className="text-xs text-zinc-400">{new Date(imp.created_at).toLocaleDateString()}</span>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-hidden rounded-lg border border-zinc-200">
+            <table className="w-full text-sm">
+              <thead className="border-b border-zinc-200 bg-zinc-50">
+                <tr>
+                  {["Type", "Client", "File", "Rows", "Status", "Date"].map((h) => (
+                    <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {imports.map((imp) => (
+                  <tr key={imp.id} className="bg-white">
+                    <td className="px-4 py-2.5 font-medium text-zinc-900">{imp.import_type}</td>
+                    <td className="px-4 py-2.5 text-zinc-600">{imp.client_id ? clientMap[imp.client_id] || "" : ""}</td>
+                    <td className="px-4 py-2.5 text-zinc-500">{imp.source_name || "—"}</td>
+                    <td className="px-4 py-2.5 text-zinc-600">{imp.row_count}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${imp.status === "completed" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-zinc-50 text-zinc-600 border border-zinc-200"}`}>
+                        {imp.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-zinc-400">{new Date(imp.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

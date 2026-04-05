@@ -17,11 +17,11 @@ const SERVICE_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  READY_FOR_REVIEW: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  WAITING_ON_MISSING_DATA: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  APPROVED: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  SENT: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  NEW: "bg-blue-50 text-blue-700 border border-blue-200",
+  READY_FOR_REVIEW: "bg-amber-50 text-amber-700 border border-amber-200",
+  WAITING_ON_MISSING_DATA: "bg-orange-50 text-orange-700 border border-orange-200",
+  APPROVED: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  SENT: "bg-violet-50 text-violet-700 border border-violet-200",
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -35,7 +35,6 @@ const FIELD_LABELS: Record<string, string> = {
   notes: "Notes",
 };
 
-// Order for displaying normalized fields
 const FIELD_ORDER = [
   "customer_name", "customer_email", "customer_phone",
   "invoice_number", "amount", "due_date", "days_overdue", "notes",
@@ -49,13 +48,15 @@ function NormalizedFields({ data }: { data: Record<string, Json | undefined> }) 
   if (entries.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-x-6 gap-y-2 lg:grid-cols-4">
-      {entries.map((e) => (
-        <div key={e.key}>
-          <dt className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">{e.label}</dt>
-          <dd className="mt-0.5 text-sm text-zinc-900 dark:text-zinc-100">{e.value}</dd>
-        </div>
-      ))}
+    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+      <div className="grid grid-cols-2 gap-x-8 gap-y-3 lg:grid-cols-4">
+        {entries.map((e) => (
+          <div key={e.key}>
+            <dt className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">{e.label}</dt>
+            <dd className="mt-0.5 text-sm font-medium text-zinc-900">{e.value}</dd>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -65,17 +66,19 @@ function RawPayload({ data }: { data: Record<string, Json | undefined> }) {
   if (entries.length === 0) return null;
 
   return (
-    <details className="mt-2">
+    <details className="mt-3">
       <summary className="cursor-pointer text-[10px] font-medium uppercase tracking-wider text-zinc-400 hover:text-zinc-600">
         All imported fields ({entries.length})
       </summary>
-      <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 lg:grid-cols-4">
-        {entries.map(([k, v]) => (
-          <div key={k} className="flex gap-1 text-xs">
-            <span className="font-medium text-zinc-500">{k}:</span>
-            <span className="text-zinc-700 dark:text-zinc-300">{String(v)}</span>
-          </div>
-        ))}
+      <div className="mt-2 rounded-lg border border-zinc-100 bg-white p-3">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1 lg:grid-cols-4">
+          {entries.map(([k, v]) => (
+            <div key={k} className="flex gap-1.5 text-xs">
+              <span className="font-medium text-zinc-500">{k}:</span>
+              <span className="text-zinc-900">{String(v)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </details>
   );
@@ -105,9 +108,9 @@ export function QueueList({
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Work Queue</h2>
-        <div className="flex items-center gap-1">
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-zinc-900">Work Queue</h2>
+        <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-white p-1">
           {[
             { key: "all", label: "All" },
             { key: "NEW", label: "New" },
@@ -118,10 +121,10 @@ export function QueueList({
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 filter === f.key
-                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  ? "bg-zinc-900 text-white"
+                  : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
               }`}
             >
               {f.label}
@@ -133,7 +136,7 @@ export function QueueList({
       </div>
 
       {filtered.length === 0 && (
-        <p className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="py-12 text-center text-sm text-zinc-400">
           {filter === "all" ? "Queue is empty. All caught up." : `No ${filter.toLowerCase().replace(/_/g, " ")} tasks.`}
         </p>
       )}
@@ -207,46 +210,46 @@ function TaskRow({
   }
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+    <div className={`rounded-lg border bg-white ${expanded ? "border-zinc-300 shadow-sm" : "border-zinc-200"}`}>
       {/* Collapsed header */}
-      <button onClick={onToggle} className="flex w-full items-center justify-between px-4 py-3 text-left">
+      <button onClick={onToggle} className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors rounded-lg">
         <div className="flex items-center gap-3 min-w-0">
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[task.status || "NEW"] || STATUS_COLORS.NEW}`}>
-            {task.status}
+          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[task.status || "NEW"] || STATUS_COLORS.NEW}`}>
+            {(task.status || "NEW").replace(/_/g, " ")}
           </span>
-          <span className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{task.title}</span>
+          <span className="truncate text-sm font-medium text-zinc-900">{task.title}</span>
         </div>
-        <div className="flex shrink-0 items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-          <span className="font-medium">{clientName}</span>
-          <span>{SERVICE_LABELS[task.service_key || ""] || task.service_key || ""}</span>
-          {task.due_at && <span>{new Date(task.due_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
-          <span className="text-zinc-300 dark:text-zinc-600">{expanded ? "▲" : "▼"}</span>
+        <div className="flex shrink-0 items-center gap-4 text-xs">
+          <span className="font-medium text-zinc-700">{clientName}</span>
+          <span className="text-zinc-400">{SERVICE_LABELS[task.service_key || ""] || task.service_key || ""}</span>
+          {task.due_at && <span className="text-zinc-400">{new Date(task.due_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+          <span className="text-zinc-300">{expanded ? "▲" : "▼"}</span>
         </div>
       </button>
 
       {/* Expanded workspace */}
       {expanded && (
-        <div className="border-t border-zinc-100 dark:border-zinc-800">
+        <div className="border-t border-zinc-200">
           {/* Context bar */}
-          <div className="flex items-center gap-4 border-b border-zinc-100 bg-zinc-50 px-4 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">{clientName}</span>
-            <span className="text-zinc-400">·</span>
-            <span className="text-zinc-500">{SERVICE_LABELS[task.service_key || ""] || task.service_key}</span>
+          <div className="flex flex-wrap items-center gap-3 border-b border-zinc-100 bg-zinc-50 px-4 py-2.5 text-xs">
+            <span className="font-semibold text-zinc-900">{clientName}</span>
+            <span className="text-zinc-300">|</span>
+            <span className="text-zinc-600">{SERVICE_LABELS[task.service_key || ""] || task.service_key}</span>
             {task.recipient_name && (
               <>
-                <span className="text-zinc-400">·</span>
-                <span className="text-zinc-500">To: {task.recipient_name}</span>
+                <span className="text-zinc-300">|</span>
+                <span className="text-zinc-600">To: <span className="font-medium text-zinc-900">{task.recipient_name}</span></span>
               </>
             )}
             {task.recipient_email && (
-              <span className="text-zinc-400">&lt;{task.recipient_email}&gt;</span>
+              <span className="text-zinc-500">&lt;{task.recipient_email}&gt;</span>
             )}
             {task.source_system === "csv_import" && (
-              <span className="rounded bg-zinc-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">CSV Import</span>
+              <span className="rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-zinc-500">CSV Import</span>
             )}
           </div>
 
-          <div className="space-y-4 px-4 py-4">
+          <div className="space-y-5 px-5 py-5">
             {/* Source data — normalized fields */}
             {Object.keys(normalized).some((k) => normalized[k] && String(normalized[k]).trim()) && (
               <div>
@@ -258,61 +261,61 @@ function TaskRow({
             {/* Task description */}
             {task.notes && (
               <div>
-                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-zinc-400">Task Description</label>
-                <p className="text-sm text-zinc-700 dark:text-zinc-300">{task.notes}</p>
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Task Description</label>
+                <p className="text-sm text-zinc-700">{task.notes}</p>
               </div>
             )}
 
             {/* Rejection info */}
             {task.rejection_reason && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 dark:border-red-800 dark:bg-red-900/20">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-red-400">Previously Rejected</span>
-                <p className="mt-0.5 text-sm text-red-700 dark:text-red-400">{task.rejection_reason}</p>
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-red-500">Previously Rejected</span>
+                <p className="mt-1 text-sm font-medium text-red-800">{task.rejection_reason}</p>
               </div>
             )}
 
             {/* Draft area */}
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-5 lg:grid-cols-2">
               <div>
-                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                   AI Draft
-                  <span className="ml-1 font-normal normal-case tracking-normal text-zinc-300">(auto-generated or paste here)</span>
+                  <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-400">(auto-generated or paste here)</span>
                 </label>
                 <textarea
                   value={aiDraft}
                   onChange={(e) => setAiDraft(e.target.value)}
                   onBlur={() => saveDraft("ai_draft", aiDraft)}
                   rows={8}
-                  className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                   placeholder="Draft email, message, or notes..."
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                   Final Draft
-                  <span className="ml-1 font-normal normal-case tracking-normal text-zinc-300">(edit before approving)</span>
+                  <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-400">(edit before approving)</span>
                 </label>
                 <textarea
                   value={editedDraft}
                   onChange={(e) => setEditedDraft(e.target.value)}
                   onBlur={() => saveDraft("edited_draft", editedDraft)}
                   rows={8}
-                  className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                   placeholder="Final version — what actually gets sent..."
                 />
               </div>
             </div>
 
-            {/* Subject line (for email tasks) */}
+            {/* Subject line */}
             {(task.service_key === "payment_followup" || task.service_key === "review_requests") && (
               <div>
-                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-zinc-400">Subject Line</label>
-                <p className="text-sm text-zinc-700 dark:text-zinc-300">{task.subject_line || "—"}</p>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Subject Line</label>
+                <p className="text-sm font-medium text-zinc-900">{task.subject_line || "—"}</p>
               </div>
             )}
 
             {/* Timestamps */}
-            <div className="flex flex-wrap gap-4 text-[10px] text-zinc-400">
+            <div className="flex flex-wrap gap-5 text-xs text-zinc-400">
               {task.created_at && <span>Created: {new Date(task.created_at).toLocaleString()}</span>}
               {task.approved_at && <span>Approved: {new Date(task.approved_at).toLocaleString()}</span>}
               {task.sent_at && <span>Sent: {new Date(task.sent_at).toLocaleString()}</span>}
@@ -320,12 +323,12 @@ function TaskRow({
             </div>
 
             {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+            <div className="flex flex-wrap items-center gap-3 border-t border-zinc-200 pt-4">
               {task.status === "NEW" && (
                 <button
                   onClick={() => handleAction("READY_FOR_REVIEW")}
                   disabled={loading}
-                  className="rounded-md bg-zinc-900 px-4 py-2 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                  className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
                 >
                   Start Working
                 </button>
@@ -335,14 +338,14 @@ function TaskRow({
                   <button
                     onClick={() => handleAction("APPROVED")}
                     disabled={loading}
-                    className="rounded-md bg-green-700 px-4 py-2 text-xs font-medium text-white hover:bg-green-600 disabled:opacity-50"
+                    className="rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                   >
                     Approve
                   </button>
                   <button
                     onClick={() => setShowReject(!showReject)}
                     disabled={loading}
-                    className="rounded-md bg-zinc-200 px-4 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-700 dark:text-zinc-200"
+                    className="rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
                   >
                     Reject
                   </button>
@@ -352,7 +355,7 @@ function TaskRow({
                 <button
                   onClick={() => handleAction("SENT")}
                   disabled={loading}
-                  className="rounded-md bg-blue-700 px-4 py-2 text-xs font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+                  className="rounded-lg bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   Mark Sent
                 </button>
@@ -361,7 +364,7 @@ function TaskRow({
                 <button
                   onClick={() => handleAction("CLOSED")}
                   disabled={loading}
-                  className="rounded-md bg-zinc-600 px-4 py-2 text-xs font-medium text-white hover:bg-zinc-500 disabled:opacity-50"
+                  className="rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
                 >
                   Close Task
                 </button>
@@ -370,7 +373,7 @@ function TaskRow({
                 <button
                   onClick={() => handleAction("READY_FOR_REVIEW")}
                   disabled={loading}
-                  className="rounded-md bg-zinc-900 px-4 py-2 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                  className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
                 >
                   Data Received → Review
                 </button>
@@ -379,20 +382,20 @@ function TaskRow({
 
             {/* Reject reason input */}
             {showReject && (
-              <div className="flex items-end gap-2">
+              <div className="flex items-end gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
                 <div className="flex-1">
-                  <label className="mb-1 block text-xs text-zinc-500">Rejection reason</label>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Rejection reason</label>
                   <input
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
-                    className="w-full rounded-md border border-zinc-200 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
                     placeholder="Why is this being sent back?"
                   />
                 </div>
                 <button
                   onClick={() => handleAction("NEW", { rejection_reason: rejectReason })}
                   disabled={loading || !rejectReason}
-                  className="rounded-md bg-red-700 px-4 py-2 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50"
+                  className="rounded-lg bg-red-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
                 >
                   Confirm Reject
                 </button>

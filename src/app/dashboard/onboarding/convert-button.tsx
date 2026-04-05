@@ -23,7 +23,7 @@ export function ConvertButton({ submissionId }: { submissionId: string }) {
     <button
       onClick={handleConvert}
       disabled={loading}
-      className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+      className="rounded-lg bg-zinc-900 px-4 py-2 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
     >
       {loading ? "Converting..." : "Convert to Client"}
     </button>

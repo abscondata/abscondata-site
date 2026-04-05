@@ -61,7 +61,6 @@ export function ImportForm({ clients }: { clients: { id: number; name: string }[
       const parsed = parseCSV(text);
       setHeaders(parsed.headers);
       setRows(parsed.rows);
-      // Auto-guess column mappings
       const guessed: Record<string, string> = {};
       parsed.headers.forEach((h) => {
         const g = guessMapping(h);
@@ -76,15 +75,12 @@ export function ImportForm({ clients }: { clients: { id: number; name: string }[
     setColumnMap((prev) => ({ ...prev, [csvCol]: field }));
   }
 
-  // Remap rows using the column mapping before sending to server
   function remapRows(): Record<string, string>[] {
     return rows.map((row) => {
       const mapped: Record<string, string> = {};
-      // Keep all original columns
       for (const [csvCol, val] of Object.entries(row)) {
         mapped[csvCol] = val;
       }
-      // Add normalized field names based on mapping
       for (const [csvCol, field] of Object.entries(columnMap)) {
         if (field && row[csvCol]) {
           mapped[field] = row[csvCol];
@@ -109,56 +105,54 @@ export function ImportForm({ clients }: { clients: { id: number; name: string }[
     }
   }
 
-  const inputClasses = "rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
-
   return (
     <div>
-      <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">Import Data</h2>
+      <h2 className="mb-5 text-lg font-semibold text-zinc-900">Import Data</h2>
 
       {result && (
-        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
-          <p className="text-sm font-medium text-green-700 dark:text-green-400">
+        <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <p className="text-sm font-medium text-emerald-800">
             Import complete — {result.taskCount} tasks created.
           </p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="grid gap-4 sm:grid-cols-3">
+      <form onSubmit={handleSubmit} className="space-y-5 rounded-lg border border-zinc-200 bg-white p-6">
+        <div className="grid gap-5 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Client</label>
-            <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className={`w-full ${inputClasses}`}>
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Client</label>
+            <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none">
               <option value="">Select client...</option>
               {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Import Type</label>
-            <select value={importType} onChange={(e) => setImportType(e.target.value)} className={`w-full ${inputClasses}`}>
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Import Type</label>
+            <select value={importType} onChange={(e) => setImportType(e.target.value)} className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none">
               <option value="overdue_accounts">Overdue Accounts</option>
               <option value="invoices">Invoices</option>
               <option value="customers">Customers</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">CSV File</label>
-            <input type="file" accept=".csv" onChange={handleFile} className="w-full text-sm text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-700 dark:text-zinc-400 dark:file:bg-zinc-800 dark:file:text-zinc-300" />
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">CSV File</label>
+            <input type="file" accept=".csv" onChange={handleFile} className="w-full text-sm text-zinc-600 file:mr-3 file:rounded-lg file:border file:border-zinc-300 file:bg-white file:px-3 file:py-2 file:text-xs file:font-semibold file:text-zinc-700 hover:file:bg-zinc-50" />
           </div>
         </div>
 
         {/* Column Mapping */}
         {headers.length > 0 && (
           <div>
-            <p className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">Column Mapping</p>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Column Mapping</label>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {headers.map((h) => (
-                <div key={h} className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate text-xs text-zinc-700 dark:text-zinc-300" title={h}>{h}</span>
-                  <span className="text-zinc-400">→</span>
+                <div key={h} className="flex items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
+                  <span className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-700" title={h}>{h}</span>
+                  <span className="text-zinc-300">→</span>
                   <select
                     value={columnMap[h] || ""}
                     onChange={(e) => updateMapping(h, e.target.value)}
-                    className="flex-1 rounded border border-zinc-200 px-2 py-1 text-xs dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                    className="flex-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-zinc-400 focus:outline-none"
                   >
                     <option value="">(skip)</option>
                     {KNOWN_FIELDS.map((f) => (
@@ -174,25 +168,25 @@ export function ImportForm({ clients }: { clients: { id: number; name: string }[
         {/* Preview */}
         {rows.length > 0 && (
           <div>
-            <p className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">Preview ({rows.length} rows total, showing first 5)</p>
-            <div className="overflow-x-auto rounded border border-zinc-200 dark:border-zinc-700">
+            <label className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Preview ({rows.length} rows total, showing first 5)</label>
+            <div className="overflow-x-auto rounded-lg border border-zinc-200">
               <table className="w-full text-xs">
-                <thead className="bg-zinc-50 dark:bg-zinc-800">
+                <thead className="border-b border-zinc-200 bg-zinc-50">
                   <tr>
                     {headers.map((h) => (
-                      <th key={h} className="px-3 py-1.5 text-left font-medium text-zinc-600 dark:text-zinc-400">
+                      <th key={h} className="px-3 py-2 text-left font-semibold text-zinc-600">
                         {h}
                         {columnMap[h] && (
-                          <span className="ml-1 font-normal text-blue-500">→ {columnMap[h].replace(/_/g, " ")}</span>
+                          <span className="ml-1 font-normal text-blue-600">→ {columnMap[h].replace(/_/g, " ")}</span>
                         )}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tbody className="divide-y divide-zinc-100">
                   {rows.slice(0, 5).map((row, i) => (
-                    <tr key={i}>
-                      {headers.map((h) => <td key={h} className="px-3 py-1.5 text-zinc-700 dark:text-zinc-300">{row[h]}</td>)}
+                    <tr key={i} className="bg-white">
+                      {headers.map((h) => <td key={h} className="px-3 py-2 text-zinc-900">{row[h]}</td>)}
                     </tr>
                   ))}
                 </tbody>
@@ -204,7 +198,7 @@ export function ImportForm({ clients }: { clients: { id: number; name: string }[
         <button
           type="submit"
           disabled={loading || !clientId || rows.length === 0}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
         >
           {loading ? "Importing..." : `Import ${rows.length} rows`}
         </button>
