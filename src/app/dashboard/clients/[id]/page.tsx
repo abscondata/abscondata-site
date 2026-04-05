@@ -27,6 +27,15 @@ const STATUS_COLORS: Record<string, string> = {
   error: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
+const TASK_STATUS_COLORS: Record<string, string> = {
+  NEW: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  READY_FOR_REVIEW: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  WAITING_ON_MISSING_DATA: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  APPROVED: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  SENT: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  CLOSED: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500",
+};
+
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
@@ -47,9 +56,21 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   ] = await Promise.all([
     supabase.from("client_services").select("*").eq("client_id", client.id).order("service_key"),
     supabase.from("client_platforms").select("*").eq("client_id", client.id).order("platform_key"),
-    supabase.from("tasks").select("*").eq("client_id", client.id).neq("status", "CLOSED").order("created_at", { ascending: false }).limit(20),
+    supabase.from("tasks").select("*").eq("client_id", client.id).order("created_at", { ascending: false }).limit(30),
     supabase.from("imports").select("*").eq("client_id", client.id).order("created_at", { ascending: false }).limit(10),
   ]);
+
+  // Fetch source data for tasks
+  const taskIds = (tasks ?? []).map((t) => t.id);
+  const { data: sourceData } = taskIds.length > 0
+    ? await supabase.from("task_source_data").select("*").in("task_id", taskIds)
+    : { data: [] };
+  const sourceMap = Object.fromEntries(
+    (sourceData ?? []).map((sd) => [sd.task_id!, sd])
+  );
+
+  const activeTasks = (tasks ?? []).filter((t) => t.status !== "CLOSED");
+  const closedTasks = (tasks ?? []).filter((t) => t.status === "CLOSED");
 
   return (
     <div className="space-y-8">
@@ -116,39 +137,75 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         )}
       </section>
 
-      {/* Tasks */}
+      {/* Active Tasks */}
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Active Tasks</h3>
-        {(!tasks || tasks.length === 0) ? (
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Active Tasks ({activeTasks.length})</h3>
+          <Link href="/dashboard/queue" className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400">
+            Open Queue →
+          </Link>
+        </div>
+        {activeTasks.length === 0 ? (
           <p className="text-sm text-zinc-500">No active tasks.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
-                <tr>
-                  {["Title", "Service", "Status", "Due"].map((h) => (
-                    <th key={h} className="px-4 py-2 font-medium text-zinc-600 dark:text-zinc-400">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {tasks.map((t) => (
-                  <tr key={t.id} className="bg-white dark:bg-zinc-900/50">
-                    <td className="px-4 py-2 text-zinc-900 dark:text-zinc-100">{t.title}</td>
-                    <td className="px-4 py-2 text-zinc-500 dark:text-zinc-400">{SERVICE_LABELS[t.service_key || ""] || t.service_key || "—"}</td>
-                    <td className="px-4 py-2 text-zinc-500 dark:text-zinc-400">{t.status || "—"}</td>
-                    <td className="px-4 py-2 text-zinc-500 dark:text-zinc-400">{t.due_at ? new Date(t.due_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-2">
+            {activeTasks.map((t) => {
+              const sd = sourceMap[t.id];
+              const normalized = (sd?.normalized_fields_json as Record<string, string | null>) || {};
+              return (
+                <div key={t.id} className="rounded-lg border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${TASK_STATUS_COLORS[t.status || "NEW"] || TASK_STATUS_COLORS.NEW}`}>
+                        {t.status}
+                      </span>
+                      <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{t.title}</span>
+                    </div>
+                    <span className="text-xs text-zinc-500">{SERVICE_LABELS[t.service_key || ""] || t.service_key || "—"}</span>
+                  </div>
+                  {/* Show key source data inline */}
+                  {(normalized.customer_name || normalized.amount || normalized.invoice_number) && (
+                    <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-zinc-500">
+                      {normalized.customer_name && <span>{normalized.customer_name}</span>}
+                      {normalized.invoice_number && <span>Inv #{normalized.invoice_number}</span>}
+                      {normalized.amount && <span>{normalized.amount}</span>}
+                      {normalized.days_overdue && <span>{normalized.days_overdue} days overdue</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
 
+      {/* Closed Tasks */}
+      {closedTasks.length > 0 && (
+        <section>
+          <details>
+            <summary className="cursor-pointer text-sm font-semibold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400">
+              Closed Tasks ({closedTasks.length})
+            </summary>
+            <div className="mt-2 space-y-1">
+              {closedTasks.map((t) => (
+                <div key={t.id} className="flex items-center justify-between rounded border border-zinc-100 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  <span className="text-xs text-zinc-500">{t.title}</span>
+                  <span className="text-[10px] text-zinc-400">{t.sent_at ? new Date(t.sent_at).toLocaleDateString() : ""}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        </section>
+      )}
+
       {/* Imports */}
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Import History</h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Import History</h3>
+          <Link href="/dashboard/imports" className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400">
+            Import Data →
+          </Link>
+        </div>
         {(!imports || imports.length === 0) ? (
           <p className="text-sm text-zinc-500">No imports yet.</p>
         ) : (
