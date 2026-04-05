@@ -19,11 +19,9 @@ export function DashboardShell({ userEmail, role, children }: { userEmail: strin
     { href: "/dashboard", label: "Overview" },
     { href: "/dashboard/queue", label: "Queue" },
     { href: "/dashboard/clients", label: "Clients" },
-    { href: "/dashboard/onboarding", label: "Onboarding" },
     { href: "/dashboard/imports", label: "Imports" },
     { href: "/dashboard/outreach", label: "Outreach" },
-    { href: "/dashboard/tasks", label: "Tasks" },
-    { href: "/dashboard/exceptions", label: "Exceptions" },
+    { href: "/dashboard/onboarding", label: "Onboarding" },
   ];
   const links = role === "owner" ? ownerLinks : [{ href: "/dashboard", label: "My Tasks" }];
 

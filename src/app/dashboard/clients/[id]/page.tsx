@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ServiceToggle } from "./service-toggle";
+import { PlatformStatusDropdown } from "./platform-status";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -127,9 +128,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                   )}
                   {p.notes && <span className="ml-2 text-xs text-zinc-400">{p.notes}</span>}
                 </div>
-                <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[p.connection_status || "not_connected"] || STATUS_COLORS.not_connected}`}>
-                  {(p.connection_status || "not_connected").replace(/_/g, " ")}
-                </span>
+                <PlatformStatusDropdown platformId={p.id} currentStatus={p.connection_status || "not_connected"} />
               </div>
             ))}
           </div>

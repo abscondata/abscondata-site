@@ -17,8 +17,6 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  // Don't redirect to /login if profile is missing — that causes a loop.
-  // The layout already tries to auto-create the profile.
   const role = profile?.role ?? "va";
   const email = profile?.email ?? user.email ?? "";
 
@@ -36,21 +34,21 @@ export default async function DashboardPage() {
   const [
     { data: clients },
     { data: tasks },
-    { data: exceptions },
-    { data: reports },
+    { count: pendingOnboarding },
   ] = await Promise.all([
     supabase.from("clients").select("*").order("name"),
-    supabase.from("tasks").select("*").neq("status", "CLOSED").order("due_at", { ascending: true }).limit(20),
-    supabase.from("exceptions").select("*").neq("resolution_status", "resolved").order("created_at", { ascending: false }).limit(10),
-    supabase.from("weekly_reports").select("*").order("week_start", { ascending: false }).limit(10),
+    supabase.from("tasks").select("*").neq("status", "CLOSED").order("created_at", { ascending: false }).limit(20),
+    supabase.from("onboarding_submissions").select("*", { count: "exact", head: true }).eq("status", "pending"),
   ]);
+
+  const clientMap = Object.fromEntries((clients ?? []).map((c) => [c.id, c.name]));
 
   return (
     <OwnerOverview
       clients={clients ?? []}
       tasks={tasks ?? []}
-      exceptions={exceptions ?? []}
-      reports={reports ?? []}
+      pendingOnboarding={pendingOnboarding ?? 0}
+      clientMap={clientMap}
     />
   );
 }
