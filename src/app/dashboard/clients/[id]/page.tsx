@@ -105,6 +105,40 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         )}
       </div>
 
+      {/* Onboarding Progress */}
+      {platforms && platforms.length > 0 && (() => {
+        const connected = platforms.filter((p) => p.connection_status === "connected").length;
+        const total = platforms.length;
+        const allConnected = connected === total;
+
+        if (allConnected) return null;
+
+        const statusDot: Record<string, string> = {
+          connected: "bg-emerald-500",
+          credentials_received: "bg-amber-400",
+          error: "bg-red-500",
+          not_connected: "bg-zinc-300",
+        };
+
+        return (
+          <section className="rounded-lg border border-amber-200 bg-amber-50 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">Onboarding Progress</h3>
+              <span className="text-xs font-semibold text-amber-700">{connected} of {total} platforms connected</span>
+            </div>
+            <div className="space-y-2">
+              {platforms.map((p) => (
+                <div key={p.id} className="flex items-center gap-3">
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${statusDot[p.connection_status || "not_connected"] || statusDot.not_connected}`} />
+                  <span className="text-sm text-zinc-900">{PLATFORM_LABELS[p.platform_key] || p.platform_key}</span>
+                  <span className="text-xs text-zinc-500">{(p.connection_status || "not_connected").replace(/_/g, " ")}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
+
       {/* Services */}
       <section>
         <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Services</h3>

@@ -94,3 +94,18 @@ export async function convertSubmission(submissionId: string) {
   revalidatePath("/dashboard");
   return { clientId };
 }
+
+export async function rejectSubmission(submissionId: string, reason?: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("onboarding_submissions")
+    .update({ status: "rejected" })
+    .eq("id", submissionId)
+    .eq("status", "pending");
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/dashboard/onboarding");
+  revalidatePath("/dashboard");
+}

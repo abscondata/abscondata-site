@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { ConvertButton } from "./convert-button";
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -8,6 +9,12 @@ const SERVICE_LABELS: Record<string, string> = {
   review_requests: "Review Requests",
   weekly_summary: "Weekly Business Summary",
   lead_intake: "Lead & Intake Admin",
+};
+
+const STATUS_BADGE: Record<string, string> = {
+  pending: "border-amber-200 bg-amber-50 text-amber-700",
+  converted: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  rejected: "border-red-200 bg-red-50 text-red-700",
 };
 
 export default async function OnboardingReviewPage() {
@@ -23,6 +30,19 @@ export default async function OnboardingReviewPage() {
     .select("*")
     .order("created_at", { ascending: false });
 
+  // Fetch client names for converted submissions
+  const convertedClientIds = (submissions ?? [])
+    .filter((s) => s.client_id)
+    .map((s) => s.client_id!);
+
+  const { data: linkedClients } = convertedClientIds.length > 0
+    ? await supabase.from("clients").select("id, name").in("id", convertedClientIds)
+    : { data: [] };
+
+  const clientNameMap = Object.fromEntries(
+    (linkedClients ?? []).map((c) => [c.id, c.name])
+  );
+
   return (
     <div>
       <h2 className="mb-5 text-lg font-semibold text-zinc-900">Onboarding Submissions</h2>
@@ -36,14 +56,26 @@ export default async function OnboardingReviewPage() {
           const p = sub.payload_json as Record<string, unknown>;
           const services = (p.services as string[]) || [];
           const isPending = sub.status === "pending";
+          const isConverted = sub.status === "converted";
+          const badgeClass = STATUS_BADGE[sub.status] || STATUS_BADGE.pending;
 
           return (
             <div key={sub.id} className="rounded-lg border border-zinc-200 bg-white p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-zinc-900">
-                    {String(p.company || "Unknown Company")}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900">
+                      {String(p.company || "Unknown Company")}
+                    </h3>
+                    {isConverted && sub.client_id && (
+                      <Link
+                        href={`/dashboard/clients/${sub.client_id}`}
+                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                      >
+                        View Client →
+                      </Link>
+                    )}
+                  </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
                     <span className="font-medium text-zinc-700">{String(p.contact_name || "")}</span>
                     <span>{String(p.email || "")}</span>
@@ -61,9 +93,14 @@ export default async function OnboardingReviewPage() {
                   )}
                   {p.industry ? <p className="mt-1.5 text-xs text-zinc-500">{String(p.industry)}</p> : null}
                   {p.notes ? <p className="mt-2 text-xs italic text-zinc-500">&quot;{String(p.notes)}&quot;</p> : null}
+                  {isConverted && sub.client_id && clientNameMap[sub.client_id] && (
+                    <p className="mt-2 text-xs text-emerald-600">
+                      Converted to: <span className="font-medium">{clientNameMap[sub.client_id]}</span>
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${isPending ? "border border-amber-200 bg-amber-50 text-amber-700" : "border border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClass}`}>
                     {sub.status}
                   </span>
                   {isPending && <ConvertButton submissionId={sub.id} />}
