@@ -238,6 +238,36 @@ export interface Database {
         Update: { id?: string; client_id?: number; import_type?: string; source_name?: string | null; status?: string; storage_key?: string | null; summary_json?: Json | null; row_count?: number | null; created_at?: string };
         Relationships: [{ foreignKeyName: "imports_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
       };
+      outreach_leads: {
+        Row: {
+          id: string; email: string; first_name: string | null; last_name: string | null;
+          company_name: string | null; title: string | null; industry: string | null;
+          employee_count: string | null; location: string | null; revenue: string | null;
+          phone: string | null; linkedin_url: string | null; source: string | null;
+          apollo_id: string | null; batch_id: string | null; status: string | null;
+          campaign_name: string | null; uploaded_to_instantly: boolean | null;
+          uploaded_at: string | null; rejected_reason: string | null; created_at: string;
+        };
+        Insert: {
+          id?: string; email: string; first_name?: string | null; last_name?: string | null;
+          company_name?: string | null; title?: string | null; industry?: string | null;
+          employee_count?: string | null; location?: string | null; revenue?: string | null;
+          phone?: string | null; linkedin_url?: string | null; source?: string | null;
+          apollo_id?: string | null; batch_id?: string | null; status?: string | null;
+          campaign_name?: string | null; uploaded_to_instantly?: boolean | null;
+          uploaded_at?: string | null; rejected_reason?: string | null; created_at?: string;
+        };
+        Update: {
+          id?: string; email?: string; first_name?: string | null; last_name?: string | null;
+          company_name?: string | null; title?: string | null; industry?: string | null;
+          employee_count?: string | null; location?: string | null; revenue?: string | null;
+          phone?: string | null; linkedin_url?: string | null; source?: string | null;
+          apollo_id?: string | null; batch_id?: string | null; status?: string | null;
+          campaign_name?: string | null; uploaded_to_instantly?: boolean | null;
+          uploaded_at?: string | null; rejected_reason?: string | null; created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {};
     Functions: {};
