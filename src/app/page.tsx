@@ -46,6 +46,12 @@ const process_steps = [
     description:
       "Weekly report every Monday. Every action documented. What was completed, what's outstanding, what needs your input.",
   },
+  {
+    number: "04",
+    title: "You stay in control",
+    description:
+      "Separate login for our team. Every action documented. Sensitive operations held for your review before anything goes out. Access revocable at any time.",
+  },
 ];
 
 export default function Home() {
@@ -58,7 +64,7 @@ export default function Home() {
         </Link>
         <div className="flex items-center gap-6 sm:gap-8">
           <Link href="/onboarding" className="text-[13px] font-semibold text-[#B8956A] transition-colors hover:text-[#0F1A2E]">
-            Get In Touch
+            Tell Us About Your Business
           </Link>
           <Link href="/login" className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#0F1A2E] border-b border-[#0F1A2E]/30 pb-[2px] hover:border-[#0F1A2E]">
             Sign In
@@ -84,9 +90,10 @@ export default function Home() {
               you already use.
             </p>
             <p className="mt-4 max-w-lg text-[15px] leading-[1.7] text-[#8A8680]">
-              We work inside the tools you already have, so you don&apos;t need to
-              change your workflow or learn new software. You keep doing the
-              work. We keep the operational side moving.
+              When invoicing, follow-up, and reporting keep getting pushed to
+              the end of the day, cash slows down and things fall through. We
+              take that work off your plate and run it on a repeatable weekly
+              rhythm.
             </p>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
               <Link
@@ -183,7 +190,7 @@ export default function Home() {
             </p>
           </div>
           <div className="flex-1">
-            <div className="grid gap-12 sm:grid-cols-3 sm:gap-8">
+            <div className="grid gap-12 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
               {process_steps.map((step) => (
                 <div key={step.number}>
                   <span className="text-[13px] font-semibold text-[#B8956A]">
@@ -197,34 +204,6 @@ export default function Home() {
                   </p>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How Access Works */}
-      <section className="border-y border-[#E5E2DC] bg-[#F4F3F0]">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 lg:px-12">
-          <div className="flex flex-col gap-10 lg:flex-row lg:gap-20">
-            <div className="lg:w-64 lg:shrink-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B8956A]">
-                How Access Works
-              </p>
-            </div>
-            <div className="max-w-2xl flex-1">
-              <p className="text-[17px] font-semibold leading-[1.5] text-[#0F1A2E]">
-                You create a separate user or login for our team in the systems
-                you already use.
-              </p>
-              <p className="mt-4 text-[14px] leading-[1.7] text-[#6B6762]">
-                We work inside your existing tools — not our own platform.
-                Every action is documented. Sensitive operations like sending
-                invoices or customer communications can be held for your review
-                before anything goes out. You keep full control.
-              </p>
-              <p className="mt-4 text-[14px] leading-[1.7] text-[#6B6762]">
-                Access can be revoked at any time. No long-term contracts, no lock-in.
-              </p>
             </div>
           </div>
         </div>
@@ -248,8 +227,8 @@ export default function Home() {
                 the end of the day.
               </h2>
               <p className="mt-6 text-[15px] leading-[1.75] text-white/70">
-                Trades, construction, facilities, and home services across
-                Florida and the Southeast. Companies with 2–50 employees where
+                Trades, construction, facilities, and home service businesses
+                with 2–50 employees where
                 invoicing, payment follow-up, and reporting are too important to
                 keep doing ad hoc at night.
               </p>
@@ -285,6 +264,13 @@ export default function Home() {
               consistently. Abscondata is a managed service — the process is
               built in. You get repeatable execution, structured reporting, and
               controlled access to your systems without training anyone.
+            </p>
+            <p className="mt-5 text-[14px] leading-[1.7] text-[#6B6762]">
+              Abscondata is run as a controlled operating service, not a
+              freelance admin arrangement. Every engagement has defined scope,
+              structured weekly execution, and documented output. Work
+              doesn&apos;t happen in a black box — you see exactly what was done,
+              what&apos;s pending, and what needs your decision.
             </p>
           </div>
         </div>
