@@ -42,7 +42,7 @@ const DEFAULT_FILTERS = {
 };
 
 async function fetchApolloPage(apiKey: string, page: number): Promise<{ people: ApolloPerson[]; totalEntries: number }> {
-  const res = await fetch("https://api.apollo.io/v1/mixed_people/search", {
+  const res = await fetch("https://api.apollo.io/v1/mixed_people/api_search", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Api-Key": apiKey },
     body: JSON.stringify({
