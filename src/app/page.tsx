@@ -338,6 +338,10 @@ export default function Home() {
             <a href="tel:+17724868112" className="transition-colors hover:text-[#0F1A2E]">
               (772) 486-8112
             </a>
+            <span className="text-[#D6D3CD]">&middot;</span>
+            <Link href="/agreement" className="transition-colors hover:text-[#0F1A2E]">
+              Agreement
+            </Link>
           </div>
         </div>
       </footer>

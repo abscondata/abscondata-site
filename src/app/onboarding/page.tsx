@@ -100,18 +100,31 @@ export default function OnboardingPage() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-6">
-        <div className="max-w-md text-center">
-          <h1 className="text-3xl font-medium text-[#1B2A4A]">Thank you</h1>
-          <p className="mt-4 text-base font-light leading-relaxed text-[#6B6560]">
-            We&apos;ll review your submission and reach out within 24 hours.
-          </p>
-          <Link
-            href="/"
-            className="mt-8 inline-block text-sm text-[#6B6560] underline underline-offset-4 hover:text-[var(--text)]"
-          >
-            Back to homepage
-          </Link>
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-4 sm:px-6">
+        <div className="max-w-lg">
+          <h1 className="text-2xl font-medium text-[#1B2A4A] sm:text-3xl">Thank you. We&apos;ve received your information.</h1>
+          <div className="mt-6">
+            <p className="text-sm font-semibold text-[#1B2A4A]">Here&apos;s what happens next:</p>
+            <ol className="mt-3 space-y-2 text-sm leading-relaxed text-[#6B6560]">
+              <li>1. We&apos;ll review your submission within 1 business day.</li>
+              <li>2. If it&apos;s a good fit, we&apos;ll schedule a brief call to discuss your needs.</li>
+              <li>3. After alignment, we&apos;ll send a service agreement and begin onboarding.</li>
+            </ol>
+          </div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+            <Link
+              href="/agreement"
+              className="text-sm text-[#6B6560] underline underline-offset-4 hover:text-[var(--text)]"
+            >
+              View our service agreement
+            </Link>
+            <Link
+              href="/"
+              className="text-sm text-[#6B6560] underline underline-offset-4 hover:text-[var(--text)]"
+            >
+              Back to homepage
+            </Link>
+          </div>
         </div>
       </div>
     );
