@@ -7,10 +7,21 @@ interface ApolloResult {
   totalFound: number;
   duplicatesSkipped: number;
   newLeadsSaved: number;
+  revealed: number;
+  skippedNoEmail: number;
   batchId: string;
 }
 
-interface ApolloPerson {
+// Shape returned by api_search (obfuscated)
+interface ApolloSearchPerson {
+  id?: string;
+  first_name?: string;
+  title?: string;
+  has_email?: boolean;
+}
+
+// Shape returned by people/match (full details)
+interface ApolloRevealedPerson {
   id?: string;
   email?: string;
   first_name?: string;
@@ -29,6 +40,9 @@ interface ApolloPerson {
   linkedin_url?: string;
 }
 
+const MAX_REVEALS_PER_BATCH = 250;
+const REVEAL_DELAY_MS = 200;
+
 const DEFAULT_FILTERS = {
   person_titles: ["Owner", "Founder", "President", "CEO", "General Manager"],
   employee_ranges: ["1,10", "11,20", "21,50"],
@@ -41,7 +55,7 @@ const DEFAULT_FILTERS = {
   contact_email_status: ["verified"],
 };
 
-async function fetchApolloPage(apiKey: string, page: number): Promise<{ people: ApolloPerson[]; totalEntries: number }> {
+async function searchApollo(apiKey: string, page: number): Promise<{ people: ApolloSearchPerson[]; totalEntries: number }> {
   const res = await fetch("https://api.apollo.io/v1/mixed_people/api_search", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Api-Key": apiKey },
@@ -54,22 +68,39 @@ async function fetchApolloPage(apiKey: string, page: number): Promise<{ people: 
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Apollo API error (${res.status}): ${text}`);
+    throw new Error(`Apollo search error (${res.status}): ${text}`);
   }
 
   const data = await res.json();
   return {
     people: data.people || [],
-    totalEntries: data.pagination?.total_entries || 0,
+    totalEntries: data.total_entries || 0,
   };
 }
 
-function formatLocation(person: ApolloPerson): string | null {
+async function revealPerson(apiKey: string, personId: string): Promise<ApolloRevealedPerson | null> {
+  const res = await fetch("https://api.apollo.io/v1/people/match", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Api-Key": apiKey },
+    body: JSON.stringify({
+      id: personId,
+      reveal_personal_emails: false,
+      reveal_phone_number: true,
+    }),
+  });
+
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  return data.person || null;
+}
+
+function formatLocation(person: ApolloRevealedPerson): string | null {
   const parts = [person.city, person.state, person.country].filter(Boolean);
   return parts.length > 0 ? parts.join(", ") : null;
 }
 
-function formatEmployeeCount(org?: ApolloPerson["organization"]): string | null {
+function formatEmployeeCount(org?: ApolloRevealedPerson["organization"]): string | null {
   if (!org?.estimated_num_employees) return null;
   return String(org.estimated_num_employees);
 }
@@ -82,26 +113,49 @@ export async function pullFromApollo(): Promise<ApolloResult> {
   const now = new Date();
   const batchId = `batch_${now.toISOString().slice(0, 10)}_${now.toTimeString().slice(0, 8).replace(/:/g, "")}`;
 
-  // Pull pages 1-3
-  const allPeople: ApolloPerson[] = [];
+  // Step 1: Search for people (pages 1-3, up to 300 candidates)
+  const searchResults: ApolloSearchPerson[] = [];
   let totalEntries = 0;
 
   for (let page = 1; page <= 3; page++) {
-    const result = await fetchApolloPage(apiKey, page);
+    const result = await searchApollo(apiKey, page);
     totalEntries = result.totalEntries;
-    allPeople.push(...result.people);
+    searchResults.push(...result.people);
     if (result.people.length < 100) break;
   }
 
-  if (allPeople.length === 0) {
+  // Filter to people with IDs (required for reveal)
+  const candidates = searchResults.filter((p) => p.id);
+
+  if (candidates.length === 0) {
     throw new Error("No new leads found with current filters");
   }
 
-  // Filter to only people with emails
-  const withEmails = allPeople.filter((p) => p.email);
+  // Cap at MAX_REVEALS_PER_BATCH to conserve credits
+  const toReveal = candidates.slice(0, MAX_REVEALS_PER_BATCH);
 
-  // Check existing emails in bulk
-  const emails = withEmails.map((p) => p.email!);
+  // Step 2: Reveal each person to get full contact details
+  const revealed: ApolloRevealedPerson[] = [];
+  let skippedNoEmail = 0;
+
+  for (const candidate of toReveal) {
+    const person = await revealPerson(apiKey, candidate.id!);
+
+    if (person && person.email) {
+      revealed.push(person);
+    } else {
+      skippedNoEmail++;
+    }
+
+    await new Promise((r) => setTimeout(r, REVEAL_DELAY_MS));
+  }
+
+  if (revealed.length === 0) {
+    throw new Error("No leads with valid emails found after reveal");
+  }
+
+  // Step 3: Dedup against existing leads
+  const emails = revealed.map((p) => p.email!);
   const { data: existingRows } = await supabase
     .from("outreach_leads")
     .select("email")
@@ -109,8 +163,7 @@ export async function pullFromApollo(): Promise<ApolloResult> {
 
   const existingEmails = new Set((existingRows ?? []).map((r) => r.email));
 
-  // Prepare new leads
-  const newLeads = withEmails
+  const newLeads = revealed
     .filter((p) => !existingEmails.has(p.email!))
     .map((p) => ({
       email: p.email!,
@@ -130,10 +183,10 @@ export async function pullFromApollo(): Promise<ApolloResult> {
       status: "new",
     }));
 
-  const duplicatesSkipped = withEmails.length - newLeads.length;
+  const duplicatesSkipped = revealed.length - newLeads.length;
 
+  // Step 4: Insert new leads
   if (newLeads.length > 0) {
-    // Insert in chunks of 50 to avoid payload limits
     for (let i = 0; i < newLeads.length; i += 50) {
       const chunk = newLeads.slice(i, i + 50);
       const { error } = await supabase.from("outreach_leads").insert(chunk);
@@ -147,6 +200,8 @@ export async function pullFromApollo(): Promise<ApolloResult> {
     totalFound: totalEntries,
     duplicatesSkipped,
     newLeadsSaved: newLeads.length,
+    revealed: revealed.length,
+    skippedNoEmail,
     batchId,
   };
 }

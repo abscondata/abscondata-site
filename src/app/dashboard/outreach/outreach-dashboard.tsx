@@ -48,7 +48,7 @@ export function OutreachDashboard({
 }) {
   const [markingBatch, setMarkingBatch] = useState<string | null>(null);
   const [pulling, setPulling] = useState(false);
-  const [pullResult, setPullResult] = useState<{ newLeadsSaved: number; duplicatesSkipped: number } | null>(null);
+  const [pullResult, setPullResult] = useState<{ newLeadsSaved: number; duplicatesSkipped: number; revealed: number; skippedNoEmail: number } | null>(null);
   const [pullError, setPullError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -60,7 +60,7 @@ export function OutreachDashboard({
     setPullError(null);
     try {
       const result = await pullFromApollo();
-      setPullResult({ newLeadsSaved: result.newLeadsSaved, duplicatesSkipped: result.duplicatesSkipped });
+      setPullResult({ newLeadsSaved: result.newLeadsSaved, duplicatesSkipped: result.duplicatesSkipped, revealed: result.revealed, skippedNoEmail: result.skippedNoEmail });
       router.refresh();
     } catch (err) {
       setPullError(err instanceof Error ? err.message : "Pull failed");
@@ -97,7 +97,7 @@ export function OutreachDashboard({
       {pullResult && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
           <p className="text-sm font-medium text-emerald-800">
-            {pullResult.newLeadsSaved} new leads saved, {pullResult.duplicatesSkipped} duplicates skipped.
+            {pullResult.revealed} contacts revealed, {pullResult.newLeadsSaved} new leads saved, {pullResult.duplicatesSkipped} duplicates skipped, {pullResult.skippedNoEmail} had no email.
           </p>
         </div>
       )}
