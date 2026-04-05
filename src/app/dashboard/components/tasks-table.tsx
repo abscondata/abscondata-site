@@ -30,43 +30,59 @@ export function TasksTable({ tasks, clients }: { tasks: Task[]; clients: { id: n
     router.refresh();
   }
 
+  const selectClasses = "rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none";
+
   return (
     <div>
-      <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">All Tasks</h2>
+      <h2 className="mb-4 text-lg font-semibold text-zinc-900">All Tasks</h2>
       <div className="mb-4 flex flex-wrap gap-2">
-        <select value={filterClient} onChange={(e) => setFilterClient(e.target.value)} className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+        <select value={filterClient} onChange={(e) => setFilterClient(e.target.value)} className={selectClasses}>
           <option value="">All Clients</option>
           {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={selectClasses}>
           <option value="">All Statuses</option>
           {statuses.map((s) => <option key={s} value={s!}>{s}</option>)}
         </select>
-        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className={selectClasses}>
           <option value="">All Priorities</option>
           {priorities.map((p) => <option key={p} value={p!}>{p}</option>)}
         </select>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+      <div className="overflow-x-auto rounded-lg border border-zinc-200">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+          <thead className="border-b border-zinc-200 bg-zinc-50">
             <tr>
-              {["Title", "Client", "Type", "Status", "Priority", "Due", "Assigned VA"].map((h) => <th key={h} className="px-4 py-2 font-medium text-zinc-600 dark:text-zinc-400">{h}</th>)}
+              {["Title", "Client", "Type", "Status", "Priority", "Due", "Assigned VA"].map((h) => (
+                <th key={h} className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{h}</th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-zinc-100">
             {filtered.map((task) => (
-              <tr key={task.id} className="bg-white dark:bg-zinc-900/50">
-                <td className="px-4 py-2 text-zinc-900 dark:text-zinc-100">{task.title}{task.escalation_required && <span className="ml-2 rounded-full bg-red-100 px-1.5 py-0.5 text-xs text-red-700 dark:bg-red-900/30 dark:text-red-400">Escalation</span>}</td>
-                <td className="px-4 py-2 text-zinc-600 dark:text-zinc-400">{task.client_id ? clientMap[task.client_id] ?? "—" : "—"}</td>
-                <td className="px-4 py-2 text-zinc-600 dark:text-zinc-400">{task.task_type ?? "—"}</td>
-                <td className="px-4 py-2 text-zinc-600 dark:text-zinc-400">{task.status ?? "—"}</td>
-                <td className="px-4 py-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${task.priority?.toLowerCase() === "high" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : task.priority?.toLowerCase() === "medium" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"}`}>{task.priority ?? "—"}</span></td>
-                <td className="px-4 py-2 text-zinc-600 dark:text-zinc-400">{task.due_at ? new Date(task.due_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</td>
-                <td className="px-4 py-2"><input type="email" defaultValue={task.assigned_va ?? ""} placeholder="va@email.com" onBlur={(e) => handleAssign(task.id, e.target.value)} className="w-36 rounded border border-zinc-200 bg-transparent px-2 py-1 text-xs dark:border-zinc-700" /></td>
+              <tr key={task.id} className="bg-white hover:bg-zinc-50 transition-colors">
+                <td className="px-4 py-2.5 font-medium text-zinc-900">
+                  {task.title || "Untitled"}
+                  {task.escalation_required && <span className="ml-2 rounded-full border border-red-200 bg-red-50 px-1.5 py-0.5 text-xs text-red-700">Escalation</span>}
+                </td>
+                <td className="px-4 py-2.5 text-zinc-600">{task.client_id ? clientMap[task.client_id] ?? "—" : "—"}</td>
+                <td className="px-4 py-2.5 text-zinc-600">{task.task_type ?? "—"}</td>
+                <td className="px-4 py-2.5 text-zinc-600">{(task.status ?? "—").replace(/_/g, " ")}</td>
+                <td className="px-4 py-2.5">
+                  <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+                    task.priority?.toLowerCase() === "high" ? "border-red-200 bg-red-50 text-red-700" :
+                    task.priority?.toLowerCase() === "medium" ? "border-amber-200 bg-amber-50 text-amber-700" :
+                    task.priority ? "border-emerald-200 bg-emerald-50 text-emerald-700" :
+                    "border-zinc-200 bg-zinc-50 text-zinc-500"
+                  }`}>{task.priority ?? "—"}</span>
+                </td>
+                <td className="px-4 py-2.5 text-zinc-600">{task.due_at ? new Date(task.due_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</td>
+                <td className="px-4 py-2.5">
+                  <input type="email" defaultValue={task.assigned_va ?? ""} placeholder="va@email.com" onBlur={(e) => handleAssign(task.id, e.target.value)} className="w-36 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-zinc-400 focus:outline-none" />
+                </td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">No tasks match your filters.</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-zinc-400">No tasks match your filters.</td></tr>}
           </tbody>
         </table>
       </div>

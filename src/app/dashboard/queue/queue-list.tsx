@@ -217,12 +217,12 @@ function TaskRow({
           <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[task.status || "NEW"] || STATUS_COLORS.NEW}`}>
             {(task.status || "NEW").replace(/_/g, " ")}
           </span>
-          <span className="truncate text-sm font-medium text-zinc-900">{task.title}</span>
+          <span className="truncate text-sm font-medium text-zinc-900">{task.title || "Untitled task"}</span>
         </div>
         <div className="flex shrink-0 items-center gap-4 text-xs">
-          <span className="font-medium text-zinc-700">{clientName}</span>
-          <span className="text-zinc-400">{SERVICE_LABELS[task.service_key || ""] || task.service_key || ""}</span>
-          {task.due_at && <span className="text-zinc-400">{new Date(task.due_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+          <span className="hidden font-medium text-zinc-700 sm:inline">{clientName}</span>
+          <span className="hidden text-zinc-400 sm:inline">{SERVICE_LABELS[task.service_key || ""] || task.service_key || "—"}</span>
+          {task.due_at && <span className="hidden text-zinc-400 sm:inline">{new Date(task.due_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
           <span className="text-zinc-300">{expanded ? "▲" : "▼"}</span>
         </div>
       </button>

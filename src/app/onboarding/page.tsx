@@ -123,7 +123,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Nav */}
-      <nav className="mx-auto flex max-w-3xl items-center justify-between px-6 py-7">
+      <nav className="mx-auto flex max-w-3xl items-center justify-between px-4 py-7 sm:px-6">
         <Link href="/" className="text-xl font-semibold tracking-tight text-[#1B2A4A]">
           Abscondata
         </Link>
@@ -132,7 +132,7 @@ export default function OnboardingPage() {
         </Link>
       </nav>
 
-      <div className="mx-auto max-w-2xl px-6 pb-24 pt-12">
+      <div className="mx-auto max-w-2xl px-4 pb-24 pt-12 sm:px-6">
         <h1 className="text-3xl font-medium text-[#1B2A4A]">Start Onboarding</h1>
         <p className="mt-3 text-base font-light text-[#6B6560]">
           Tell us about your business and what you need handled. We&apos;ll review and reach out within 24 hours.
