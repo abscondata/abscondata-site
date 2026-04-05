@@ -40,8 +40,8 @@ interface ApolloRevealedPerson {
   linkedin_url?: string;
 }
 
-const MAX_REVEALS_PER_BATCH = 250;
-const REVEAL_DELAY_MS = 200;
+const MAX_REVEALS_PER_BATCH = 100;
+const REVEAL_DELAY_MS = 100;
 
 const DEFAULT_FILTERS = {
   person_titles: ["Owner", "Founder", "President", "CEO", "General Manager"],
@@ -135,14 +135,14 @@ export async function pullFromApollo(): Promise<ApolloResult> {
   const toReveal = candidates.slice(0, MAX_REVEALS_PER_BATCH);
 
   // Step 2: Reveal each person to get full contact details
-  const revealed: ApolloRevealedPerson[] = [];
+  const revealedRaw: ApolloRevealedPerson[] = [];
   let skippedNoEmail = 0;
 
   for (const candidate of toReveal) {
     const person = await revealPerson(apiKey, candidate.id!);
 
     if (person && person.email) {
-      revealed.push(person);
+      revealedRaw.push(person);
     } else {
       skippedNoEmail++;
     }
@@ -150,11 +150,21 @@ export async function pullFromApollo(): Promise<ApolloResult> {
     await new Promise((r) => setTimeout(r, REVEAL_DELAY_MS));
   }
 
+  // Dedup within batch by email (Apollo can return the same person across pages)
+  const seenEmails = new Map<string, ApolloRevealedPerson>();
+  for (const person of revealedRaw) {
+    if (!seenEmails.has(person.email!)) {
+      seenEmails.set(person.email!, person);
+    }
+  }
+  const revealed = Array.from(seenEmails.values());
+  const batchDupes = revealedRaw.length - revealed.length;
+
   if (revealed.length === 0) {
     throw new Error("No leads with valid emails found after reveal");
   }
 
-  // Step 3: Dedup against existing leads
+  // Step 3: Dedup against existing leads in DB
   const emails = revealed.map((p) => p.email!);
   const { data: existingRows } = await supabase
     .from("outreach_leads")
@@ -183,13 +193,15 @@ export async function pullFromApollo(): Promise<ApolloResult> {
       status: "new",
     }));
 
-  const duplicatesSkipped = revealed.length - newLeads.length;
+  const duplicatesSkipped = (revealed.length - newLeads.length) + batchDupes;
 
-  // Step 4: Insert new leads
+  // Step 4: Upsert new leads (ignoreDuplicates handles race conditions)
   if (newLeads.length > 0) {
     for (let i = 0; i < newLeads.length; i += 50) {
       const chunk = newLeads.slice(i, i + 50);
-      const { error } = await supabase.from("outreach_leads").insert(chunk);
+      const { error } = await supabase
+        .from("outreach_leads")
+        .upsert(chunk, { onConflict: "email", ignoreDuplicates: true });
       if (error) throw new Error(`Insert failed: ${error.message}`);
     }
   }
