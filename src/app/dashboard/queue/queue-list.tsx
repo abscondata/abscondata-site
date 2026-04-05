@@ -22,6 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
   WAITING_ON_MISSING_DATA: "bg-orange-50 text-orange-700 border border-orange-200",
   APPROVED: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   SENT: "bg-violet-50 text-violet-700 border border-violet-200",
+  EXCEPTION: "bg-red-50 text-red-700 border border-red-200",
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -88,12 +89,14 @@ export function QueueList({
   tasks,
   clientMap,
   sourceMap,
+  initialExpandId,
 }: {
   tasks: Task[];
   clientMap: Record<number, string>;
   sourceMap: Record<number, SourceData>;
+  initialExpandId?: number;
 }) {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(initialExpandId ?? null);
   const [filter, setFilter] = useState<string>("all");
 
   const filtered = filter === "all"
@@ -110,13 +113,15 @@ export function QueueList({
     <div>
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-zinc-900">Work Queue</h2>
-        <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-white p-1">
+        <div className="flex flex-wrap items-center gap-1 rounded-lg border border-zinc-200 bg-white p-1">
           {[
             { key: "all", label: "All" },
             { key: "NEW", label: "New" },
             { key: "READY_FOR_REVIEW", label: "Review" },
+            { key: "WAITING_ON_MISSING_DATA", label: "Waiting" },
             { key: "APPROVED", label: "Approved" },
             { key: "SENT", label: "Sent" },
+            { key: "EXCEPTION", label: "Exception" },
           ].map((f) => (
             <button
               key={f.key}
@@ -171,28 +176,32 @@ function TaskRow({
   onToggle: () => void;
 }) {
   const [loading, setLoading] = useState(false);
-  const [aiDraft, setAiDraft] = useState(task.ai_draft || "");
   const [editedDraft, setEditedDraft] = useState(task.edited_draft || "");
   const [rejectReason, setRejectReason] = useState("");
   const [showReject, setShowReject] = useState(false);
+  const [needsInfoNotes, setNeedsInfoNotes] = useState("");
+  const [showNeedsInfo, setShowNeedsInfo] = useState(false);
   const router = useRouter();
 
   const normalized = (sourceData?.normalized_fields_json as Record<string, Json | undefined>) || {};
   const payload = (sourceData?.payload_json as Record<string, Json | undefined>) || {};
+  const status = task.status || "NEW";
+  const isReviewable = status === "READY_FOR_REVIEW";
 
   async function handleAction(
-    status: "READY_FOR_REVIEW" | "APPROVED" | "SENT" | "CLOSED" | "NEW",
-    extra?: { rejection_reason?: string }
+    newStatus: string,
+    extra?: { rejection_reason?: string; notes?: string }
   ) {
     setLoading(true);
     try {
-      await updateTaskStatus(task.id, status, {
+      await updateTaskStatus(task.id, newStatus as Parameters<typeof updateTaskStatus>[1], {
         ...extra,
-        ai_draft: aiDraft,
         edited_draft: editedDraft,
       });
       setShowReject(false);
+      setShowNeedsInfo(false);
       setRejectReason("");
+      setNeedsInfoNotes("");
       router.refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed");
@@ -201,9 +210,9 @@ function TaskRow({
     }
   }
 
-  async function saveDraft(field: "ai_draft" | "edited_draft", value: string) {
+  async function saveDraft() {
     try {
-      await updateTaskDraft(task.id, value, field);
+      await updateTaskDraft(task.id, editedDraft, "edited_draft");
     } catch {
       // silent
     }
@@ -214,8 +223,8 @@ function TaskRow({
       {/* Collapsed header */}
       <button onClick={onToggle} className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors rounded-lg">
         <div className="flex items-center gap-3 min-w-0">
-          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[task.status || "NEW"] || STATUS_COLORS.NEW}`}>
-            {(task.status || "NEW").replace(/_/g, " ")}
+          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[status] || STATUS_COLORS.NEW}`}>
+            {status.replace(/_/g, " ")}
           </span>
           <span className="truncate text-sm font-medium text-zinc-900">{task.title || "Untitled task"}</span>
         </div>
@@ -250,7 +259,7 @@ function TaskRow({
           </div>
 
           <div className="space-y-5 px-5 py-5">
-            {/* Source data — normalized fields */}
+            {/* Source data */}
             {Object.keys(normalized).some((k) => normalized[k] && String(normalized[k]).trim()) && (
               <div>
                 <NormalizedFields data={normalized} />
@@ -266,11 +275,13 @@ function TaskRow({
               </div>
             )}
 
-            {/* Rejection info */}
-            {task.rejection_reason && (
+            {/* Exception/rejection info */}
+            {(task.rejection_reason || task.exception_description) && (
               <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-red-500">Previously Rejected</span>
-                <p className="mt-1 text-sm font-medium text-red-800">{task.rejection_reason}</p>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-red-500">
+                  {status === "EXCEPTION" ? "Exception" : "Previously Rejected"}
+                </span>
+                <p className="mt-1 text-sm font-medium text-red-800">{task.exception_description || task.rejection_reason}</p>
               </div>
             )}
 
@@ -279,29 +290,35 @@ function TaskRow({
               <div>
                 <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                   AI Draft
-                  <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-400">(auto-generated or paste here)</span>
+                  <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-400">(read-only)</span>
                 </label>
                 <textarea
-                  value={aiDraft}
-                  onChange={(e) => setAiDraft(e.target.value)}
-                  onBlur={() => saveDraft("ai_draft", aiDraft)}
+                  value={task.ai_draft || ""}
+                  readOnly
                   rows={8}
-                  className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                  placeholder="Draft email, message, or notes..."
+                  className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 cursor-default"
+                  placeholder="No AI draft yet"
                 />
               </div>
               <div>
                 <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                   Final Draft
-                  <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-400">(edit before approving)</span>
+                  <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-400">
+                    {isReviewable ? "(edit before approving)" : "(locked)"}
+                  </span>
                 </label>
                 <textarea
                   value={editedDraft}
-                  onChange={(e) => setEditedDraft(e.target.value)}
-                  onBlur={() => saveDraft("edited_draft", editedDraft)}
+                  onChange={isReviewable ? (e) => setEditedDraft(e.target.value) : undefined}
+                  onBlur={isReviewable ? saveDraft : undefined}
+                  readOnly={!isReviewable}
                   rows={8}
-                  className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                  placeholder="Final version — what actually gets sent..."
+                  className={`w-full rounded-lg border px-4 py-3 text-sm ${
+                    isReviewable
+                      ? "border-zinc-300 bg-white text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                      : "border-zinc-200 bg-zinc-50 text-zinc-700 cursor-default"
+                  }`}
+                  placeholder={isReviewable ? "Edit the final version here..." : "No draft yet"}
                 />
               </div>
             </div>
@@ -324,16 +341,34 @@ function TaskRow({
 
             {/* Action buttons */}
             <div className="flex flex-wrap items-center gap-3 border-t border-zinc-200 pt-4">
-              {task.status === "NEW" && (
+              {status === "NEW" && (
+                <>
+                  <button
+                    onClick={() => handleAction("READY_FOR_REVIEW")}
+                    disabled={loading}
+                    className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+                  >
+                    Start Working
+                  </button>
+                  <button
+                    onClick={() => setShowNeedsInfo(!showNeedsInfo)}
+                    disabled={loading}
+                    className="rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+                  >
+                    Needs Info
+                  </button>
+                </>
+              )}
+              {status === "WAITING_ON_MISSING_DATA" && (
                 <button
                   onClick={() => handleAction("READY_FOR_REVIEW")}
                   disabled={loading}
                   className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
                 >
-                  Start Working
+                  Ready for Review
                 </button>
               )}
-              {task.status === "READY_FOR_REVIEW" && (
+              {status === "READY_FOR_REVIEW" && (
                 <>
                   <button
                     onClick={() => handleAction("APPROVED")}
@@ -351,7 +386,7 @@ function TaskRow({
                   </button>
                 </>
               )}
-              {task.status === "APPROVED" && (
+              {status === "APPROVED" && (
                 <button
                   onClick={() => handleAction("SENT")}
                   disabled={loading}
@@ -360,7 +395,7 @@ function TaskRow({
                   Mark Sent
                 </button>
               )}
-              {task.status === "SENT" && (
+              {status === "SENT" && (
                 <button
                   onClick={() => handleAction("CLOSED")}
                   disabled={loading}
@@ -369,16 +404,29 @@ function TaskRow({
                   Close Task
                 </button>
               )}
-              {task.status === "WAITING_ON_MISSING_DATA" && (
-                <button
-                  onClick={() => handleAction("READY_FOR_REVIEW")}
-                  disabled={loading}
-                  className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
-                >
-                  Data Received → Review
-                </button>
-              )}
             </div>
+
+            {/* Needs Info input */}
+            {showNeedsInfo && (
+              <div className="flex items-end gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                <div className="flex-1">
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">What information is needed?</label>
+                  <input
+                    value={needsInfoNotes}
+                    onChange={(e) => setNeedsInfoNotes(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
+                    placeholder="Describe what is missing..."
+                  />
+                </div>
+                <button
+                  onClick={() => handleAction("WAITING_ON_MISSING_DATA", { notes: needsInfoNotes })}
+                  disabled={loading || !needsInfoNotes}
+                  className="rounded-lg bg-orange-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-orange-700 disabled:opacity-50 transition-colors"
+                >
+                  Mark Waiting
+                </button>
+              </div>
+            )}
 
             {/* Reject reason input */}
             {showReject && (
@@ -389,11 +437,11 @@ function TaskRow({
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
                     className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
-                    placeholder="Why is this being sent back?"
+                    placeholder="Why is this being rejected?"
                   />
                 </div>
                 <button
-                  onClick={() => handleAction("NEW", { rejection_reason: rejectReason })}
+                  onClick={() => handleAction("EXCEPTION", { rejection_reason: rejectReason })}
                   disabled={loading || !rejectReason}
                   className="rounded-lg bg-red-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
                 >

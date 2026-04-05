@@ -6,19 +6,49 @@ import type { Database } from "@/lib/database.types";
 
 type TaskStatus = Database["public"]["Enums"]["task_status"];
 
+// Valid transitions
+const VALID_TRANSITIONS: Record<string, TaskStatus[]> = {
+  NEW: ["READY_FOR_REVIEW", "WAITING_ON_MISSING_DATA", "EXCEPTION"],
+  WAITING_ON_MISSING_DATA: ["READY_FOR_REVIEW", "EXCEPTION"],
+  READY_FOR_REVIEW: ["APPROVED", "EXCEPTION"],
+  APPROVED: ["SENT", "EXCEPTION"],
+  SENT: ["CLOSED", "EXCEPTION"],
+};
+
 export async function updateTaskStatus(
   taskId: number,
   newStatus: TaskStatus,
-  extra?: { rejection_reason?: string; ai_draft?: string; edited_draft?: string }
+  extra?: { rejection_reason?: string; ai_draft?: string; edited_draft?: string; notes?: string }
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Fetch current task to validate transition
+  const { data: task } = await supabase.from("tasks").select("status, ai_draft, edited_draft").eq("id", taskId).single();
+  if (!task) throw new Error("Task not found");
+
+  const currentStatus = task.status || "NEW";
+  const allowed = VALID_TRANSITIONS[currentStatus];
+  if (!allowed || !allowed.includes(newStatus)) {
+    throw new Error(`Invalid transition: ${currentStatus} to ${newStatus}`);
+  }
+
   const updates: Record<string, unknown> = { status: newStatus, updated_at: new Date().toISOString() };
 
-  if (newStatus === "APPROVED") updates.approved_at = new Date().toISOString();
+  if (newStatus === "APPROVED") {
+    updates.approved_at = new Date().toISOString();
+    // Auto-copy ai_draft to edited_draft if edited_draft is empty
+    const finalEdited = extra?.edited_draft || task.edited_draft;
+    if (!finalEdited) {
+      updates.edited_draft = extra?.ai_draft || task.ai_draft || "";
+    }
+  }
   if (newStatus === "SENT") updates.sent_at = new Date().toISOString();
-  if (extra?.rejection_reason) updates.rejection_reason = extra.rejection_reason;
+  if (newStatus === "EXCEPTION" && extra?.rejection_reason) {
+    updates.exception_reason_code = "rejected";
+    updates.exception_description = extra.rejection_reason;
+    updates.rejection_reason = extra.rejection_reason;
+  }
   if (extra?.ai_draft !== undefined) updates.ai_draft = extra.ai_draft;
   if (extra?.edited_draft !== undefined) updates.edited_draft = extra.edited_draft;
 
@@ -26,12 +56,15 @@ export async function updateTaskStatus(
   if (error) throw new Error(error.message);
 
   // Log event
+  let eventNotes = extra?.rejection_reason ? `Rejected: ${extra.rejection_reason}` : null;
+  if (extra?.notes) eventNotes = extra.notes;
+
   await supabase.from("task_events").insert({
     task_id: taskId,
-    event_type: `status_change:${newStatus}`,
+    event_type: `status_change:${currentStatus}→${newStatus}`,
     actor_type: "user",
     actor_id: user?.id || null,
-    notes: extra?.rejection_reason ? `Rejected: ${extra.rejection_reason}` : null,
+    notes: eventNotes,
   });
 
   revalidatePath("/dashboard/queue");

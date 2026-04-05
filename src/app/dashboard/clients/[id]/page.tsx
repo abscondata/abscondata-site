@@ -22,12 +22,6 @@ const PLATFORM_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  not_connected: "border-zinc-200 bg-zinc-50 text-zinc-600",
-  connected: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  error: "border-red-200 bg-red-50 text-red-700",
-};
-
 const TASK_STATUS_COLORS: Record<string, string> = {
   NEW: "border-blue-200 bg-blue-50 text-blue-700",
   READY_FOR_REVIEW: "border-amber-200 bg-amber-50 text-amber-700",
@@ -72,6 +66,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const activeTasks = (tasks ?? []).filter((t) => t.status !== "CLOSED");
   const closedTasks = (tasks ?? []).filter((t) => t.status === "CLOSED");
 
+  // Task counts by status
+  const statusCounts: Record<string, number> = {};
+  for (const t of activeTasks) {
+    const s = t.status || "NEW";
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -93,6 +94,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           {client.service_area && <span className="text-zinc-400">{client.service_area}</span>}
         </div>
         {client.notes && <p className="mt-2 text-sm italic text-zinc-500">{client.notes}</p>}
+        {/* Task status summary */}
+        {activeTasks.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
+            {Object.entries(statusCounts).map(([s, count]) => (
+              <span key={s}>{s.replace(/_/g, " ")}: <span className="font-semibold text-zinc-700">{count}</span></span>
+            ))}
+            <span>Closed: <span className="font-semibold text-zinc-700">{closedTasks.length}</span></span>
+          </div>
+        )}
       </div>
 
       {/* Services */}
@@ -127,6 +137,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     <span className="ml-2 text-xs text-zinc-400">({p.connection_method})</span>
                   )}
                   {p.notes && <span className="ml-2 text-xs text-zinc-400">{p.notes}</span>}
+                  {p.last_sync_at && <span className="ml-2 text-[10px] text-zinc-400">Synced: {new Date(p.last_sync_at).toLocaleDateString()}</span>}
                 </div>
                 <PlatformStatusDropdown platformId={p.id} currentStatus={p.connection_status || "not_connected"} />
               </div>
@@ -157,7 +168,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                       <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${TASK_STATUS_COLORS[t.status || "NEW"] || TASK_STATUS_COLORS.NEW}`}>
                         {(t.status || "NEW").replace(/_/g, " ")}
                       </span>
-                      <span className="text-sm font-medium text-zinc-900">{t.title}</span>
+                      <Link href={`/dashboard/queue?task=${t.id}`} className="text-sm font-medium text-zinc-900 hover:underline">{t.title}</Link>
                     </div>
                     <span className="text-xs text-zinc-400">{SERVICE_LABELS[t.service_key || ""] || t.service_key || "—"}</span>
                   </div>
