@@ -57,7 +57,7 @@ export default function Home() {
           Abscondata
         </Link>
         <div className="flex items-center gap-6 sm:gap-8">
-          <Link href="/onboarding" className="text-[13px] font-medium text-[#5A564F] transition-colors hover:text-[#0F1A2E]">
+          <Link href="/onboarding" className="text-[13px] font-semibold text-[#B8956A] transition-colors hover:text-[#0F1A2E]">
             Get In Touch
           </Link>
           <Link href="/login" className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#0F1A2E] border-b border-[#0F1A2E]/30 pb-[2px] hover:border-[#0F1A2E]">
@@ -91,7 +91,7 @@ export default function Home() {
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
               <Link
                 href="/onboarding"
-                className="inline-flex items-center justify-center bg-[#0F1A2E] px-8 py-4 text-[13px] font-semibold uppercase tracking-[0.1em] text-white transition-all hover:bg-[#1a2d4d] sm:px-10"
+                className="inline-flex items-center justify-center rounded-sm bg-[#B8956A] px-12 py-5 text-[13px] font-semibold uppercase tracking-[0.1em] text-white shadow-lg transition-all hover:bg-[#A68455] hover:shadow-xl"
               >
                 Tell Us About Your Business
               </Link>
@@ -116,8 +116,8 @@ export default function Home() {
               "Sensitive actions held for approval",
             ].map((item) => (
               <div key={item} className="flex items-start gap-2.5">
-                <span className="mt-[5px] h-[6px] w-[6px] shrink-0 rounded-full bg-[#B8956A]" />
-                <p className="text-[13px] leading-[1.45] text-[#5A564F]">{item}</p>
+                <span className="mt-[5px] h-[6px] w-[6px] shrink-0 rounded-full bg-[#0F1A2E]" />
+                <p className="text-[13px] leading-[1.45] text-[#3D3A35]">{item}</p>
               </div>
             ))}
           </div>
@@ -144,7 +144,7 @@ export default function Home() {
                   i < services.length - 1 ? "border-b border-[#E5E2DC]" : ""
                 }`}
               >
-                <h3 className="text-[16px] font-semibold text-[#0F1A2E] sm:w-56 sm:shrink-0">
+                <h3 className="text-[17px] font-semibold text-[#0F1A2E] sm:w-56 sm:shrink-0">
                   {s.title}
                 </h3>
                 <p className="text-[14px] leading-[1.65] text-[#6B6762]">
@@ -189,7 +189,7 @@ export default function Home() {
                   <span className="text-[13px] font-semibold text-[#B8956A]">
                     {step.number}
                   </span>
-                  <h3 className="mt-3 text-[16px] font-semibold leading-[1.35] text-[#0F1A2E]">
+                  <h3 className="mt-3 text-[17px] font-semibold leading-[1.35] text-[#0F1A2E]">
                     {step.title}
                   </h3>
                   <p className="mt-3 text-[14px] leading-[1.65] text-[#6B6762]">
@@ -212,7 +212,7 @@ export default function Home() {
               </p>
             </div>
             <div className="max-w-2xl flex-1">
-              <p className="text-[16px] font-semibold leading-[1.5] text-[#0F1A2E]">
+              <p className="text-[17px] font-semibold leading-[1.5] text-[#0F1A2E]">
                 You create a separate user or login for our team in the systems
                 you already use.
               </p>
@@ -247,13 +247,13 @@ export default function Home() {
                 Built for service businesses where admin keeps getting pushed to
                 the end of the day.
               </h2>
-              <p className="mt-6 text-[15px] leading-[1.75] text-white/55">
+              <p className="mt-6 text-[15px] leading-[1.75] text-white/70">
                 Trades, construction, facilities, and home services across
                 Florida and the Southeast. Companies with 2–50 employees where
                 invoicing, payment follow-up, and reporting are too important to
                 keep doing ad hoc at night.
               </p>
-              <p className="mt-4 text-[15px] leading-[1.75] text-white/55">
+              <p className="mt-4 text-[15px] leading-[1.75] text-white/70">
                 When those tasks keep getting pushed, cash slows down, reviews
                 get missed, and the owner ends up doing admin at 9 PM because
                 there&apos;s no one else to do it. We put that work on a repeatable
@@ -340,9 +340,9 @@ export default function Home() {
           </p>
           <Link
             href="/onboarding"
-            className="mt-8 inline-flex items-center justify-center bg-[#0F1A2E] px-10 py-4 text-[13px] font-semibold uppercase tracking-[0.1em] text-white transition-all hover:bg-[#1a2d4d]"
+            className="mt-8 inline-flex items-center justify-center rounded-sm bg-[#B8956A] px-12 py-5 text-[13px] font-semibold uppercase tracking-[0.1em] text-white shadow-lg transition-all hover:bg-[#A68455] hover:shadow-xl"
           >
-            Start Onboarding
+            Tell Us About Your Business
           </Link>
         </div>
       </section>
@@ -351,7 +351,7 @@ export default function Home() {
       <footer className="border-t border-[#E5E2DC]">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row sm:px-8 lg:px-12">
           <span className="text-[13px] text-[#8A8680]">&copy; 2026 Abscondata</span>
-          <div className="flex items-center gap-5 text-[13px] text-[#8A8680]">
+          <div className="flex items-center gap-5 text-[13px] text-[#6B6762]">
             <a href="mailto:robin@abscondata.com" className="transition-colors hover:text-[#0F1A2E]">
               robin@abscondata.com
             </a>
