@@ -16,7 +16,7 @@ const services = [
   {
     title: "Review Requests",
     description:
-      "After completed jobs, review requests are queued, sent, and tracked consistently so they stop getting forgotten.",
+      "After completed jobs, review requests are queued, sent, and tracked consistently so they do not get forgotten.",
     key: "review_requests",
   },
   {
@@ -32,7 +32,7 @@ const process_steps = [
     number: "01",
     title: "You create a separate login for our team",
     description:
-      "In the systems you already use. QuickBooks, Jobber, ServiceTitan, Google Workspace. No new software. No migration.",
+      "In the systems you already use: QuickBooks, Jobber, ServiceTitan, Google Workspace. No new software. No migration.",
   },
   {
     number: "02",
@@ -86,7 +86,7 @@ export default function Home() {
             </h1>
             <p className="mt-7 max-w-xl text-[17px] font-light leading-[1.7] text-[#5A564F] sm:text-[18px]">
               Abscondata runs invoicing, payment follow-up, review requests, and
-              weekly reporting for small service businesses, inside the systems
+              weekly reporting for small service businesses inside the systems
               you already use.
             </p>
             <p className="mt-4 max-w-lg text-[15px] leading-[1.7] text-[#8A8680]">
@@ -228,9 +228,8 @@ export default function Home() {
               </h2>
               <p className="mt-6 text-[15px] leading-[1.75] text-white/70">
                 Trades, construction, facilities, and home service businesses
-                with 2–50 employees where
-                invoicing, payment follow-up, and reporting are too important to
-                keep doing ad hoc at night.
+                with 2 to 50 employees where invoicing, payment follow-up, and
+                reporting are too important to keep doing ad hoc at night.
               </p>
               <p className="mt-4 text-[15px] leading-[1.75] text-white/70">
                 When those tasks keep getting pushed, cash slows down, reviews
