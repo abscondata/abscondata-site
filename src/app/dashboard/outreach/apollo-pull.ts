@@ -85,7 +85,7 @@ async function revealPerson(apiKey: string, personId: string): Promise<ApolloRev
     body: JSON.stringify({
       id: personId,
       reveal_personal_emails: false,
-      reveal_phone_number: true,
+      reveal_phone_number: false,
     }),
   });
 
