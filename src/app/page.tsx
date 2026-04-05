@@ -16,7 +16,7 @@ const services = [
   {
     title: "Review Requests",
     description:
-      "After completed jobs, review requests are queued, sent, and tracked consistently — so they stop getting forgotten.",
+      "After completed jobs, review requests are queued, sent, and tracked consistently so they stop getting forgotten.",
     key: "review_requests",
   },
   {
@@ -32,7 +32,7 @@ const process_steps = [
     number: "01",
     title: "You create a separate login for our team",
     description:
-      "In the systems you already use — QuickBooks, Jobber, ServiceTitan, Google Workspace. No new software. No migration.",
+      "In the systems you already use. QuickBooks, Jobber, ServiceTitan, Google Workspace. No new software. No migration.",
   },
   {
     number: "02",
@@ -86,7 +86,7 @@ export default function Home() {
             </h1>
             <p className="mt-7 max-w-xl text-[17px] font-light leading-[1.7] text-[#5A564F] sm:text-[18px]">
               Abscondata runs invoicing, payment follow-up, review requests, and
-              weekly reporting for small service businesses — inside the systems
+              weekly reporting for small service businesses, inside the systems
               you already use.
             </p>
             <p className="mt-4 max-w-lg text-[15px] leading-[1.7] text-[#8A8680]">
@@ -256,21 +256,15 @@ export default function Home() {
               className="text-[24px] font-medium leading-[1.3] text-[#0F1A2E] sm:text-[28px]"
               style={{ fontFamily: "var(--font-serif)" }}
             >
-              Not a VA you have to train. Not software you have to learn.
+              Built like an operating function, not an afterthought.
             </h2>
             <p className="mt-5 text-[14px] leading-[1.7] text-[#6B6762]">
-              Hiring a virtual assistant means writing instructions, managing
-              quality, answering questions, and hoping things get done
-              consistently. Abscondata is a managed service — the process is
-              built in. You get repeatable execution, structured reporting, and
-              controlled access to your systems without training anyone.
-            </p>
-            <p className="mt-5 text-[14px] leading-[1.7] text-[#6B6762]">
-              Abscondata is run as a controlled operating service, not a
-              freelance admin arrangement. Every engagement has defined scope,
-              structured weekly execution, and documented output. Work
-              doesn&apos;t happen in a black box — you see exactly what was done,
-              what&apos;s pending, and what needs your decision.
+              Abscondata runs a defined set of back-office processes on a fixed
+              rhythm inside your existing systems. Invoicing, payment follow-up,
+              review requests, and reporting are handled consistently, documented
+              clearly, and kept visible to you at every step. You keep control.
+              The work gets done. Nothing falls through because it was left for
+              the end of the day.
             </p>
           </div>
         </div>
