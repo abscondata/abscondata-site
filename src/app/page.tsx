@@ -58,7 +58,7 @@ export default function Home() {
         </Link>
         <div className="flex items-center gap-6 sm:gap-8">
           <Link href="/onboarding" className="text-[13px] font-medium text-[#5A564F] transition-colors hover:text-[#0F1A2E]">
-            Get Started
+            Get In Touch
           </Link>
           <Link href="/login" className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#0F1A2E] border-b border-[#0F1A2E]/30 pb-[2px] hover:border-[#0F1A2E]">
             Sign In
@@ -93,7 +93,7 @@ export default function Home() {
                 href="/onboarding"
                 className="inline-flex items-center justify-center bg-[#0F1A2E] px-8 py-4 text-[13px] font-semibold uppercase tracking-[0.1em] text-white transition-all hover:bg-[#1a2d4d] sm:px-10"
               >
-                Start Onboarding
+                Tell Us About Your Business
               </Link>
               <span className="text-[13px] text-[#8A8680]">
                 Initial review within 24 hours. Service launch within one week.
@@ -223,8 +223,7 @@ export default function Home() {
                 before anything goes out. You keep full control.
               </p>
               <p className="mt-4 text-[14px] leading-[1.7] text-[#6B6762]">
-                Credentials are stored in an enterprise password manager with
-                two-factor authentication. Access can be revoked at any time.
+                Access can be revoked at any time. No long-term contracts, no lock-in.
               </p>
             </div>
           </div>
@@ -249,10 +248,10 @@ export default function Home() {
                 the end of the day.
               </h2>
               <p className="mt-6 text-[15px] leading-[1.75] text-white/55">
-                Trades, construction, facilities, home services, health and
-                wellness. Companies with 2–50 employees where invoicing, payment
-                follow-up, and reporting are too important to keep doing ad hoc
-                at night.
+                Trades, construction, facilities, and home services across
+                Florida and the Southeast. Companies with 2–50 employees where
+                invoicing, payment follow-up, and reporting are too important to
+                keep doing ad hoc at night.
               </p>
               <p className="mt-4 text-[15px] leading-[1.75] text-white/55">
                 When those tasks keep getting pushed, cash slows down, reviews
@@ -335,8 +334,9 @@ export default function Home() {
             Ready to get invoicing, follow-up, and reporting off your plate?
           </h2>
           <p className="mt-5 text-[15px] leading-[1.7] text-[#8A8680]">
-            Tell us how your business runs today. We review every submission
-            personally and respond within 24 hours with a plan.
+            Tell us what tools you use, what work you want off your plate, and
+            where the bottlenecks are. We review every submission personally
+            and respond within 24 hours.
           </p>
           <Link
             href="/onboarding"
