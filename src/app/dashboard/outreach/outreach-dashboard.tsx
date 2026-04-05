@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { markBatchUploaded } from "./actions";
+import { pullFromApollo } from "./apollo-pull";
 import { useRouter } from "next/navigation";
 import type { Database } from "@/lib/database.types";
 
@@ -46,9 +47,27 @@ export function OutreachDashboard({
   leads: Lead[];
 }) {
   const [markingBatch, setMarkingBatch] = useState<string | null>(null);
+  const [pulling, setPulling] = useState(false);
+  const [pullResult, setPullResult] = useState<{ newLeadsSaved: number; duplicatesSkipped: number } | null>(null);
+  const [pullError, setPullError] = useState<string | null>(null);
   const router = useRouter();
 
   const pendingLeads = leads.filter((l) => !l.uploaded_to_instantly);
+
+  async function handlePullFromApollo() {
+    setPulling(true);
+    setPullResult(null);
+    setPullError(null);
+    try {
+      const result = await pullFromApollo();
+      setPullResult({ newLeadsSaved: result.newLeadsSaved, duplicatesSkipped: result.duplicatesSkipped });
+      router.refresh();
+    } catch (err) {
+      setPullError(err instanceof Error ? err.message : "Pull failed");
+    } finally {
+      setPulling(false);
+    }
+  }
 
   async function handleMarkBatch(batchId: string) {
     setMarkingBatch(batchId);
@@ -64,7 +83,30 @@ export function OutreachDashboard({
 
   return (
     <div className="space-y-8">
-      <h2 className="text-lg font-semibold text-zinc-900">Outreach</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-zinc-900">Outreach</h2>
+        <button
+          onClick={handlePullFromApollo}
+          disabled={pulling}
+          className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+        >
+          {pulling ? "Pulling leads from Apollo..." : "Generate New Batch"}
+        </button>
+      </div>
+
+      {pullResult && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <p className="text-sm font-medium text-emerald-800">
+            {pullResult.newLeadsSaved} new leads saved, {pullResult.duplicatesSkipped} duplicates skipped.
+          </p>
+        </div>
+      )}
+
+      {pullError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm font-medium text-red-800">{pullError}</p>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
