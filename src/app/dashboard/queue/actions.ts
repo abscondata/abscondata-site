@@ -76,3 +76,64 @@ export async function updateTaskDraft(taskId: number, draft: string, field: "ai_
   const { error } = await supabase.from("tasks").update({ [field]: draft }).eq("id", taskId);
   if (error) throw new Error(error.message);
 }
+
+export async function createManualTask(
+  clientId: number,
+  serviceKey: string,
+  recipient: { name?: string; email?: string; phone?: string },
+  sourceNotes: string,
+  title: string
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: task, error } = await supabase
+    .from("tasks")
+    .insert({
+      client_id: clientId,
+      service_key: serviceKey,
+      task_type: serviceKey,
+      title,
+      status: "NEW" as const,
+      recipient_name: recipient.name || null,
+      recipient_email: recipient.email || null,
+      source_system: "manual",
+      notes: sourceNotes || null,
+    })
+    .select("id")
+    .single();
+
+  if (error || !task) throw new Error(error?.message || "Failed to create task");
+
+  // Store source data
+  if (sourceNotes) {
+    await supabase.from("task_source_data").insert({
+      task_id: task.id,
+      payload_json: {
+        customer_name: recipient.name || null,
+        customer_email: recipient.email || null,
+        customer_phone: recipient.phone || null,
+        notes: sourceNotes,
+      },
+      normalized_fields_json: {
+        customer_name: recipient.name || null,
+        customer_email: recipient.email || null,
+        customer_phone: recipient.phone || null,
+        notes: sourceNotes,
+      },
+    });
+  }
+
+  // Log creation event
+  await supabase.from("task_events").insert({
+    task_id: task.id,
+    event_type: "task_created",
+    actor_type: "user",
+    actor_id: user?.id || null,
+    notes: `Manual task: ${title}`,
+  });
+
+  revalidatePath("/dashboard/queue");
+  revalidatePath("/dashboard");
+  return { taskId: task.id };
+}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Breadcrumb } from "./breadcrumb";
 
 export function DashboardShell({ userEmail, role, children }: { userEmail: string; role: "owner" | "va"; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -54,7 +55,10 @@ export function DashboardShell({ userEmail, role, children }: { userEmail: strin
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">{children}</main>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
+        <Breadcrumb />
+        {children}
+      </main>
     </div>
   );
 }

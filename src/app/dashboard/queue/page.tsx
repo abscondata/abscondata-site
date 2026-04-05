@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { QueueList } from "./queue-list";
 
-export default async function QueuePage({ searchParams }: { searchParams: Promise<{ task?: string }> }) {
-  const { task: expandTaskId } = await searchParams;
+export default async function QueuePage({ searchParams }: { searchParams: Promise<{ task?: string; filter?: string }> }) {
+  const { task: expandTaskId, filter: initialFilter } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -27,7 +27,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
     (sourceData ?? []).map((sd) => [sd.task_id!, sd])
   );
 
-  const { data: clients } = await supabase.from("clients").select("id, name");
+  const { data: clients } = await supabase.from("clients").select("id, name").eq("status", "active").order("name");
   const clientMap = Object.fromEntries((clients ?? []).map((c) => [c.id, c.name]));
 
   return (
@@ -35,7 +35,9 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
       tasks={tasks ?? []}
       clientMap={clientMap}
       sourceMap={sourceMap}
+      clients={clients ?? []}
       initialExpandId={expandTaskId ? Number(expandTaskId) : undefined}
+      initialFilter={initialFilter}
     />
   );
 }

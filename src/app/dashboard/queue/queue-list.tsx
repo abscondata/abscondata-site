@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateTaskStatus, updateTaskDraft } from "./actions";
+import { updateTaskStatus, updateTaskDraft, createManualTask } from "./actions";
 import { useRouter } from "next/navigation";
 import type { Database, Json } from "@/lib/database.types";
 
@@ -85,19 +85,34 @@ function RawPayload({ data }: { data: Record<string, Json | undefined> }) {
   );
 }
 
+const SERVICE_OPTIONS = [
+  { key: "invoice_ops", label: "Invoice Ops" },
+  { key: "payment_followup", label: "Payment Follow-Up" },
+  { key: "review_requests", label: "Review Requests" },
+  { key: "weekly_summary", label: "Weekly Summary" },
+  { key: "lead_intake", label: "Lead & Intake" },
+];
+
 export function QueueList({
   tasks,
   clientMap,
   sourceMap,
+  clients,
   initialExpandId,
+  initialFilter,
 }: {
   tasks: Task[];
   clientMap: Record<number, string>;
   sourceMap: Record<number, SourceData>;
+  clients: { id: number; name: string }[];
   initialExpandId?: number;
+  initialFilter?: string;
 }) {
   const [expandedId, setExpandedId] = useState<number | null>(initialExpandId ?? null);
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>(
+    initialExpandId ? "all" : (initialFilter || "all")
+  );
+  const [showNewTask, setShowNewTask] = useState(false);
 
   const filtered = filter === "all"
     ? tasks
@@ -112,7 +127,15 @@ export function QueueList({
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-zinc-900">Work Queue</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-zinc-900">Work Queue</h2>
+          <button
+            onClick={() => setShowNewTask(!showNewTask)}
+            className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors"
+          >
+            {showNewTask ? "Cancel" : "New Task"}
+          </button>
+        </div>
         <div className="flex flex-wrap items-center gap-1 rounded-lg border border-zinc-200 bg-white p-1">
           {[
             { key: "all", label: "All" },
@@ -139,6 +162,8 @@ export function QueueList({
           ))}
         </div>
       </div>
+
+      {showNewTask && <NewTaskForm clients={clients} onDone={() => setShowNewTask(false)} />}
 
       {filtered.length === 0 && (
         <p className="py-12 text-center text-sm text-zinc-400">
@@ -453,5 +478,86 @@ function TaskRow({
         </div>
       )}
     </div>
+  );
+}
+
+function NewTaskForm({ clients, onDone }: { clients: { id: number; name: string }[]; onDone: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [clientId, setClientId] = useState("");
+  const [serviceKey, setServiceKey] = useState("payment_followup");
+  const [title, setTitle] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [sourceNotes, setSourceNotes] = useState("");
+  const router = useRouter();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!clientId || !title) return;
+    setLoading(true);
+    try {
+      await createManualTask(
+        Number(clientId),
+        serviceKey,
+        { name: recipientName, email: recipientEmail, phone: recipientPhone },
+        sourceNotes,
+        title
+      );
+      onDone();
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create task");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inputClasses = "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none";
+
+  return (
+    <form onSubmit={handleSubmit} className="mb-5 rounded-lg border border-zinc-200 bg-white p-5 space-y-4">
+      <h3 className="text-sm font-semibold text-zinc-900">Create Task</h3>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Client *</label>
+          <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className={inputClasses}>
+            <option value="">Select client...</option>
+            {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Service *</label>
+          <select value={serviceKey} onChange={(e) => setServiceKey(e.target.value)} className={inputClasses}>
+            {SERVICE_OPTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Task Title *</label>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. Follow up: John Smith INV-1234" className={inputClasses} />
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Recipient Name</label>
+          <input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Customer name" className={inputClasses} />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Recipient Email</label>
+          <input value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} placeholder="customer@example.com" className={inputClasses} />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Recipient Phone</label>
+          <input value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} placeholder="555-555-5555" className={inputClasses} />
+        </div>
+      </div>
+      <div>
+        <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Source Notes</label>
+        <textarea value={sourceNotes} onChange={(e) => setSourceNotes(e.target.value)} rows={3} placeholder="Invoice details, amounts, dates, context..." className={inputClasses} />
+      </div>
+      <button type="submit" disabled={loading || !clientId || !title} className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors">
+        {loading ? "Creating..." : "Create Task"}
+      </button>
+    </form>
   );
 }
