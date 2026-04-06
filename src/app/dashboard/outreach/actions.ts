@@ -20,6 +20,30 @@ export async function markBatchUploaded(batchId: string) {
   revalidatePath("/dashboard/outreach");
 }
 
+export async function updateLeadResponse(
+  leadId: string,
+  status: string,
+  notes?: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = await createClient();
+    // response_status, response_notes, response_date columns added by migration 010
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from("outreach_leads") as any)
+      .update({
+        response_status: status,
+        response_notes: notes || null,
+        response_date: new Date().toISOString(),
+      })
+      .eq("id", leadId);
+    if (error) return { success: false, message: error.message };
+    revalidatePath("/dashboard/outreach");
+    return { success: true, message: "Lead response updated" };
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : "Failed to update lead" };
+  }
+}
+
 export async function getOutreachStats() {
   const supabase = await createClient();
 

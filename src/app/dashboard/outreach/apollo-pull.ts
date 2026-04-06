@@ -105,6 +105,48 @@ function formatEmployeeCount(org?: ApolloRevealedPerson["organization"]): string
   return String(org.estimated_num_employees);
 }
 
+const TRADES_KEYWORDS = ["construction", "plumbing", "electrical", "hvac", "roofing"];
+const FACILITIES_KEYWORDS = ["cleaning", "landscaping", "pest control", "pool", "janitorial"];
+const HOME_SERVICES_KEYWORDS = ["handyman", "painting", "flooring", "remodeling", "home improvement"];
+
+function classifySegment(industry: string | null, employeeCount: number | null): string {
+  const ind = (industry || "").toLowerCase();
+  if (TRADES_KEYWORDS.some((k) => ind.includes(k))) {
+    return (employeeCount && employeeCount > 10) ? "mid_trades" : "small_trades";
+  }
+  if (FACILITIES_KEYWORDS.some((k) => ind.includes(k))) return "facilities";
+  if (HOME_SERVICES_KEYWORDS.some((k) => ind.includes(k))) return "home_services";
+  return "other";
+}
+
+function generatePersonalizationLine(
+  segment: string,
+  industry: string | null,
+  employeeCount: number | null,
+  companyName: string | null
+): string {
+  const ind = (industry || "service").toLowerCase();
+  const emp = employeeCount || 0;
+  const company = companyName || "your company";
+
+  switch (segment) {
+    case "small_trades":
+      return emp > 0
+        ? `Running a ${emp}-person ${ind} crew means you wear every hat — including the back-office one.`
+        : `Running a ${ind} crew means you wear every hat — including the back-office one.`;
+    case "mid_trades":
+      return emp > 0
+        ? `At ${emp} people, ${ind} companies usually hit a wall where admin work eats the owner's nights and weekends.`
+        : `${ind.charAt(0).toUpperCase() + ind.slice(1)} companies at your size usually hit a wall where admin work eats the owner's nights and weekends.`;
+    case "facilities":
+      return `${ind.charAt(0).toUpperCase() + ind.slice(1)} businesses live and die by recurring revenue, which means follow-ups can't slip through the cracks.`;
+    case "home_services":
+      return `In ${ind}, the difference between a 4-star and 5-star Google rating is usually whether reviews actually get requested.`;
+    default:
+      return `Service businesses like ${company} usually have one person doing all the back-office work.`;
+  }
+}
+
 export async function pullFromApollo(): Promise<ApolloResult> {
   const apiKey = process.env.APOLLO_API_KEY;
   if (!apiKey) throw new Error("Apollo API key not configured");
@@ -175,23 +217,31 @@ export async function pullFromApollo(): Promise<ApolloResult> {
 
   const newLeads = revealed
     .filter((p) => !existingEmails.has(p.email!))
-    .map((p) => ({
-      email: p.email!,
-      first_name: p.first_name || null,
-      last_name: p.last_name || null,
-      company_name: p.organization?.name || null,
-      title: p.title || null,
-      industry: p.organization?.industry || null,
-      employee_count: formatEmployeeCount(p.organization),
-      location: formatLocation(p),
-      revenue: p.organization?.annual_revenue_printed || null,
-      phone: p.phone_numbers?.[0]?.sanitized_number || null,
-      linkedin_url: p.linkedin_url || null,
-      source: "apollo",
-      apollo_id: p.id || null,
-      batch_id: batchId,
-      status: "new",
-    }));
+    .map((p) => {
+      const empNum = p.organization?.estimated_num_employees || null;
+      const industryStr = p.organization?.industry || null;
+      const segment = classifySegment(industryStr, empNum);
+      const personalizationLine = generatePersonalizationLine(segment, industryStr, empNum, p.organization?.name || null);
+      return {
+        email: p.email!,
+        first_name: p.first_name || null,
+        last_name: p.last_name || null,
+        company_name: p.organization?.name || null,
+        title: p.title || null,
+        industry: p.organization?.industry || null,
+        employee_count: formatEmployeeCount(p.organization),
+        location: formatLocation(p),
+        revenue: p.organization?.annual_revenue_printed || null,
+        phone: p.phone_numbers?.[0]?.sanitized_number || null,
+        linkedin_url: p.linkedin_url || null,
+        source: "apollo",
+        apollo_id: p.id || null,
+        batch_id: batchId,
+        status: "new",
+        segment,
+        personalization_line: personalizationLine,
+      };
+    });
 
   const duplicatesSkipped = (revealed.length - newLeads.length) + batchDupes;
 

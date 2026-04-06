@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { markBatchUploaded } from "./actions";
+import { markBatchUploaded, updateLeadResponse } from "./actions";
 import { pullFromApollo } from "./apollo-pull";
 import { useRouter } from "next/navigation";
 import { useToast } from "../components/toast";
@@ -9,6 +9,14 @@ import { EmptyState } from "../components/ui";
 import type { Database } from "@/lib/database.types";
 
 type Lead = Database["public"]["Tables"]["outreach_leads"]["Row"];
+// Extended lead type with columns from migration 010
+type LeadExt = Lead & {
+  segment?: string | null;
+  personalization_line?: string | null;
+  response_status?: string | null;
+  response_notes?: string | null;
+  response_date?: string | null;
+};
 
 interface Batch {
   id: string;
@@ -24,7 +32,7 @@ function escapeCSV(val: string): string {
   return val;
 }
 
-function generatePersonalization(title: string | null, company: string | null): string {
+function fallbackPersonalization(title: string | null, company: string | null): string {
   if (title && company) {
     return `As ${title} at ${company}, you know how much time back-office work takes.`;
   }
@@ -34,12 +42,12 @@ function generatePersonalization(title: string | null, company: string | null): 
   return "You know how much time back-office work takes.";
 }
 
-function downloadInstantlyCSV(leads: Lead[], batchId?: string) {
+function downloadInstantlyCSV(leads: LeadExt[], batchId?: string) {
   const headers = ["email", "first_name", "last_name", "company_name", "personalization"];
   const rows = leads.map((l) => {
     const firstName = l.first_name || "";
     const lastName = l.last_name || "";
-    const personalization = generatePersonalization(l.title, l.company_name);
+    const personalization = l.personalization_line || fallbackPersonalization(l.title, l.company_name);
     return [
       escapeCSV(l.email),
       escapeCSV(firstName),
@@ -63,11 +71,14 @@ export function OutreachDashboard({
   stats,
   batches,
   leads,
+  pipelineStats = { sent: 0, replied: 0, interested: 0, call_booked: 0, not_interested: 0 },
 }: {
   stats: { total: number; uploaded: number; pending: number };
   batches: Batch[];
-  leads: Lead[];
+  leads: LeadExt[];
+  pipelineStats?: { sent: number; replied: number; interested: number; call_booked: number; not_interested: number };
 }) {
+  const [pipelineFilter, setPipelineFilter] = useState<string | null>(null);
   const [markingBatch, setMarkingBatch] = useState<string | null>(null);
   const [pulling, setPulling] = useState(false);
   const [pullResult, setPullResult] = useState<{ newLeadsSaved: number; duplicatesSkipped: number; revealed: number; skippedNoEmail: number } | null>(null);
@@ -78,6 +89,13 @@ export function OutreachDashboard({
   const { toast } = useToast();
 
   const pendingLeads = leads.filter((l) => !l.uploaded_to_instantly);
+  const respondedLeads = leads.filter((l) => l.response_status && l.response_status !== "no_response");
+
+  async function handleResponseUpdate(leadId: string, status: string) {
+    const result = await updateLeadResponse(leadId, status);
+    if (result.success) { toast("Updated", "success"); router.refresh(); }
+    else toast(result.message, "error");
+  }
 
   const searchLower = search.toLowerCase();
   const filteredLeads = search
@@ -165,6 +183,55 @@ export function OutreachDashboard({
         ))}
       </div>
 
+      {/* Response Pipeline */}
+      <div>
+        <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Pipeline</h3>
+        <div className="grid grid-cols-5 gap-3">
+          {([
+            { key: "uploaded", label: "Sent", value: pipelineStats.sent, color: "text-zinc-900" },
+            { key: "replied", label: "Replied", value: pipelineStats.replied, color: "text-blue-700" },
+            { key: "interested", label: "Interested", value: pipelineStats.interested, color: "text-emerald-700" },
+            { key: "call_booked", label: "Calls Booked", value: pipelineStats.call_booked, color: "text-violet-700" },
+            { key: "not_interested", label: "Not Interested", value: pipelineStats.not_interested, color: "text-zinc-500" },
+          ] as const).map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setPipelineFilter(pipelineFilter === s.key ? null : s.key)}
+              className={`rounded-lg border bg-white p-3 text-left transition-colors ${pipelineFilter === s.key ? "border-zinc-400" : "border-zinc-200 hover:border-zinc-300"}`}
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{s.label}</p>
+              <p className={`mt-1 text-xl font-semibold ${s.color}`}>{s.value}</p>
+            </button>
+          ))}
+        </div>
+        {respondedLeads.length > 0 && (
+          <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200">
+            <table className="w-full text-sm">
+              <thead className="border-b border-zinc-200 bg-zinc-50">
+                <tr>
+                  {["Name", "Company", "Status", "Notes", "Date"].map((h) => (
+                    <th key={h} className="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {respondedLeads.slice(0, 25).map((l) => (
+                  <tr key={l.id} className="bg-white">
+                    <td className="px-4 py-2 text-xs font-medium text-zinc-900">{[l.first_name, l.last_name].filter(Boolean).join(" ") || "—"}</td>
+                    <td className="px-4 py-2 text-xs text-zinc-600">{l.company_name || "—"}</td>
+                    <td className="px-4 py-2">
+                      <ResponseStatusSelect leadId={l.id} currentStatus={l.response_status || "no_response"} onUpdate={handleResponseUpdate} />
+                    </td>
+                    <td className="px-4 py-2 text-xs text-zinc-500">{l.response_notes || "—"}</td>
+                    <td className="px-4 py-2 text-xs text-zinc-400">{l.response_date ? new Date(l.response_date).toLocaleDateString() : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* Download all pending */}
       {pendingLeads.length > 0 && (
         <div>
@@ -228,7 +295,7 @@ export function OutreachDashboard({
                       <table className="w-full text-sm">
                         <thead className="bg-zinc-50">
                           <tr>
-                            {["Name", "Email", "Company", "Title", "Uploaded"].map((h) => (
+                            {["Name", "Email", "Company", "Title", "Status", "Uploaded"].map((h) => (
                               <th key={h} className="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{h}</th>
                             ))}
                           </tr>
@@ -240,6 +307,9 @@ export function OutreachDashboard({
                               <td className="px-4 py-2 text-xs text-zinc-600">{l.email}</td>
                               <td className="px-4 py-2 text-xs text-zinc-600">{l.company_name || "—"}</td>
                               <td className="px-4 py-2 text-xs text-zinc-500">{l.title || "—"}</td>
+                              <td className="px-4 py-2">
+                                <ResponseStatusSelect leadId={l.id} currentStatus={(l as LeadExt).response_status || "no_response"} onUpdate={handleResponseUpdate} />
+                              </td>
                               <td className="px-4 py-2">
                                 {l.uploaded_to_instantly ? (
                                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">Yes</span>
@@ -317,5 +387,33 @@ export function OutreachDashboard({
         )}
       </div>
     </div>
+  );
+}
+
+const RESPONSE_STYLES: Record<string, string> = {
+  no_response: "border-zinc-200 bg-zinc-50 text-zinc-600",
+  opened: "border-blue-200 bg-blue-50 text-blue-700",
+  replied: "border-blue-200 bg-blue-50 text-blue-700",
+  interested: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  call_booked: "border-violet-200 bg-violet-50 text-violet-700",
+  not_interested: "border-zinc-200 bg-zinc-50 text-zinc-500",
+  unsubscribed: "border-red-200 bg-red-50 text-red-700",
+};
+
+function ResponseStatusSelect({ leadId, currentStatus, onUpdate }: { leadId: string; currentStatus: string; onUpdate: (id: string, status: string) => void }) {
+  return (
+    <select
+      value={currentStatus}
+      onChange={(e) => onUpdate(leadId, e.target.value)}
+      className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium focus:outline-none ${RESPONSE_STYLES[currentStatus] || RESPONSE_STYLES.no_response}`}
+    >
+      <option value="no_response">No Response</option>
+      <option value="opened">Opened</option>
+      <option value="replied">Replied</option>
+      <option value="interested">Interested</option>
+      <option value="call_booked">Call Booked</option>
+      <option value="not_interested">Not Interested</option>
+      <option value="unsubscribed">Unsubscribed</option>
+    </select>
   );
 }

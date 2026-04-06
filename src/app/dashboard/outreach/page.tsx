@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { OutreachDashboard } from "./outreach-dashboard";
+import { SequenceVariants } from "./sequences";
 
 export default async function OutreachPage() {
   const supabase = await createClient();
@@ -57,11 +58,41 @@ export default async function OutreachPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
+  // Pipeline stats — response_status column from migration 010
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dbAny = supabase as unknown as { from: (table: string) => any };
+  const [
+    { count: replied },
+    { count: interested },
+    { count: callBooked },
+    { count: notInterested },
+  ] = await Promise.all([
+    dbAny.from("outreach_leads").select("*", { count: "exact", head: true }).eq("response_status", "replied"),
+    dbAny.from("outreach_leads").select("*", { count: "exact", head: true }).eq("response_status", "interested"),
+    dbAny.from("outreach_leads").select("*", { count: "exact", head: true }).eq("response_status", "call_booked"),
+    dbAny.from("outreach_leads").select("*", { count: "exact", head: true }).eq("response_status", "not_interested"),
+  ]);
+
+  // Fetch email sequences
+  const { data: sequences } = await dbAny.from("email_sequences")
+    .select("*")
+    .order("created_at", { ascending: true }) ?? { data: [] };
+
   return (
-    <OutreachDashboard
-      stats={{ total: total ?? 0, uploaded: uploaded ?? 0, pending: pending ?? 0 }}
-      batches={batches}
-      leads={recentLeads ?? []}
-    />
+    <div className="space-y-8">
+      <OutreachDashboard
+        stats={{ total: total ?? 0, uploaded: uploaded ?? 0, pending: pending ?? 0 }}
+        batches={batches}
+        leads={recentLeads ?? []}
+        pipelineStats={{
+          sent: uploaded ?? 0,
+          replied: replied ?? 0,
+          interested: interested ?? 0,
+          call_booked: callBooked ?? 0,
+          not_interested: notInterested ?? 0,
+        }}
+      />
+      <SequenceVariants sequences={sequences ?? []} />
+    </div>
   );
 }
