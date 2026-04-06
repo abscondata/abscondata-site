@@ -32,8 +32,10 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   const clientMap = Object.fromEntries((clients ?? []).map((c) => [c.id, c.name]));
 
   // Fetch task templates for prefill (owner only)
+  // Fetch enabled templates only (enabled column added by migration 008)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: templates } = role === "owner"
-    ? await supabase.from("task_templates").select("id, service_key, title, description").order("sort_order", { ascending: true })
+    ? await (supabase.from("task_templates") as any).select("id, service_key, title, description").neq("enabled", false).order("sort_order", { ascending: true })
     : { data: [] };
 
   // Check if user has ever completed a task (for first-time banner)

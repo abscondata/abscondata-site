@@ -128,6 +128,21 @@ export default async function DashboardPage() {
     (t) => t.status !== "SENT" && (Date.now() - new Date(t.created_at).getTime()) > overdueThresholdMs
   ).length;
 
+  // Fetch last 7 days of snapshots for trend chart
+  const weekAgoDate = new Date(Date.now() - 7 * 24 * 3600000).toISOString().slice(0, 10);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dbAny = supabase as unknown as { from: (table: string) => any };
+  const { data: snapshots } = await dbAny
+    .from("daily_snapshots")
+    .select("snapshot_date, tasks_completed_today")
+    .gte("snapshot_date", weekAgoDate)
+    .order("snapshot_date", { ascending: true });
+
+  const trendData = (snapshots ?? []).map((s: { snapshot_date: string; tasks_completed_today: number }) => ({
+    date: s.snapshot_date,
+    completed: s.tasks_completed_today ?? 0,
+  }));
+
   return (
     <OwnerOverview
       reviewCount={reviewCount ?? 0}
@@ -136,6 +151,7 @@ export default async function DashboardPage() {
       overdueCount={overdueCount}
       recentEvents={formattedEvents}
       clientHealth={clientHealth}
+      trendData={trendData}
     />
   );
 }

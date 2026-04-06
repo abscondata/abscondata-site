@@ -10,6 +10,7 @@ import { CompletedWork } from "./completed-work";
 import { SummaryCard } from "./summary-card";
 import { TaskQuickActions } from "./task-quick-actions";
 import { BatchDraftButton } from "./batch-draft-button";
+import { ClientInvoices } from "./invoices";
 import { ClientNotes } from "./client-notes";
 import { PlatformUrl } from "./platform-url";
 
@@ -63,6 +64,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     supabase.from("tasks").select("*").eq("client_id", client.id).order("created_at", { ascending: false }).limit(30),
     supabase.from("imports").select("*").eq("client_id", client.id).order("created_at", { ascending: false }).limit(10),
   ]);
+
+  // Fetch invoices (table added by migration 008 — not in generated types)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as unknown as { from: (table: string) => any };
+  const { data: invoices } = await db.from("client_invoices")
+    .select("*")
+    .eq("client_id", client.id)
+    .order("invoice_date", { ascending: false }) ?? { data: [] };
 
   const taskIds = (tasks ?? []).map((t) => t.id);
   const { data: sourceData } = taskIds.length > 0
@@ -320,6 +329,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       {/* Completed Work */}
       <section>
         <CompletedWork tasks={completedWorkTasks} />
+      </section>
+
+      {/* Billing */}
+      <section>
+        <ClientInvoices clientId={client.id} invoices={invoices ?? []} />
       </section>
 
       {/* Weekly Summary */}

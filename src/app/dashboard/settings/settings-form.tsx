@@ -4,17 +4,23 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PageHeader, SectionLabel } from "../components/ui";
 import { useToast } from "../components/toast";
+import { TemplateManager } from "./templates";
+import type { Database } from "@/lib/database.types";
+
+type Template = Database["public"]["Tables"]["task_templates"]["Row"];
 
 export function SettingsForm({
   email,
   role,
   hasAnthropicKey,
   commitSha,
+  templates = [],
 }: {
   email: string;
   role: string;
   hasAnthropicKey: boolean;
   commitSha: string | null;
+  templates?: Template[];
 }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -154,6 +160,9 @@ export function SettingsForm({
           </div>
         </div>
       </section>
+
+      {/* Task Templates */}
+      <TemplateManager templates={templates} toast={toast} />
     </div>
   );
 }

@@ -52,6 +52,11 @@ function truncate(s: string, len: number): string {
   return s.length > len ? s.slice(0, len) + "..." : s;
 }
 
+interface TrendDay {
+  date: string;
+  completed: number;
+}
+
 export function OwnerOverview({
   reviewCount,
   newCount,
@@ -59,6 +64,7 @@ export function OwnerOverview({
   overdueCount = 0,
   recentEvents,
   clientHealth,
+  trendData = [],
 }: {
   reviewCount: number;
   newCount: number;
@@ -66,6 +72,7 @@ export function OwnerOverview({
   overdueCount?: number;
   recentEvents: FormattedEvent[];
   clientHealth: ClientHealth[];
+  trendData?: TrendDay[];
 }) {
   const capped = recentEvents.slice(0, 8);
 
@@ -180,6 +187,56 @@ export function OwnerOverview({
           </div>
         )}
       </div>
+
+      {/* Trend chart — Last 7 Days */}
+      {trendData.length > 0 && (
+        <div>
+          <SectionLabel>Last 7 Days</SectionLabel>
+          <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-5">
+            <TrendChart data={trendData} />
+            <p className="mt-3 text-center text-xs text-zinc-500">
+              {trendData.reduce((s, d) => s + d.completed, 0)} tasks completed this week
+            </p>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function TrendChart({ data }: { data: TrendDay[] }) {
+  const max = Math.max(...data.map((d) => d.completed), 1);
+  const chartH = 120;
+  const barW = 100 / data.length;
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return (
+    <svg viewBox={`0 0 ${data.length * 50} ${chartH + 20}`} className="w-full" style={{ maxHeight: chartH + 20 }}>
+      {data.map((d, i) => {
+        const barH = max > 0 ? (d.completed / max) * (chartH - 10) : 0;
+        const x = i * 50 + 10;
+        const dayIdx = new Date(d.date + "T12:00:00").getDay();
+        return (
+          <g key={d.date}>
+            <rect
+              x={x}
+              y={chartH - barH}
+              width={30}
+              height={Math.max(barH, 2)}
+              rx={3}
+              className="fill-zinc-300 hover:fill-zinc-500 transition-colors"
+            />
+            {d.completed > 0 && (
+              <text x={x + 15} y={chartH - barH - 4} textAnchor="middle" className="fill-zinc-500" style={{ fontSize: 10 }}>
+                {d.completed}
+              </text>
+            )}
+            <text x={x + 15} y={chartH + 14} textAnchor="middle" className="fill-zinc-400" style={{ fontSize: 10 }}>
+              {dayNames[dayIdx]}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
   );
 }
