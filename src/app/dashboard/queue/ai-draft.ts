@@ -4,16 +4,58 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 
-const SERVICE_PROMPTS: Record<string, (recipient: string, clientBiz: string, sourceFields: Record<string, string | null>) => string> = {
-  invoice_ops: (r, c, s) =>
-    `Draft an invoice delivery email to ${r} from ${c}. Invoice details: ${s.invoice_number ? `Invoice #${s.invoice_number}` : ""}${s.amount ? `, Amount: $${s.amount}` : ""}${s.due_date ? `, Due: ${s.due_date}` : ""}${s.notes ? `. Notes: ${s.notes}` : ""}.`,
-  payment_followup: (r, c, s) =>
-    `Draft a payment follow-up email to ${r} from ${c}. ${s.amount ? `Amount: $${s.amount}.` : ""}${s.days_overdue ? ` ${s.days_overdue} days overdue.` : ""}${s.notes ? ` Notes: ${s.notes}` : ""}`,
-  review_requests: (r, c, s) =>
-    `Draft a review request email to ${r} from ${c}. Ask them to leave a review on ${s.notes || "Google"}.`,
-  lead_intake: (r, c, s) =>
-    `Draft a lead response email to ${r} from ${c}. They inquired about: ${s.notes || "your services"}.`,
-};
+const SYSTEM_PROMPT = "You are drafting emails on behalf of a service business. Write as if you ARE the business owner or office manager. First person. Short paragraphs. Friendly but professional. No exclamation marks. No em dashes. No 'I hope this finds you well' or similar filler. Get to the point in the first sentence.";
+
+function formatSourceFields(fields: Record<string, string | null>): string {
+  const parts: string[] = [];
+  if (fields.customer_name) parts.push(`Customer: ${fields.customer_name}`);
+  if (fields.customer_email) parts.push(`Email: ${fields.customer_email}`);
+  if (fields.customer_phone) parts.push(`Phone: ${fields.customer_phone}`);
+  if (fields.invoice_number) parts.push(`Invoice #${fields.invoice_number}`);
+  if (fields.amount) parts.push(`Amount: $${fields.amount}`);
+  if (fields.due_date) parts.push(`Due date: ${fields.due_date}`);
+  if (fields.days_overdue) parts.push(`Days overdue: ${fields.days_overdue}`);
+  if (fields.notes) parts.push(`Notes: ${fields.notes}`);
+  return parts.length > 0 ? parts.join("\n") : "No additional details available.";
+}
+
+function buildUserPrompt(
+  serviceKey: string,
+  recipientName: string,
+  clientBiz: string,
+  sourceFields: Record<string, string | null>
+): string | null {
+  const details = formatSourceFields(sourceFields);
+
+  switch (serviceKey) {
+    case "invoice_ops":
+      return `Write an invoice delivery email from ${clientBiz} to ${recipientName}.
+Invoice details from source data:
+${details}
+Keep it under 5 sentences. Include the amount if available. Ask them to reach out with any questions.`;
+
+    case "payment_followup":
+      return `Write a payment follow-up email from ${clientBiz} to ${recipientName}.
+This is regarding an outstanding balance. Details:
+${details}
+Tone: firm but polite. Reference the original invoice if details are available. Ask for payment or to discuss a payment plan. Keep under 5 sentences.`;
+
+    case "review_requests":
+      return `Write a review request email from ${clientBiz} to ${recipientName}.
+They recently received service from ${clientBiz}. Source info:
+${details}
+Ask them to leave a review. Include a Google review link placeholder: [REVIEW_LINK]. Keep it warm and brief — 3-4 sentences max.`;
+
+    case "lead_intake":
+      return `Write a response to a new lead inquiry for ${clientBiz}. The lead is ${recipientName}.
+Their inquiry details:
+${details}
+Respond promptly, reference their specific inquiry, suggest next steps or a call. Keep under 5 sentences.`;
+
+    default:
+      return null;
+  }
+}
 
 export async function generateAiDraft(
   taskId: number
@@ -57,20 +99,19 @@ export async function generateAiDraft(
     const clientBiz = (task.clients as unknown as { name: string } | null)?.name || "the business";
     const recipientName = task.recipient_name || sourceFields.customer_name || "the customer";
 
-    const promptFn = SERVICE_PROMPTS[task.service_key || ""];
-    if (!promptFn) return { success: false, message: `No AI prompt template for service: ${task.service_key}` };
+    const userPrompt = buildUserPrompt(task.service_key || "", recipientName, clientBiz, sourceFields);
+    if (!userPrompt) return { success: false, message: `No AI prompt template for service: ${task.service_key}` };
 
-    let userPrompt = promptFn(recipientName, clientBiz, sourceFields);
-    if (sopContent) {
-      userPrompt += `\n\nFollow this SOP for guidance:\n${sopContent}`;
-    }
+    const fullPrompt = sopContent
+      ? `${userPrompt}\n\nFollow these operational guidelines:\n${sopContent}`
+      : userPrompt;
 
     const anthropic = new Anthropic({ apiKey });
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
-      system: "You are a back-office operations assistant for Abscondata. You draft professional emails and messages on behalf of service businesses. Be concise, professional, and warm. No exclamation marks. No em dashes. No AI-sounding language.",
-      messages: [{ role: "user", content: userPrompt }],
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: fullPrompt }],
     });
 
     const draft = response.content

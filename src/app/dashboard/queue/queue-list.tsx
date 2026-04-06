@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { updateTaskStatus, updateTaskDraft, createManualTask } from "./actions";
+import { updateTaskStatus, updateTaskDraft, createManualTask, retryException, closeException } from "./actions";
 import { generateAiDraft } from "./ai-draft";
 import { useRouter } from "next/navigation";
 import { StatusBadge, EmptyState } from "../components/ui";
@@ -58,44 +58,69 @@ function ageHours(dateStr: string): number {
 
 const TERMINAL_STATUSES = ["SENT", "CLOSED"];
 
-function NormalizedFields({ data }: { data: Record<string, Json | undefined> }) {
-  const entries = FIELD_ORDER
-    .filter((k) => data[k] && String(data[k]).trim())
-    .map((k) => ({ key: k, label: FIELD_LABELS[k] || k, value: String(data[k]) }));
-  if (entries.length === 0) return null;
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-      <div className="grid grid-cols-2 gap-x-8 gap-y-3 lg:grid-cols-4">
-        {entries.map((e) => (
-          <div key={e.key}>
-            <dt className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">{e.label}</dt>
-            <dd className="mt-0.5 text-sm font-medium text-zinc-900">{e.value}</dd>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+const DATE_FIELDS = ["due_date", "date_due", "invoice_date"];
+const AMOUNT_FIELDS = ["amount", "balance", "total", "amount_due"];
+
+function formatFieldValue(key: string, value: string): string {
+  if (AMOUNT_FIELDS.includes(key)) {
+    const num = parseFloat(value.replace(/[^0-9.-]/g, ""));
+    if (!isNaN(num)) return `$${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  if (DATE_FIELDS.includes(key)) {
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+  return value;
 }
 
-function RawPayload({ data }: { data: Record<string, Json | undefined> }) {
-  const entries = Object.entries(data).filter(([, v]) => v && String(v).trim());
-  if (entries.length === 0) return null;
+function StructuredSourceData({ normalized, payload }: { normalized: Record<string, Json | undefined>; payload: Record<string, Json | undefined> }) {
+  const normalizedEntries = FIELD_ORDER
+    .filter((k) => normalized[k] && String(normalized[k]).trim())
+    .map((k) => ({ key: k, label: FIELD_LABELS[k] || k.replace(/_/g, " "), value: formatFieldValue(k, String(normalized[k])) }));
+
+  const payloadEntries = Object.entries(payload).filter(([, v]) => v && String(v).trim());
+
+  if (normalizedEntries.length === 0 && payloadEntries.length === 0) return null;
+
   return (
-    <details className="mt-3">
-      <summary className="cursor-pointer text-[10px] font-medium uppercase tracking-wider text-zinc-400 hover:text-zinc-600">
-        All imported fields ({entries.length})
-      </summary>
-      <div className="mt-2 rounded-lg border border-zinc-100 bg-white p-3">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 lg:grid-cols-4">
-          {entries.map(([k, v]) => (
-            <div key={k} className="flex gap-1.5 text-xs">
-              <span className="font-medium text-zinc-500">{k}:</span>
-              <span className="text-zinc-900">{String(v)}</span>
-            </div>
-          ))}
+    <div>
+      {normalizedEntries.length > 0 ? (
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+          <div className="space-y-2">
+            {normalizedEntries.map((e) => (
+              <div key={e.key} className="flex items-baseline justify-between gap-4">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 shrink-0">{e.label}</span>
+                <span className="text-sm font-medium text-zinc-900 text-right">{e.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </details>
+      ) : (
+        // Fallback: formatted payload JSON
+        <pre className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-xs text-zinc-700 overflow-x-auto whitespace-pre-wrap font-mono">
+          {JSON.stringify(payload, null, 2)}
+        </pre>
+      )}
+
+      {/* Raw data collapsible */}
+      {payloadEntries.length > 0 && normalizedEntries.length > 0 && (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-[10px] font-medium uppercase tracking-wider text-zinc-400 hover:text-zinc-600">
+            Raw Data ({payloadEntries.length} fields)
+          </summary>
+          <div className="mt-2 rounded-lg border border-zinc-100 bg-white p-3">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 lg:grid-cols-4">
+              {payloadEntries.map(([k, v]) => (
+                <div key={k} className="flex gap-1.5 text-xs">
+                  <span className="font-medium text-zinc-500">{k}:</span>
+                  <span className="text-zinc-900">{String(v)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </details>
+      )}
+    </div>
   );
 }
 
@@ -344,6 +369,7 @@ function TaskRow({
   const [showReject, setShowReject] = useState(false);
   const [needsInfoNotes, setNeedsInfoNotes] = useState("");
   const [showNeedsInfo, setShowNeedsInfo] = useState(false);
+  const [exceptionNotes, setExceptionNotes] = useState("");
   const router = useRouter();
   const { toast } = useToast();
 
@@ -442,12 +468,7 @@ function TaskRow({
             {/* Left column: working area */}
             <div className="space-y-5 p-5 md:border-r md:border-zinc-100">
               {/* Source data */}
-              {Object.keys(normalized).some((k) => normalized[k] && String(normalized[k]).trim()) && (
-                <div>
-                  <NormalizedFields data={normalized} />
-                  <RawPayload data={payload} />
-                </div>
-              )}
+              <StructuredSourceData normalized={normalized} payload={payload} />
 
               {/* Task description */}
               {task.notes && (
@@ -464,6 +485,45 @@ function TaskRow({
                     {status === "EXCEPTION" ? "Exception" : "Previously Rejected"}
                   </span>
                   <p className="mt-1 text-sm font-medium text-red-800">{task.exception_description || task.rejection_reason}</p>
+                  {status === "EXCEPTION" && (
+                    <div className="mt-3 space-y-3">
+                      <textarea
+                        value={exceptionNotes}
+                        onChange={(e) => setExceptionNotes(e.target.value)}
+                        rows={2}
+                        className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
+                        placeholder="Resolution notes (optional)..."
+                      />
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={async () => {
+                            setLoading(true);
+                            const result = await retryException(task.id, exceptionNotes);
+                            if (result.success) { toast("Task retried — moved back to NEW", "success"); router.refresh(); }
+                            else { toast(result.message, "error"); }
+                            setLoading(false);
+                          }}
+                          disabled={loading}
+                          className="rounded-lg bg-zinc-900 px-5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+                        >
+                          Retry
+                        </button>
+                        <button
+                          onClick={async () => {
+                            setLoading(true);
+                            const result = await closeException(task.id, exceptionNotes);
+                            if (result.success) { toast("Exception closed", "success"); router.refresh(); }
+                            else { toast(result.message, "error"); }
+                            setLoading(false);
+                          }}
+                          disabled={loading}
+                          className="rounded-lg border border-zinc-300 bg-white px-5 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

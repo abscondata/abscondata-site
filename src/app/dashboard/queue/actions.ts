@@ -13,6 +13,7 @@ const VALID_TRANSITIONS: Record<string, TaskStatus[]> = {
   READY_FOR_REVIEW: ["APPROVED", "EXCEPTION"],
   APPROVED: ["SENT", "EXCEPTION"],
   SENT: ["CLOSED", "EXCEPTION"],
+  EXCEPTION: ["NEW", "CLOSED"],
 };
 
 export async function updateTaskStatus(
@@ -70,6 +71,7 @@ export async function updateTaskStatus(
     revalidatePath("/dashboard");
 
     const statusLabels: Record<string, string> = {
+      NEW: "Task moved back to NEW",
       READY_FOR_REVIEW: "Task moved to review",
       WAITING_ON_MISSING_DATA: "Task marked as waiting",
       APPROVED: "Task approved",
@@ -154,5 +156,77 @@ export async function createManualTask(
     return { success: true, message: "Task created", taskId: task.id };
   } catch (err) {
     return { success: false, message: err instanceof Error ? err.message : "Failed to create task" };
+  }
+}
+
+export async function retryException(
+  taskId: number,
+  notes?: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from("tasks")
+      .update({
+        status: "NEW" as const,
+        updated_at: new Date().toISOString(),
+        exception_reason_code: null,
+        exception_description: null,
+      })
+      .eq("id", taskId)
+      .eq("status", "EXCEPTION");
+
+    if (error) return { success: false, message: error.message };
+
+    await supabase.from("task_events").insert({
+      task_id: taskId,
+      event_type: "exception_retry",
+      actor_type: "user",
+      actor_id: user?.id || null,
+      notes: notes || null,
+    });
+
+    revalidatePath("/dashboard/queue");
+    revalidatePath("/dashboard");
+    return { success: true, message: "Task retried — moved back to NEW" };
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : "Failed to retry task" };
+  }
+}
+
+export async function closeException(
+  taskId: number,
+  notes?: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from("tasks")
+      .update({
+        status: "CLOSED" as const,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", taskId)
+      .eq("status", "EXCEPTION");
+
+    if (error) return { success: false, message: error.message };
+
+    await supabase.from("task_events").insert({
+      task_id: taskId,
+      event_type: "exception_closed",
+      actor_type: "user",
+      actor_id: user?.id || null,
+      notes: notes || null,
+    });
+
+    revalidatePath("/dashboard/queue");
+    revalidatePath("/dashboard");
+    return { success: true, message: "Exception closed" };
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : "Failed to close exception" };
   }
 }
