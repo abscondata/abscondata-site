@@ -478,13 +478,23 @@ function TaskRow({
 
             {/* Right column: metadata */}
             <div className="space-y-5 p-5 bg-zinc-50/50">
-              {/* Recipient */}
+              {/* Recipient contact card */}
               {(task.recipient_name || task.recipient_email) && (
                 <div>
                   <label className="mb-2 block text-[10px] font-medium uppercase tracking-wider text-zinc-500">Recipient</label>
-                  <div className="space-y-1 text-sm">
-                    {task.recipient_name && <p className="font-medium text-zinc-900">{task.recipient_name}</p>}
-                    {task.recipient_email && <p className="text-zinc-600">{task.recipient_email}</p>}
+                  <div className="rounded-lg border border-zinc-200 bg-white p-3 space-y-1.5">
+                    {task.recipient_name && <p className="font-medium text-sm text-zinc-900">{task.recipient_name}</p>}
+                    {task.recipient_email && (
+                      <a href={`mailto:${task.recipient_email}`} className="block text-xs text-blue-600 hover:text-blue-700 hover:underline">{task.recipient_email}</a>
+                    )}
+                    {normalized.customer_phone && (
+                      <a href={`tel:${String(normalized.customer_phone)}`} className="block text-xs text-blue-600 hover:text-blue-700 hover:underline">{String(normalized.customer_phone)}</a>
+                    )}
+                    {normalized.amount && (
+                      <p className="text-sm font-semibold text-zinc-900">
+                        {String(normalized.amount).startsWith("$") ? String(normalized.amount) : `$${Number(String(normalized.amount).replace(/[^0-9.]/g, "")).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

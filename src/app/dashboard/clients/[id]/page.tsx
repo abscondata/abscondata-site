@@ -9,6 +9,7 @@ import { BulkTaskForm } from "./bulk-tasks";
 import { CompletedWork } from "./completed-work";
 import { SummaryCard } from "./summary-card";
 import { TaskQuickActions } from "./task-quick-actions";
+import { BatchDraftButton } from "./batch-draft-button";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -254,6 +255,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               Create Task
             </Link>
             <BulkTaskForm clientId={client.id} />
+            <BatchDraftButton
+              clientId={client.id}
+              eligibleCount={activeTasks.filter((t) => t.status === "NEW" && !t.ai_draft && t.service_key !== "weekly_summary").length}
+            />
             <Link href="/dashboard/queue" className="text-xs font-medium text-zinc-500 hover:text-zinc-900">
               Open Queue →
             </Link>

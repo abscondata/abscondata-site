@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { OwnerOverview } from "./components/owner-overview";
 import { VAOverview } from "./components/va-overview";
+import { captureDailySnapshot } from "./stats/actions";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -54,6 +55,9 @@ export default async function DashboardPage() {
       />
     );
   }
+
+  // Capture daily snapshot (idempotent — skips if already exists for today)
+  captureDailySnapshot().catch(() => {});
 
   // Owner view
   const [

@@ -26,6 +26,7 @@ export function DashboardShell({ userEmail, role, children }: { userEmail: strin
     { href: "/dashboard/activity", label: "Activity" },
     { href: "/dashboard/sops", label: "SOPs" },
     { href: "/dashboard/onboarding", label: "Onboarding" },
+    { href: "/dashboard/settings", label: "Settings" },
   ];
   const vaLinks = [
     { href: "/dashboard", label: "Overview" },
