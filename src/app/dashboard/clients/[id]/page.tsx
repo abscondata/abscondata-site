@@ -10,6 +10,8 @@ import { CompletedWork } from "./completed-work";
 import { SummaryCard } from "./summary-card";
 import { TaskQuickActions } from "./task-quick-actions";
 import { BatchDraftButton } from "./batch-draft-button";
+import { ClientNotes } from "./client-notes";
+import { PlatformUrl } from "./platform-url";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -159,7 +161,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           {client.niche && <span className="text-zinc-400">{client.niche}</span>}
           {client.service_area && <span className="text-zinc-400">{client.service_area}</span>}
         </div>
-        {client.notes && <p className="mt-2 text-sm italic text-zinc-500">{client.notes}</p>}
+        <div className="mt-3">
+          <ClientNotes clientId={client.id} initialNotes={client.notes || ""} />
+        </div>
         {/* Task status summary */}
         {activeTasks.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
@@ -229,10 +233,17 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <p className="text-sm text-zinc-400">No platforms configured.</p>
         ) : (
           <div className="space-y-2">
-            {platforms.map((p) => (
+            {platforms.map((p) => {
+              const platformUrl = (p as Record<string, unknown>).platform_url as string || "";
+              return (
               <div key={p.id} className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3">
-                <div>
-                  <span className="text-sm font-medium text-zinc-900">{PLATFORM_LABELS[p.platform_key] || p.platform_key}</span>
+                <div className="flex items-center">
+                  {platformUrl ? (
+                    <a href={platformUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">{PLATFORM_LABELS[p.platform_key] || p.platform_key}</a>
+                  ) : (
+                    <span className="text-sm font-medium text-zinc-900">{PLATFORM_LABELS[p.platform_key] || p.platform_key}</span>
+                  )}
+                  <PlatformUrl platformId={p.id} initialUrl={platformUrl} />
                   {p.connection_method && (
                     <span className="ml-2 text-xs text-zinc-400">({p.connection_method})</span>
                   )}
@@ -241,7 +252,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                 </div>
                 <PlatformStatusDropdown platformId={p.id} currentStatus={p.connection_status || "not_connected"} />
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

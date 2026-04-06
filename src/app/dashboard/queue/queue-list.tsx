@@ -135,22 +135,66 @@ export function QueueList({
     initialExpandId ? "all" : (initialFilter || "all")
   );
   const [showNewTask, setShowNewTask] = useState(isOwner && !!initialNewTaskClientId);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const { toast } = useToast();
 
   const overdueThresholdMs = 48 * 3600000;
   const overdueTasks = tasks.filter(
     (t) => t.created_at && !TERMINAL_STATUSES.includes(t.status || "NEW") && (Date.now() - new Date(t.created_at).getTime()) > overdueThresholdMs
   );
 
-  const filtered = filter === "all"
+  const statusFiltered = filter === "all"
     ? tasks
     : filter === "OVERDUE"
     ? overdueTasks
     : tasks.filter((t) => t.status === filter);
 
+  // Search filter (client-side)
+  const searchLower = search.toLowerCase();
+  const filtered = search
+    ? statusFiltered.filter((t) => {
+        const title = (t.title || "").toLowerCase();
+        const recipient = (t.recipient_name || "").toLowerCase();
+        const recipientEmail = (t.recipient_email || "").toLowerCase();
+        const client = (t.client_id ? clientMap[t.client_id] || "" : "").toLowerCase();
+        return title.includes(searchLower) || recipient.includes(searchLower) || recipientEmail.includes(searchLower) || client.includes(searchLower);
+      })
+    : statusFiltered;
+
   const statusCounts: Record<string, number> = {};
   for (const t of tasks) {
     const s = t.status || "NEW";
     statusCounts[s] = (statusCounts[s] || 0) + 1;
+  }
+
+  function toggleSelect(taskId: number, e: React.MouseEvent) {
+    e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  }
+
+  const selectedTasks = tasks.filter((t) => selectedIds.has(t.id));
+  const allSelectedReview = selectedTasks.length > 0 && selectedTasks.every((t) => t.status === "READY_FOR_REVIEW");
+  const allSelectedApproved = selectedTasks.length > 0 && selectedTasks.every((t) => t.status === "APPROVED");
+
+  async function batchAction(newStatus: string) {
+    setBatchLoading(true);
+    let count = 0;
+    for (const t of selectedTasks) {
+      const result = await updateTaskStatus(t.id, newStatus as Parameters<typeof updateTaskStatus>[1]);
+      if (result.success) count++;
+    }
+    toast(`${newStatus === "APPROVED" ? "Approved" : "Marked sent"} ${count} tasks`, "success");
+    setSelectedIds(new Set());
+    setBatchLoading(false);
+    router.refresh();
   }
 
   const tabs = [
@@ -186,8 +230,9 @@ export function QueueList({
         </div>
       )}
 
-      {/* Filter tabs */}
-      <div className="mb-5 flex border-b border-zinc-200">
+      {/* Filter tabs + search */}
+      <div className="mb-5 flex items-end justify-between border-b border-zinc-200">
+        <div className="flex">
         {tabs.map((t) => {
           const count = t.key === "all" ? tasks.length : t.key === "OVERDUE" ? overdueTasks.length : (statusCounts[t.key] || 0);
           const active = filter === t.key;
@@ -206,6 +251,13 @@ export function QueueList({
             </button>
           );
         })}
+        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search tasks..."
+          className="mb-1 w-52 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none"
+        />
       </div>
 
       {showNewTask && <NewTaskForm clients={clients} templates={templates} initialClientId={initialNewTaskClientId} onDone={() => setShowNewTask(false)} />}
@@ -225,9 +277,44 @@ export function QueueList({
             sourceData={task.id ? sourceMap[task.id] : undefined}
             expanded={expandedId === task.id}
             onToggle={() => setExpandedId(expandedId === task.id ? null : task.id)}
+            selected={selectedIds.has(task.id)}
+            onSelect={(e) => toggleSelect(task.id, e)}
           />
         ))}
       </div>
+
+      {/* Floating batch action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-xl border border-zinc-300 bg-white px-5 py-3 shadow-lg">
+          <span className="text-xs font-semibold text-zinc-700">{selectedIds.size} selected</span>
+          {allSelectedReview && (
+            <button
+              onClick={() => batchAction("APPROVED")}
+              disabled={batchLoading}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+            >
+              {batchLoading && <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              Approve {selectedIds.size}
+            </button>
+          )}
+          {allSelectedApproved && (
+            <button
+              onClick={() => batchAction("SENT")}
+              disabled={batchLoading}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {batchLoading && <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              Mark Sent {selectedIds.size}
+            </button>
+          )}
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-xs text-zinc-400 hover:text-zinc-700"
+          >
+            Clear Selection
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -238,12 +325,16 @@ function TaskRow({
   sourceData,
   expanded,
   onToggle,
+  selected,
+  onSelect,
 }: {
   task: Task;
   clientName: string;
   sourceData?: SourceData;
   expanded: boolean;
   onToggle: () => void;
+  selected: boolean;
+  onSelect: (e: React.MouseEvent) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [generatingDraft, setGeneratingDraft] = useState(false);
@@ -320,7 +411,16 @@ function TaskRow({
   return (
     <div className={`rounded-lg border bg-white ${expanded ? "border-zinc-300 shadow-sm" : "border-zinc-200"}`}>
       {/* Collapsed header */}
-      <button onClick={onToggle} className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors rounded-lg">
+      <div className="flex items-center">
+        <div className="flex items-center pl-3" onClick={onSelect}>
+          <input
+            type="checkbox"
+            checked={selected}
+            readOnly
+            className="h-3.5 w-3.5 accent-zinc-900 cursor-pointer"
+          />
+        </div>
+      <button onClick={onToggle} className="flex flex-1 items-center justify-between px-3 py-3 text-left hover:bg-zinc-50 transition-colors rounded-lg">
         <div className="flex items-center gap-3 min-w-0">
           <StatusBadge status={status} />
           <span className="font-medium text-zinc-700 text-xs shrink-0">{clientName}</span>
@@ -333,6 +433,7 @@ function TaskRow({
           <span className="text-zinc-300">{expanded ? "▲" : "▼"}</span>
         </div>
       </button>
+      </div>
 
       {/* Expanded workspace */}
       {expanded && (

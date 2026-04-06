@@ -1,15 +1,40 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Breadcrumb } from "./breadcrumb";
 import { ToastProvider } from "./toast";
 
+function useEasternClock() {
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    function update() {
+      setTime(
+        new Date().toLocaleString("en-US", {
+          timeZone: "America/New_York",
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      );
+    }
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
 export function DashboardShell({ userEmail, role, children }: { userEmail: string; role: "owner" | "va"; children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+
+  const clock = useEasternClock();
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -65,6 +90,7 @@ export function DashboardShell({ userEmail, role, children }: { userEmail: strin
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            {clock && <span className="text-xs text-zinc-400">{clock}</span>}
             <span className="text-xs text-zinc-500">{userEmail}</span>
             <button onClick={handleSignOut} className="text-xs text-zinc-500 transition-colors hover:text-zinc-700">Sign out</button>
           </div>
