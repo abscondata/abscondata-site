@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { updateTaskStatus, updateTaskDraft, createManualTask } from "./actions";
+import { generateAiDraft } from "./ai-draft";
 import { useRouter } from "next/navigation";
 import { StatusBadge, EmptyState } from "../components/ui";
 import { useToast } from "../components/toast";
@@ -245,7 +246,9 @@ function TaskRow({
   onToggle: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [generatingDraft, setGeneratingDraft] = useState(false);
   const [editedDraft, setEditedDraft] = useState(task.edited_draft || "");
+  const [currentAiDraft, setCurrentAiDraft] = useState(task.ai_draft || "");
   const [rejectReason, setRejectReason] = useState("");
   const [showReject, setShowReject] = useState(false);
   const [needsInfoNotes, setNeedsInfoNotes] = useState("");
@@ -366,11 +369,39 @@ function TaskRow({
               {/* Draft area */}
               <div className="grid gap-4 lg:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-zinc-500">
-                    AI Draft <span className="font-normal normal-case tracking-normal text-zinc-400">(read-only)</span>
-                  </label>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
+                      AI Draft <span className="font-normal normal-case tracking-normal text-zinc-400">(read-only)</span>
+                    </label>
+                    {!currentAiDraft && (status === "NEW" || status === "READY_FOR_REVIEW") && task.service_key !== "weekly_summary" && (
+                      <button
+                        onClick={async () => {
+                          setGeneratingDraft(true);
+                          try {
+                            const result = await generateAiDraft(task.id);
+                            if (result.success && result.draft) {
+                              setCurrentAiDraft(result.draft);
+                              toast("AI draft generated", "success");
+                              router.refresh();
+                            } else {
+                              toast(result.message, "error");
+                            }
+                          } catch (err) {
+                            toast(err instanceof Error ? err.message : "Failed to generate draft", "error");
+                          } finally {
+                            setGeneratingDraft(false);
+                          }
+                        }}
+                        disabled={generatingDraft}
+                        className="inline-flex items-center gap-1.5 rounded-md bg-zinc-900 px-3 py-1 text-[10px] font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+                      >
+                        {generatingDraft && <span className="inline-block h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-white border-t-transparent" />}
+                        {generatingDraft ? "Generating..." : "Generate Draft"}
+                      </button>
+                    )}
+                  </div>
                   <textarea
-                    value={task.ai_draft || ""}
+                    value={currentAiDraft}
                     readOnly
                     rows={6}
                     className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-700 cursor-default"

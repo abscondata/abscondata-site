@@ -1,13 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import { SectionLabel, StatusBadge } from "../../components/ui";
+import { useToast } from "../../components/toast";
+
+const SERVICE_REPORT_LABELS: Record<string, string> = {
+  invoice_ops: "Invoicing",
+  payment_followup: "Payment Follow-up",
+  review_requests: "Review Requests",
+  lead_intake: "Lead Intake",
+  weekly_summary: "Weekly Summary",
+};
+
+interface CompletedTask {
+  id: number;
+  title: string;
+  completedAt: string;
+  serviceKey: string | null;
+}
 
 interface WeeklySummaryProps {
   createdThisWeek: number;
   completedThisWeek: number;
   openByStatus: Record<string, number>;
-  completedTasks: Array<{ id: number; title: string; completedAt: string }>;
+  completedTasks: CompletedTask[];
   clientName: string;
+  contactFirstName: string;
   weekStart: string;
   weekEnd: string;
 }
@@ -18,10 +36,64 @@ export function WeeklySummary({
   openByStatus,
   completedTasks,
   clientName,
+  contactFirstName,
   weekStart,
   weekEnd,
 }: WeeklySummaryProps) {
   const totalOpen = Object.values(openByStatus).reduce((a, b) => a + b, 0);
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+
+  // Group completed by service
+  const byService: Record<string, CompletedTask[]> = {};
+  for (const t of completedTasks) {
+    const key = t.serviceKey || "other";
+    if (!byService[key]) byService[key] = [];
+    byService[key].push(t);
+  }
+
+  // Build copy-paste report
+  const firstName = contactFirstName || "there";
+  const subject = `Weekly Update — ${clientName} — ${weekStart} to ${weekEnd}`;
+
+  const serviceCounts = Object.entries(byService)
+    .map(([key, tasks]) => {
+      const label = SERVICE_REPORT_LABELS[key] || key.replace(/_/g, " ");
+      const verb = key === "lead_intake" ? "processed" : "sent";
+      return `${label}: ${tasks.length} ${verb}`;
+    })
+    .join("\n");
+
+  const details = completedTasks
+    .map((t) => `- ${t.title} (${new Date(t.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })})`)
+    .join("\n");
+
+  const reportBody = `Hi ${firstName},
+
+Here is your weekly operations summary.
+
+Completed This Week:
+
+${serviceCounts || "No tasks completed this week."}
+
+${details ? `Details:\n${details}` : ""}
+
+Currently In Progress: ${totalOpen} tasks
+
+Best,
+Robin
+Abscondata`;
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(`Subject: ${subject}\n\n${reportBody}`);
+      setCopied(true);
+      toast("Report copied to clipboard", "success");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast("Failed to copy", "error");
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -76,6 +148,23 @@ export function WeeklySummary({
       {createdThisWeek === 0 && completedThisWeek === 0 && (
         <p className="py-4 text-center text-sm text-zinc-400">No activity this week for {clientName}.</p>
       )}
+
+      {/* Client Report — copy-paste block */}
+      <div className="border-t border-zinc-200 pt-4">
+        <div className="mb-3 flex items-center justify-between">
+          <SectionLabel>Client Report</SectionLabel>
+          <button
+            onClick={handleCopy}
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors"
+          >
+            {copied ? "Copied!" : "Copy to Clipboard"}
+          </button>
+        </div>
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+          <p className="mb-3 select-all text-xs font-semibold text-zinc-700">Subject: {subject}</p>
+          <pre className="whitespace-pre-wrap font-sans text-sm text-zinc-700 leading-relaxed select-all">{reportBody}</pre>
+        </div>
+      </div>
     </div>
   );
 }

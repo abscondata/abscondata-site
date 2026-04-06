@@ -8,6 +8,7 @@ import { WeeklySummary } from "./weekly-summary";
 import { BulkTaskForm } from "./bulk-tasks";
 import { CompletedWork } from "./completed-work";
 import { SummaryCard } from "./summary-card";
+import { TaskQuickActions } from "./task-quick-actions";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -92,6 +93,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     id: t.id,
     title: t.title,
     completedAt: t.sent_at || t.updated_at || t.created_at,
+    serviceKey: t.service_key,
   }));
 
   // Completed work data (SENT + CLOSED tasks)
@@ -273,7 +275,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                       </span>
                       <Link href={`/dashboard/queue?task=${t.id}`} className="text-sm font-medium text-zinc-900 hover:underline">{t.title}</Link>
                     </div>
-                    <span className="text-xs text-zinc-400">{SERVICE_LABELS[t.service_key || ""] || t.service_key || "—"}</span>
+                    <div className="flex items-center gap-3">
+                      <TaskQuickActions
+                        taskId={t.id}
+                        status={t.status || "NEW"}
+                        serviceKey={t.service_key}
+                        hasAiDraft={!!t.ai_draft}
+                      />
+                      <span className="text-xs text-zinc-400">{SERVICE_LABELS[t.service_key || ""] || t.service_key || "—"}</span>
+                    </div>
                   </div>
                   {(normalized.customer_name || normalized.amount || normalized.invoice_number) && (
                     <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-zinc-500">
@@ -303,6 +313,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           openByStatus={openByStatus}
           completedTasks={completedTasksList}
           clientName={client.name}
+          contactFirstName={(client.primary_contact_name || "").split(" ")[0]}
           weekStart={weekStart}
           weekEnd={weekEnd}
         />
