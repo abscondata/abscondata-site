@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SectionLabel } from "../../components/ui";
+import { SectionLabel, EmptyState } from "../../components/ui";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -68,9 +68,7 @@ export function CompletedWork({ tasks }: { tasks: CompletedTask[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="py-6 text-center text-sm text-zinc-400">
-          {range === "week" ? "No completed work this week." : range === "lastweek" ? "No completed work last week." : "No completed work yet."}
-        </p>
+        <EmptyState message={range === "week" ? "No completed work this week." : range === "lastweek" ? "No completed work last week." : "No completed work yet."} />
       ) : (
         <div className="overflow-hidden rounded-lg border border-zinc-200">
           <table className="w-full text-sm">

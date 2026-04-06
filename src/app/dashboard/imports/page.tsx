@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { EmptyState } from "../components/ui";
 import { ImportForm } from "./import-form";
 
 export default async function ImportsPage() {
@@ -24,7 +25,7 @@ export default async function ImportsPage() {
       <div>
         <h3 className="mb-3 text-sm font-semibold text-zinc-900">Import History</h3>
         {(!imports || imports.length === 0) ? (
-          <p className="text-sm text-zinc-400">No imports yet.</p>
+          <EmptyState message="No imports yet. Use CSV upload to bring in client data." />
         ) : (
           <div className="overflow-hidden rounded-lg border border-zinc-200">
             <table className="w-full text-sm">

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { EmptyState } from "../../components/ui";
 import { ServiceToggle } from "./service-toggle";
 import { PlatformStatusDropdown } from "./platform-status";
 import { WeeklySummary } from "./weekly-summary";
@@ -257,7 +258,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </div>
         {activeTasks.length === 0 ? (
-          <p className="text-sm text-zinc-400">No active tasks.</p>
+          <EmptyState message="No active tasks. Create a task or import data to get started." actionLabel="Create Task" actionHref={`/dashboard/queue?newTask=${client.id}`} />
         ) : (
           <div className="space-y-2">
             {activeTasks.map((t) => {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updatePlatformStatus } from "./actions";
 import { useRouter } from "next/navigation";
+import { useToast } from "../../components/toast";
 
 const STATUS_OPTIONS = [
   { value: "not_connected", label: "Not Connected" },
@@ -22,14 +23,22 @@ export function PlatformStatusDropdown({ platformId, currentStatus }: { platform
   const [status, setStatus] = useState(currentStatus || "not_connected");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleChange(newStatus: string) {
     setLoading(true);
     setStatus(newStatus);
     try {
-      await updatePlatformStatus(platformId, newStatus);
-      router.refresh();
+      const result = await updatePlatformStatus(platformId, newStatus);
+      if (result.success) {
+        toast("Platform status updated", "success");
+        router.refresh();
+      } else {
+        toast(result.message, "error");
+        setStatus(currentStatus);
+      }
     } catch {
+      toast("Failed to update platform status", "error");
       setStatus(currentStatus);
     } finally {
       setLoading(false);

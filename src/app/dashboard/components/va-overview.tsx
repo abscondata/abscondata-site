@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SectionLabel } from "./ui";
+import { SectionLabel, EmptyState } from "./ui";
 
 interface VAEvent {
   id: string;
@@ -66,7 +66,9 @@ export function VAOverview({
       <div>
         <SectionLabel>Your Recent Activity</SectionLabel>
         {recentEvents.length === 0 ? (
-          <p className="mt-3 py-8 text-center text-sm text-zinc-400">No activity yet. Head to the queue to get started.</p>
+          <div className="mt-3">
+            <EmptyState message="No recent activity. Tasks will appear here as you work." actionLabel="Go to Queue" actionHref="/dashboard/queue" />
+          </div>
         ) : (
           <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200">
             {recentEvents.map((e, i) => (

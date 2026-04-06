@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { processImport } from "./actions";
 import { useRouter } from "next/navigation";
+import { useToast } from "../components/toast";
 
 const KNOWN_FIELDS = [
   "customer_name", "customer_email", "customer_phone",
@@ -47,8 +48,9 @@ export function ImportForm({ clients }: { clients: { id: number; name: string }[
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [columnMap, setColumnMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ importId: string; taskCount: number } | null>(null);
+  const [result, setResult] = useState<{ importId?: string; taskCount?: number } | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -96,10 +98,15 @@ export function ImportForm({ clients }: { clients: { id: number; name: string }[
     setLoading(true);
     try {
       const res = await processImport(Number(clientId), importType, fileName, remapRows());
-      setResult(res);
-      router.refresh();
+      if (res.success) {
+        toast(res.message, "success");
+        setResult(res);
+        router.refresh();
+      } else {
+        toast(res.message, "error");
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Import failed");
+      toast(err instanceof Error ? err.message : "Import failed", "error");
     } finally {
       setLoading(false);
     }

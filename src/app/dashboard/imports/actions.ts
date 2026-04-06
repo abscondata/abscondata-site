@@ -8,7 +8,8 @@ export async function processImport(
   importType: string,
   fileName: string,
   rows: Record<string, string>[]
-) {
+): Promise<{ success: boolean; message: string; importId?: string; taskCount?: number }> {
+  try {
   const supabase = await createClient();
 
   // Create import record
@@ -25,7 +26,7 @@ export async function processImport(
     .select("id")
     .single();
 
-  if (impErr || !imp) throw new Error(impErr?.message || "Failed to create import");
+  if (impErr || !imp) return { success: false, message: impErr?.message || "Failed to create import" };
 
   // Map import type to service key
   const serviceKeyMap: Record<string, string> = {
@@ -96,5 +97,8 @@ export async function processImport(
   revalidatePath("/dashboard/imports");
   revalidatePath("/dashboard/queue");
   revalidatePath("/dashboard");
-  return { importId: imp.id, taskCount: rows.length };
+  return { success: true, message: `Import complete — ${rows.length} tasks created`, importId: imp.id, taskCount: rows.length };
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : "Import failed" };
+  }
 }

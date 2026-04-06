@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { EmptyState } from "../components/ui";
 import { ConvertButton } from "./convert-button";
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -48,7 +49,7 @@ export default async function OnboardingReviewPage() {
       <h2 className="mb-5 text-lg font-semibold text-zinc-900">Onboarding Submissions</h2>
 
       {(!submissions || submissions.length === 0) && (
-        <p className="py-12 text-center text-sm text-zinc-400">No submissions yet.</p>
+        <EmptyState message="No onboarding submissions yet. Share abscondata.com/onboarding with prospects." />
       )}
 
       <div className="space-y-3">

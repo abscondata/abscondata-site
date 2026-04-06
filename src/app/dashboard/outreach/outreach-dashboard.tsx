@@ -4,6 +4,8 @@ import { useState } from "react";
 import { markBatchUploaded } from "./actions";
 import { pullFromApollo } from "./apollo-pull";
 import { useRouter } from "next/navigation";
+import { useToast } from "../components/toast";
+import { EmptyState } from "../components/ui";
 import type { Database } from "@/lib/database.types";
 
 type Lead = Database["public"]["Tables"]["outreach_leads"]["Row"];
@@ -73,6 +75,7 @@ export function OutreachDashboard({
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const router = useRouter();
+  const { toast } = useToast();
 
   const pendingLeads = leads.filter((l) => !l.uploaded_to_instantly);
 
@@ -105,9 +108,10 @@ export function OutreachDashboard({
     setMarkingBatch(batchId);
     try {
       await markBatchUploaded(batchId);
+      toast("Batch marked as uploaded", "success");
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed");
+      toast(err instanceof Error ? err.message : "Failed to mark batch", "error");
     } finally {
       setMarkingBatch(null);
     }
@@ -270,7 +274,9 @@ export function OutreachDashboard({
           />
         </div>
         {filteredLeads.length === 0 ? (
-          <p className="py-12 text-center text-sm text-zinc-400">{search ? "No leads match your search." : "No leads yet."}</p>
+          search
+            ? <EmptyState message="No leads match your search." />
+            : <EmptyState message="No leads loaded. Pull from Apollo to start prospecting." />
         ) : (
           <div className="overflow-x-auto rounded-lg border border-zinc-200">
             <table className="w-full text-sm">

@@ -3,19 +3,27 @@
 import { useState } from "react";
 import { convertSubmission, rejectSubmission } from "./actions";
 import { useRouter } from "next/navigation";
+import { useToast } from "../components/toast";
 
 export function ConvertButton({ submissionId }: { submissionId: string }) {
   const [loading, setLoading] = useState(false);
   const [showReject, setShowReject] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleConvert() {
     setLoading(true);
     try {
       const result = await convertSubmission(submissionId);
-      router.push(`/dashboard/clients/${result.clientId}`);
+      if (result.success && result.clientId) {
+        toast("Submission converted to client", "success");
+        router.push(`/dashboard/clients/${result.clientId}`);
+      } else {
+        toast(result.message, "error");
+        setLoading(false);
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Conversion failed");
+      toast(err instanceof Error ? err.message : "Conversion failed", "error");
       setLoading(false);
     }
   }
@@ -23,10 +31,15 @@ export function ConvertButton({ submissionId }: { submissionId: string }) {
   async function handleReject() {
     setLoading(true);
     try {
-      await rejectSubmission(submissionId);
-      router.refresh();
+      const result = await rejectSubmission(submissionId);
+      if (result.success) {
+        toast("Submission rejected", "success");
+        router.refresh();
+      } else {
+        toast(result.message, "error");
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Reject failed");
+      toast(err instanceof Error ? err.message : "Reject failed", "error");
     } finally {
       setLoading(false);
       setShowReject(false);

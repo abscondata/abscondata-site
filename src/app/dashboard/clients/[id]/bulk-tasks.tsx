@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { bulkCreateTasks } from "./bulk-actions";
 import { useRouter } from "next/navigation";
+import { useToast } from "../../components/toast";
 
 const SERVICE_OPTIONS = [
   { key: "payment_followup", label: "Payment Follow-Up" },
@@ -45,6 +46,7 @@ export function BulkTaskForm({ clientId }: { clientId: number }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   function handlePreview() {
     const rows = parseRows(rawText);
@@ -56,12 +58,17 @@ export function BulkTaskForm({ clientId }: { clientId: number }) {
     setLoading(true);
     try {
       const res = await bulkCreateTasks(clientId, serviceKey, preview);
-      setResult(res.count);
-      setRawText("");
-      setPreview(null);
-      router.refresh();
+      if (res.success) {
+        toast(res.message, "success");
+        setResult(res.count ?? 0);
+        setRawText("");
+        setPreview(null);
+        router.refresh();
+      } else {
+        toast(res.message, "error");
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Bulk creation failed");
+      toast(err instanceof Error ? err.message : "Bulk creation failed", "error");
     } finally {
       setLoading(false);
     }
@@ -127,8 +134,9 @@ export function BulkTaskForm({ clientId }: { clientId: number }) {
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="rounded-lg bg-zinc-900 px-5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
           >
+            {loading && <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             {loading ? "Creating..." : `Create ${preview.length} Tasks`}
           </button>
         )}

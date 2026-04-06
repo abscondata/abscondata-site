@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { updateTaskStatus, updateTaskDraft, createManualTask } from "./actions";
 import { useRouter } from "next/navigation";
-import { StatusBadge } from "../components/ui";
+import { StatusBadge, EmptyState } from "../components/ui";
+import { useToast } from "../components/toast";
 import type { Database, Json } from "@/lib/database.types";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
@@ -193,9 +194,9 @@ export function QueueList({
       {showNewTask && <NewTaskForm clients={clients} templates={templates} initialClientId={initialNewTaskClientId} onDone={() => setShowNewTask(false)} />}
 
       {filtered.length === 0 && (
-        <p className="py-12 text-center text-sm text-zinc-400">
-          {filter === "all" ? "Queue is empty. All caught up." : `No ${filter.toLowerCase().replace(/_/g, " ")} tasks.`}
-        </p>
+        filter === "all"
+          ? <EmptyState message="No tasks in queue. Create one from a client page or wait for imports." />
+          : <EmptyState message={`No ${filter.toLowerCase().replace(/_/g, " ")} tasks.`} />
       )}
 
       <div className="space-y-1.5">
@@ -234,6 +235,7 @@ function TaskRow({
   const [needsInfoNotes, setNeedsInfoNotes] = useState("");
   const [showNeedsInfo, setShowNeedsInfo] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const normalized = (sourceData?.normalized_fields_json as Record<string, Json | undefined>) || {};
   const payload = (sourceData?.payload_json as Record<string, Json | undefined>) || {};
@@ -247,27 +249,31 @@ function TaskRow({
   ) {
     setLoading(true);
     try {
-      await updateTaskStatus(task.id, newStatus as Parameters<typeof updateTaskStatus>[1], {
+      const result = await updateTaskStatus(task.id, newStatus as Parameters<typeof updateTaskStatus>[1], {
         ...extra,
         edited_draft: editedDraft,
       });
-      setShowReject(false);
-      setShowNeedsInfo(false);
-      setRejectReason("");
-      setNeedsInfoNotes("");
-      router.refresh();
+      if (result.success) {
+        toast(result.message, "success");
+        setShowReject(false);
+        setShowNeedsInfo(false);
+        setRejectReason("");
+        setNeedsInfoNotes("");
+        router.refresh();
+      } else {
+        toast(result.message, "error");
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed");
+      toast(err instanceof Error ? err.message : "Failed to update status", "error");
     } finally {
       setLoading(false);
     }
   }
 
   async function saveDraft() {
-    try {
-      await updateTaskDraft(task.id, editedDraft, "edited_draft");
-    } catch {
-      // silent
+    const result = await updateTaskDraft(task.id, editedDraft, "edited_draft");
+    if (result.success) {
+      toast("Draft saved", "success");
     }
   }
 
@@ -450,6 +456,7 @@ function NewTaskForm({ clients, templates, initialClientId, onDone }: { clients:
   const [recipientPhone, setRecipientPhone] = useState("");
   const [sourceNotes, setSourceNotes] = useState("");
   const router = useRouter();
+  const { toast } = useToast();
 
   const serviceTemplates = templates.filter((t) => t.service_key === serviceKey);
 
@@ -472,11 +479,16 @@ function NewTaskForm({ clients, templates, initialClientId, onDone }: { clients:
     if (!clientId || !title) return;
     setLoading(true);
     try {
-      await createManualTask(Number(clientId), serviceKey, { name: recipientName, email: recipientEmail, phone: recipientPhone }, sourceNotes, title);
-      onDone();
-      router.refresh();
+      const result = await createManualTask(Number(clientId), serviceKey, { name: recipientName, email: recipientEmail, phone: recipientPhone }, sourceNotes, title);
+      if (result.success) {
+        toast("Task created", "success");
+        onDone();
+        router.refresh();
+      } else {
+        toast(result.message, "error");
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to create task");
+      toast(err instanceof Error ? err.message : "Failed to create task", "error");
     } finally {
       setLoading(false);
     }
@@ -533,7 +545,8 @@ function NewTaskForm({ clients, templates, initialClientId, onDone }: { clients:
         <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-zinc-500">Source Notes</label>
         <textarea value={sourceNotes} onChange={(e) => setSourceNotes(e.target.value)} rows={3} placeholder="Invoice details, amounts, dates, context..." className={inputClasses} />
       </div>
-      <button type="submit" disabled={loading || !clientId || !title} className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors">
+      <button type="submit" disabled={loading || !clientId || !serviceKey || !title} className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors">
+        {loading && <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />}
         {loading ? "Creating..." : "Create Task"}
       </button>
     </form>

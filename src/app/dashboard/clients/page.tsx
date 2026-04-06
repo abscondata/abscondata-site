@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { StatusBadge } from "../components/ui";
+import { StatusBadge, EmptyState } from "../components/ui";
 import type { Database } from "@/lib/database.types";
 
 type Client = Database["public"]["Tables"]["clients"]["Row"];
@@ -101,7 +101,7 @@ export default async function ClientsPage() {
               </tr>
             ))}
             {sorted.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-zinc-400">No clients yet.</td></tr>
+              <tr><td colSpan={6}><EmptyState message="No clients yet. Add your first client to get started." actionLabel="Add Client" actionHref="/dashboard/clients/new" /></td></tr>
             )}
           </tbody>
         </table>

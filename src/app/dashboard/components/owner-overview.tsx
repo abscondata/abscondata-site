@@ -107,7 +107,7 @@ export function OwnerOverview({
           </Link>
         </div>
         {capped.length === 0 ? (
-          <EmptyState message="No recent activity." actionLabel="Go to Queue" actionHref="/dashboard/queue" />
+          <EmptyState message="No recent activity. Tasks will appear here as you work." actionLabel="Go to Queue" actionHref="/dashboard/queue" />
         ) : (
           <div className="overflow-hidden rounded-lg border border-zinc-200">
             {capped.map((e, i) => (
@@ -129,9 +129,13 @@ export function OwnerOverview({
       </div>
 
       {/* Client health */}
-      {clientHealth.length > 0 && (
-        <div>
-          <SectionLabel>Client Health</SectionLabel>
+      <div>
+        <SectionLabel>Client Health</SectionLabel>
+        {clientHealth.length === 0 ? (
+          <div className="mt-3">
+            <EmptyState message="No active clients. Your client health dashboard will populate as you onboard clients." actionLabel="Add Client" actionHref="/dashboard/clients/new" />
+          </div>
+        ) : (
           <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200">
             <table className="w-full text-sm">
               <thead className="border-b border-zinc-200 bg-zinc-50">
@@ -171,8 +175,8 @@ export function OwnerOverview({
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
