@@ -24,7 +24,11 @@ export function DashboardShell({ userEmail, role, children }: { userEmail: strin
     { href: "/dashboard/outreach", label: "Outreach" },
     { href: "/dashboard/onboarding", label: "Onboarding" },
   ];
-  const links = role === "owner" ? ownerLinks : [{ href: "/dashboard", label: "My Tasks" }];
+  const vaLinks = [
+    { href: "/dashboard", label: "Overview" },
+    { href: "/dashboard/queue", label: "Queue" },
+  ];
+  const links = role === "owner" ? ownerLinks : vaLinks;
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";

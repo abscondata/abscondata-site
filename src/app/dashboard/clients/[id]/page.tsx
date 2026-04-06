@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ServiceToggle } from "./service-toggle";
 import { PlatformStatusDropdown } from "./platform-status";
 import { WeeklySummary } from "./weekly-summary";
+import { BulkTaskForm } from "./bulk-tasks";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -212,6 +213,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             <Link href={`/dashboard/queue?newTask=${client.id}`} className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors">
               Create Task
             </Link>
+            <BulkTaskForm clientId={client.id} />
             <Link href="/dashboard/queue" className="text-xs font-medium text-zinc-500 hover:text-zinc-900">
               Open Queue →
             </Link>

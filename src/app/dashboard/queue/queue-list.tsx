@@ -104,6 +104,8 @@ export function QueueList({
   sourceMap,
   clients,
   templates,
+  role = "owner",
+  isFirstSession = false,
   initialExpandId,
   initialFilter,
   initialNewTaskClientId,
@@ -113,15 +115,18 @@ export function QueueList({
   sourceMap: Record<number, SourceData>;
   clients: { id: number; name: string }[];
   templates: TaskTemplate[];
+  role?: "owner" | "va";
+  isFirstSession?: boolean;
   initialExpandId?: number;
   initialFilter?: string;
   initialNewTaskClientId?: string;
 }) {
+  const isOwner = role === "owner";
   const [expandedId, setExpandedId] = useState<number | null>(initialExpandId ?? null);
   const [filter, setFilter] = useState<string>(
     initialExpandId ? "all" : (initialFilter || "all")
   );
-  const [showNewTask, setShowNewTask] = useState(!!initialNewTaskClientId);
+  const [showNewTask, setShowNewTask] = useState(isOwner && !!initialNewTaskClientId);
 
   const filtered = filter === "all"
     ? tasks
@@ -148,14 +153,22 @@ export function QueueList({
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-zinc-800">Work Queue</h2>
-          <button
-            onClick={() => setShowNewTask(!showNewTask)}
-            className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors"
-          >
-            {showNewTask ? "Cancel" : "New Task"}
-          </button>
+          {isOwner && (
+            <button
+              onClick={() => setShowNewTask(!showNewTask)}
+              className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors"
+            >
+              {showNewTask ? "Cancel" : "New Task"}
+            </button>
+          )}
         </div>
       </div>
+
+      {isFirstSession && (
+        <div className="mb-4 rounded-lg bg-zinc-100 px-4 py-3 text-sm text-zinc-600">
+          Pick a task → review the draft → edit if needed → approve → mark as sent when done
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="mb-5 flex border-b border-zinc-200">

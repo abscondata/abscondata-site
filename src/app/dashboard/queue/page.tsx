@@ -9,8 +9,9 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-  if (profile?.role !== "owner") redirect("/dashboard");
+  const role = profile?.role ?? "va";
 
+  // VA can access queue too (not just owners)
   const { data: tasks } = await supabase
     .from("tasks")
     .select("*")
@@ -30,11 +31,17 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   const { data: clients } = await supabase.from("clients").select("id, name").eq("status", "active").order("name");
   const clientMap = Object.fromEntries((clients ?? []).map((c) => [c.id, c.name]));
 
-  // Fetch task templates for prefill
-  const { data: templates } = await supabase
-    .from("task_templates")
-    .select("id, service_key, title, description")
-    .order("sort_order", { ascending: true });
+  // Fetch task templates for prefill (owner only)
+  const { data: templates } = role === "owner"
+    ? await supabase.from("task_templates").select("id, service_key, title, description").order("sort_order", { ascending: true })
+    : { data: [] };
+
+  // Check if user has ever completed a task (for first-time banner)
+  const { count: completedCount } = await supabase
+    .from("task_events")
+    .select("*", { count: "exact", head: true })
+    .eq("actor_id", user.id)
+    .like("event_type", "%SENT%");
 
   return (
     <QueueList
@@ -43,9 +50,11 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
       sourceMap={sourceMap}
       clients={clients ?? []}
       templates={templates ?? []}
+      role={role as "owner" | "va"}
+      isFirstSession={(completedCount ?? 0) === 0}
       initialExpandId={expandTaskId ? Number(expandTaskId) : undefined}
       initialFilter={initialFilter}
-      initialNewTaskClientId={newTaskClientId}
+      initialNewTaskClientId={role === "owner" ? newTaskClientId : undefined}
     />
   );
 }
