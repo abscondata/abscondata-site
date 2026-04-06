@@ -91,26 +91,37 @@ function RawPayload({ data }: { data: Record<string, Json | undefined> }) {
   );
 }
 
+interface TaskTemplate {
+  id: string;
+  service_key: string;
+  title: string;
+  description: string | null;
+}
+
 export function QueueList({
   tasks,
   clientMap,
   sourceMap,
   clients,
+  templates,
   initialExpandId,
   initialFilter,
+  initialNewTaskClientId,
 }: {
   tasks: Task[];
   clientMap: Record<number, string>;
   sourceMap: Record<number, SourceData>;
   clients: { id: number; name: string }[];
+  templates: TaskTemplate[];
   initialExpandId?: number;
   initialFilter?: string;
+  initialNewTaskClientId?: string;
 }) {
   const [expandedId, setExpandedId] = useState<number | null>(initialExpandId ?? null);
   const [filter, setFilter] = useState<string>(
     initialExpandId ? "all" : (initialFilter || "all")
   );
-  const [showNewTask, setShowNewTask] = useState(false);
+  const [showNewTask, setShowNewTask] = useState(!!initialNewTaskClientId);
 
   const filtered = filter === "all"
     ? tasks
@@ -166,7 +177,7 @@ export function QueueList({
         })}
       </div>
 
-      {showNewTask && <NewTaskForm clients={clients} onDone={() => setShowNewTask(false)} />}
+      {showNewTask && <NewTaskForm clients={clients} templates={templates} initialClientId={initialNewTaskClientId} onDone={() => setShowNewTask(false)} />}
 
       {filtered.length === 0 && (
         <p className="py-12 text-center text-sm text-zinc-400">
@@ -415,16 +426,33 @@ function TaskRow({
   );
 }
 
-function NewTaskForm({ clients, onDone }: { clients: { id: number; name: string }[]; onDone: () => void }) {
+function NewTaskForm({ clients, templates, initialClientId, onDone }: { clients: { id: number; name: string }[]; templates: TaskTemplate[]; initialClientId?: string; onDone: () => void }) {
   const [loading, setLoading] = useState(false);
-  const [clientId, setClientId] = useState("");
+  const [clientId, setClientId] = useState(initialClientId || "");
   const [serviceKey, setServiceKey] = useState("payment_followup");
+  const [templateId, setTemplateId] = useState("");
   const [title, setTitle] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [sourceNotes, setSourceNotes] = useState("");
   const router = useRouter();
+
+  const serviceTemplates = templates.filter((t) => t.service_key === serviceKey);
+
+  function handleServiceChange(newKey: string) {
+    setServiceKey(newKey);
+    setTemplateId("");
+    // Auto-select first template title
+    const first = templates.find((t) => t.service_key === newKey);
+    if (first) setTitle(first.title);
+  }
+
+  function handleTemplateChange(tId: string) {
+    setTemplateId(tId);
+    const tmpl = templates.find((t) => t.id === tId);
+    if (tmpl) setTitle(tmpl.title);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -446,7 +474,7 @@ function NewTaskForm({ clients, onDone }: { clients: { id: number; name: string 
   return (
     <form onSubmit={handleSubmit} className="mb-5 rounded-lg border border-zinc-200 bg-white p-5 space-y-4">
       <h3 className="text-sm font-semibold text-zinc-900">Create Task</h3>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-zinc-500">Client *</label>
           <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className={inputClasses}>
@@ -456,10 +484,19 @@ function NewTaskForm({ clients, onDone }: { clients: { id: number; name: string 
         </div>
         <div>
           <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-zinc-500">Service *</label>
-          <select value={serviceKey} onChange={(e) => setServiceKey(e.target.value)} className={inputClasses}>
+          <select value={serviceKey} onChange={(e) => handleServiceChange(e.target.value)} className={inputClasses}>
             {SERVICE_OPTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
           </select>
         </div>
+        {serviceTemplates.length > 1 && (
+          <div>
+            <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-zinc-500">Template</label>
+            <select value={templateId} onChange={(e) => handleTemplateChange(e.target.value)} className={inputClasses}>
+              <option value="">Select template...</option>
+              {serviceTemplates.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+            </select>
+          </div>
+        )}
         <div>
           <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-zinc-500">Task Title *</label>
           <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. Follow up: John Smith INV-1234" className={inputClasses} />

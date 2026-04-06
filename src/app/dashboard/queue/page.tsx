@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { QueueList } from "./queue-list";
 
-export default async function QueuePage({ searchParams }: { searchParams: Promise<{ task?: string; filter?: string }> }) {
-  const { task: expandTaskId, filter: initialFilter } = await searchParams;
+export default async function QueuePage({ searchParams }: { searchParams: Promise<{ task?: string; filter?: string; newTask?: string }> }) {
+  const { task: expandTaskId, filter: initialFilter, newTask: newTaskClientId } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -30,14 +30,22 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   const { data: clients } = await supabase.from("clients").select("id, name").eq("status", "active").order("name");
   const clientMap = Object.fromEntries((clients ?? []).map((c) => [c.id, c.name]));
 
+  // Fetch task templates for prefill
+  const { data: templates } = await supabase
+    .from("task_templates")
+    .select("id, service_key, title, description")
+    .order("sort_order", { ascending: true });
+
   return (
     <QueueList
       tasks={tasks ?? []}
       clientMap={clientMap}
       sourceMap={sourceMap}
       clients={clients ?? []}
+      templates={templates ?? []}
       initialExpandId={expandTaskId ? Number(expandTaskId) : undefined}
       initialFilter={initialFilter}
+      initialNewTaskClientId={newTaskClientId}
     />
   );
 }

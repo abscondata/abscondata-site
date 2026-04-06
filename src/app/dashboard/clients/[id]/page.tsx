@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ServiceToggle } from "./service-toggle";
 import { PlatformStatusDropdown } from "./platform-status";
+import { WeeklySummary } from "./weekly-summary";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -65,6 +66,29 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const activeTasks = (tasks ?? []).filter((t) => t.status !== "CLOSED");
   const closedTasks = (tasks ?? []).filter((t) => t.status === "CLOSED");
+
+  // Weekly summary data
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekStart = weekAgo.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const weekEnd = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  const allTasks = tasks ?? [];
+  const createdThisWeek = allTasks.filter((t) => new Date(t.created_at) >= weekAgo).length;
+  const completedThisWeek = allTasks.filter((t) =>
+    (t.status === "SENT" || t.status === "CLOSED") &&
+    (t.sent_at ? new Date(t.sent_at) >= weekAgo : false)
+  );
+  const openByStatus: Record<string, number> = {};
+  for (const t of activeTasks) {
+    const s = t.status || "NEW";
+    openByStatus[s] = (openByStatus[s] || 0) + 1;
+  }
+  const completedTasksList = completedThisWeek.map((t) => ({
+    id: t.id,
+    title: t.title,
+    completedAt: t.sent_at || t.updated_at || t.created_at,
+  }));
 
   // Task counts by status
   const statusCounts: Record<string, number> = {};
@@ -184,9 +208,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Active Tasks ({activeTasks.length})</h3>
-          <Link href="/dashboard/queue" className="text-xs font-medium text-zinc-500 hover:text-zinc-900">
-            Open Queue →
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href={`/dashboard/queue?newTask=${client.id}`} className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors">
+              Create Task
+            </Link>
+            <Link href="/dashboard/queue" className="text-xs font-medium text-zinc-500 hover:text-zinc-900">
+              Open Queue →
+            </Link>
+          </div>
         </div>
         {activeTasks.length === 0 ? (
           <p className="text-sm text-zinc-400">No active tasks.</p>
@@ -239,6 +268,19 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </details>
         </section>
       )}
+
+      {/* Weekly Summary */}
+      <section>
+        <WeeklySummary
+          createdThisWeek={createdThisWeek}
+          completedThisWeek={completedThisWeek.length}
+          openByStatus={openByStatus}
+          completedTasks={completedTasksList}
+          clientName={client.name}
+          weekStart={weekStart}
+          weekEnd={weekEnd}
+        />
+      </section>
 
       {/* Imports */}
       <section>
