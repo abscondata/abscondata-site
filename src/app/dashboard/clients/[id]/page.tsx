@@ -5,6 +5,8 @@ import { ServiceToggle } from "./service-toggle";
 import { PlatformStatusDropdown } from "./platform-status";
 import { WeeklySummary } from "./weekly-summary";
 import { BulkTaskForm } from "./bulk-tasks";
+import { CompletedWork } from "./completed-work";
+import { SummaryCard } from "./summary-card";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -91,6 +93,31 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     completedAt: t.sent_at || t.updated_at || t.created_at,
   }));
 
+  // Completed work data (SENT + CLOSED tasks)
+  const completedWorkTasks = closedTasks
+    .sort((a, b) => {
+      const da = a.sent_at || a.updated_at || a.created_at;
+      const db = b.sent_at || b.updated_at || b.created_at;
+      return new Date(db).getTime() - new Date(da).getTime();
+    })
+    .map((t) => ({
+      id: t.id,
+      title: t.title,
+      serviceKey: t.service_key,
+      recipientName: t.recipient_name,
+      recipientEmail: t.recipient_email,
+      sentAt: t.sent_at || t.updated_at || null,
+    }));
+
+  // Summary card data
+  const enabledServices = (services ?? []).filter((s) => s.enabled).map((s) => s.service_key);
+  const connectedPlatforms = (platforms ?? []).filter((p) => p.connection_status === "connected").length;
+  const totalPlatforms = (platforms ?? []).length;
+  const summaryCompletedTasks = completedThisWeek.map((t) => ({
+    title: t.title,
+    date: new Date(t.sent_at || t.updated_at || t.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+  }));
+
   // Task counts by status
   const statusCounts: Record<string, number> = {};
   for (const t of activeTasks) {
@@ -110,6 +137,16 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${client.status?.toLowerCase() === "active" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-zinc-200 bg-zinc-50 text-zinc-600"}`}>
             {client.status || "—"}
           </span>
+          <SummaryCard
+            clientName={client.name}
+            niche={client.niche}
+            services={enabledServices}
+            platformsConnected={connectedPlatforms}
+            platformsTotal={totalPlatforms}
+            weekLabel={weekStart}
+            completedCount={completedThisWeek.length}
+            completedTasks={summaryCompletedTasks}
+          />
         </div>
         <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-zinc-600">
           {client.primary_contact_name && <span className="font-medium text-zinc-900">{client.primary_contact_name}</span>}
@@ -252,24 +289,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         )}
       </section>
 
-      {/* Closed Tasks */}
-      {closedTasks.length > 0 && (
-        <section>
-          <details>
-            <summary className="cursor-pointer text-[10px] font-semibold uppercase tracking-wider text-zinc-400 hover:text-zinc-600">
-              Closed Tasks ({closedTasks.length})
-            </summary>
-            <div className="mt-2 space-y-1">
-              {closedTasks.map((t) => (
-                <div key={t.id} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-                  <span className="text-xs text-zinc-500">{t.title}</span>
-                  <span className="text-[10px] text-zinc-400">{t.sent_at ? new Date(t.sent_at).toLocaleDateString() : ""}</span>
-                </div>
-              ))}
-            </div>
-          </details>
-        </section>
-      )}
+      {/* Completed Work */}
+      <section>
+        <CompletedWork tasks={completedWorkTasks} />
+      </section>
 
       {/* Weekly Summary */}
       <section>

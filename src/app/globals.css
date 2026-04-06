@@ -76,3 +76,9 @@ a {
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
 }
+
+@media print {
+  header, nav, .print\\:hidden { display: none !important; }
+  main { padding: 0 !important; max-width: 100% !important; }
+  body { background: white !important; }
+}
