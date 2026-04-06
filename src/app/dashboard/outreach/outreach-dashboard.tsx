@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { markBatchUploaded, updateLeadResponse } from "./actions";
 import { pullFromApollo } from "./apollo-pull";
+import { backfillLeadSegmentation } from "./backfill-actions";
 import { useRouter } from "next/navigation";
 import { useToast } from "../components/toast";
 import { EmptyState } from "../components/ui";
@@ -81,6 +82,7 @@ export function OutreachDashboard({
   const [pipelineFilter, setPipelineFilter] = useState<string | null>(null);
   const [markingBatch, setMarkingBatch] = useState<string | null>(null);
   const [pulling, setPulling] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
   const [pullResult, setPullResult] = useState<{ newLeadsSaved: number; duplicatesSkipped: number; revealed: number; skippedNoEmail: number } | null>(null);
   const [pullError, setPullError] = useState<string | null>(null);
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
@@ -146,13 +148,32 @@ export function OutreachDashboard({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-zinc-900">Outreach</h2>
-        <button
-          onClick={handlePullFromApollo}
-          disabled={pulling}
-          className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
-        >
-          {pulling ? "Pulling leads from Apollo..." : "Generate New Batch"}
-        </button>
+        <div className="flex items-center gap-3">
+          {leads.some((l) => !(l as LeadExt).segment) && (
+            <button
+              onClick={async () => {
+                setBackfilling(true);
+                try {
+                  const result = await backfillLeadSegmentation();
+                  if (result.success) { toast(result.message, "success"); router.refresh(); }
+                  else toast(result.message, "error");
+                } catch (err) { toast(err instanceof Error ? err.message : "Backfill failed", "error"); }
+                finally { setBackfilling(false); }
+              }}
+              disabled={backfilling}
+              className="rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+            >
+              {backfilling ? "Backfilling..." : "Backfill Segments"}
+            </button>
+          )}
+          <button
+            onClick={handlePullFromApollo}
+            disabled={pulling}
+            className="rounded-lg bg-zinc-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+          >
+            {pulling ? "Pulling leads from Apollo..." : "Generate New Batch"}
+          </button>
+        </div>
       </div>
 
       {pullResult && (

@@ -143,6 +143,23 @@ export default async function DashboardPage() {
     completed: s.tasks_completed_today ?? 0,
   }));
 
+  // Today's progress — count events from today (Eastern)
+  const todayEastern = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const todayStr = todayEastern.toISOString().slice(0, 10);
+  const todayStart = todayStr + "T00:00:00Z";
+
+  const { count: completedToday } = await supabase
+    .from("task_events")
+    .select("*", { count: "exact", head: true })
+    .like("event_type", "%→SENT%")
+    .gte("created_at", todayStart);
+
+  const { count: draftsToday } = await supabase
+    .from("task_events")
+    .select("*", { count: "exact", head: true })
+    .eq("event_type", "task_created")
+    .gte("created_at", todayStart);
+
   return (
     <OwnerOverview
       reviewCount={reviewCount ?? 0}
@@ -152,6 +169,10 @@ export default async function DashboardPage() {
       recentEvents={formattedEvents}
       clientHealth={clientHealth}
       trendData={trendData}
+      todayProgress={{
+        completed: completedToday ?? 0,
+        drafts: draftsToday ?? 0,
+      }}
     />
   );
 }

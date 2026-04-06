@@ -13,7 +13,7 @@ interface NewClientData {
   service_area: string;
   notes: string;
   services: string[];
-  platforms: string[];
+  platforms: { key: string; url?: string }[];
 }
 
 export async function createClientManual(data: NewClientData): Promise<{ success: boolean; message: string; clientId?: number }> {
@@ -47,12 +47,14 @@ export async function createClientManual(data: NewClientData): Promise<{ success
     }
 
     if (data.platforms.length > 0) {
-      await supabase.from("client_platforms").insert(
-        data.platforms.map((key) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("client_platforms") as any).insert(
+        data.platforms.map((p) => ({
           client_id: clientId,
-          platform_key: key,
+          platform_key: p.key,
           connection_method: "pending",
           connection_status: "not_connected",
+          platform_url: p.url || null,
         }))
       );
     }

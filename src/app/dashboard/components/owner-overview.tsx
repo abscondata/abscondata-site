@@ -57,6 +57,11 @@ interface TrendDay {
   completed: number;
 }
 
+interface TodayProgress {
+  completed: number;
+  drafts: number;
+}
+
 export function OwnerOverview({
   reviewCount,
   newCount,
@@ -65,6 +70,7 @@ export function OwnerOverview({
   recentEvents,
   clientHealth,
   trendData = [],
+  todayProgress,
 }: {
   reviewCount: number;
   newCount: number;
@@ -73,6 +79,7 @@ export function OwnerOverview({
   recentEvents: FormattedEvent[];
   clientHealth: ClientHealth[];
   trendData?: TrendDay[];
+  todayProgress?: TodayProgress;
 }) {
   const capped = recentEvents.slice(0, 8);
 
@@ -200,6 +207,27 @@ export function OwnerOverview({
           </div>
         </div>
       )}
+
+      {/* Today's Progress */}
+      {todayProgress && (
+        <div>
+          <SectionLabel>Today&apos;s Progress</SectionLabel>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="rounded-lg border border-zinc-200 bg-white p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Tasks Completed</p>
+              <p className="mt-1 text-2xl font-semibold text-emerald-700">{todayProgress.completed}</p>
+            </div>
+            <div className="rounded-lg border border-zinc-200 bg-white p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Tasks Created</p>
+              <p className="mt-1 text-2xl font-semibold text-zinc-900">{todayProgress.drafts}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <p className="py-4 text-center text-sm italic text-zinc-400">
+        Volume + quality + time. The system works. Trust the process.
+      </p>
     </div>
   );
 }
