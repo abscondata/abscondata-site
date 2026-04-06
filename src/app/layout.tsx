@@ -24,8 +24,14 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Abscondata",
-  description: "Managed back-office operations",
+  title: {
+    default: "Abscondata",
+    template: "Abscondata | %s",
+  },
+  description: "Managed back-office operations for service businesses",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

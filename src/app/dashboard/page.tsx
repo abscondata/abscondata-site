@@ -119,11 +119,17 @@ export default async function DashboardPage() {
     };
   });
 
+  const overdueThresholdMs = 48 * 3600000;
+  const overdueCount = (openTasks ?? []).filter(
+    (t) => t.status !== "SENT" && (Date.now() - new Date(t.created_at).getTime()) > overdueThresholdMs
+  ).length;
+
   return (
     <OwnerOverview
       reviewCount={reviewCount ?? 0}
       newCount={newCount ?? 0}
       pendingOnboarding={pendingOnboarding ?? 0}
+      overdueCount={overdueCount}
       recentEvents={formattedEvents}
       clientHealth={clientHealth}
     />

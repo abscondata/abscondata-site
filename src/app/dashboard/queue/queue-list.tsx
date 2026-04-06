@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { updateTaskStatus, updateTaskDraft, createManualTask } from "./actions";
 import { useRouter } from "next/navigation";
 import { StatusBadge, EmptyState } from "../components/ui";
@@ -50,6 +50,12 @@ function timeAgo(dateStr: string): string {
   const days = Math.floor(hours / 24);
   return `${days}d`;
 }
+
+function ageHours(dateStr: string): number {
+  return (Date.now() - new Date(dateStr).getTime()) / 3600000;
+}
+
+const TERMINAL_STATUSES = ["SENT", "CLOSED"];
 
 function NormalizedFields({ data }: { data: Record<string, Json | undefined> }) {
   const entries = FIELD_ORDER
@@ -129,8 +135,15 @@ export function QueueList({
   );
   const [showNewTask, setShowNewTask] = useState(isOwner && !!initialNewTaskClientId);
 
+  const overdueThresholdMs = 48 * 3600000;
+  const overdueTasks = tasks.filter(
+    (t) => t.created_at && !TERMINAL_STATUSES.includes(t.status || "NEW") && (Date.now() - new Date(t.created_at).getTime()) > overdueThresholdMs
+  );
+
   const filtered = filter === "all"
     ? tasks
+    : filter === "OVERDUE"
+    ? overdueTasks
     : tasks.filter((t) => t.status === filter);
 
   const statusCounts: Record<string, number> = {};
@@ -147,6 +160,7 @@ export function QueueList({
     { key: "APPROVED", label: "Approved" },
     { key: "SENT", label: "Sent" },
     { key: "EXCEPTION", label: "Exception" },
+    ...(overdueTasks.length > 0 ? [{ key: "OVERDUE", label: "Overdue" }] : []),
   ];
 
   return (
@@ -174,14 +188,16 @@ export function QueueList({
       {/* Filter tabs */}
       <div className="mb-5 flex border-b border-zinc-200">
         {tabs.map((t) => {
-          const count = t.key === "all" ? tasks.length : (statusCounts[t.key] || 0);
+          const count = t.key === "all" ? tasks.length : t.key === "OVERDUE" ? overdueTasks.length : (statusCounts[t.key] || 0);
           const active = filter === t.key;
           return (
             <button
               key={t.key}
               onClick={() => setFilter(t.key)}
               className={`relative px-4 py-2.5 text-xs font-medium transition-colors ${
-                active ? "text-zinc-800" : "text-zinc-400 hover:text-zinc-600"
+                active
+                  ? t.key === "OVERDUE" ? "text-red-700" : "text-zinc-800"
+                  : t.key === "OVERDUE" ? "text-red-400 hover:text-red-600" : "text-zinc-400 hover:text-zinc-600"
               }`}
             >
               {t.label}{count > 0 ? ` (${count})` : ""}
@@ -237,11 +253,32 @@ function TaskRow({
   const router = useRouter();
   const { toast } = useToast();
 
+  const draftRef = useRef<HTMLTextAreaElement>(null);
+
   const normalized = (sourceData?.normalized_fields_json as Record<string, Json | undefined>) || {};
   const payload = (sourceData?.payload_json as Record<string, Json | undefined>) || {};
   const status = task.status || "NEW";
   const isReviewable = status === "READY_FOR_REVIEW";
   const age = task.created_at ? timeAgo(task.created_at) : "";
+  const hours = task.created_at ? ageHours(task.created_at) : 0;
+  const isUnworked = status === "NEW" && hours >= 24;
+  const isOverdue = !TERMINAL_STATUSES.includes(status) && hours >= 48;
+
+  // Keyboard shortcuts when expanded
+  useEffect(() => {
+    if (!expanded) return;
+    function handleKey(e: KeyboardEvent) {
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if (loading) return;
+      if (e.key === "Escape") { onToggle(); return; }
+      if (e.key === "a" && status === "READY_FOR_REVIEW") { handleAction("APPROVED"); return; }
+      if (e.key === "s" && status === "APPROVED") { handleAction("SENT"); return; }
+      if (e.key === "e" && status === "READY_FOR_REVIEW") { draftRef.current?.focus(); return; }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [expanded, status, loading]);
 
   async function handleAction(
     newStatus: string,
@@ -288,6 +325,8 @@ function TaskRow({
         </div>
         <div className="flex shrink-0 items-center gap-3 text-xs">
           <span className="text-zinc-400">{age}</span>
+          {isOverdue && <span className="font-semibold text-red-600">2d+ overdue</span>}
+          {!isOverdue && isUnworked && <span className="font-semibold text-amber-600">1d+ unworked</span>}
           <span className="text-zinc-300">{expanded ? "▲" : "▼"}</span>
         </div>
       </button>
@@ -343,6 +382,7 @@ function TaskRow({
                     Final Draft <span className="font-normal normal-case tracking-normal text-zinc-400">{isReviewable ? "(editable)" : "(locked)"}</span>
                   </label>
                   <textarea
+                    ref={draftRef}
                     value={editedDraft}
                     onChange={isReviewable ? (e) => setEditedDraft(e.target.value) : undefined}
                     onBlur={isReviewable ? saveDraft : undefined}
@@ -382,6 +422,7 @@ function TaskRow({
                   <button onClick={() => handleAction("CLOSED")} disabled={loading} className="rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition-colors">Close Task</button>
                 )}
               </div>
+              <p className="text-xs text-zinc-400">Shortcuts: A approve · S send · E edit · Esc close</p>
 
               {showNeedsInfo && (
                 <div className="flex items-end gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4">

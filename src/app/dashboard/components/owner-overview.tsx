@@ -56,12 +56,14 @@ export function OwnerOverview({
   reviewCount,
   newCount,
   pendingOnboarding,
+  overdueCount = 0,
   recentEvents,
   clientHealth,
 }: {
   reviewCount: number;
   newCount: number;
   pendingOnboarding: number;
+  overdueCount?: number;
   recentEvents: FormattedEvent[];
   clientHealth: ClientHealth[];
 }) {
@@ -72,20 +74,21 @@ export function OwnerOverview({
       <h2 className="text-xl font-semibold text-zinc-800">{getGreeting()}</h2>
 
       {/* Action strip */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className={`grid gap-3 ${overdueCount > 0 ? "grid-cols-4" : "grid-cols-3"}`}>
         {[
-          { count: reviewCount, label: "tasks to review", href: "/dashboard/queue?filter=READY_FOR_REVIEW", urgent: reviewCount > 0 },
-          { count: newCount, label: "new tasks", href: "/dashboard/queue?filter=NEW", urgent: false },
-          { count: pendingOnboarding, label: "pending onboarding", href: "/dashboard/onboarding", urgent: pendingOnboarding > 0 },
+          { count: reviewCount, label: "tasks to review", href: "/dashboard/queue?filter=READY_FOR_REVIEW", urgent: reviewCount > 0, danger: false },
+          { count: newCount, label: "new tasks", href: "/dashboard/queue?filter=NEW", urgent: false, danger: false },
+          { count: pendingOnboarding, label: "pending onboarding", href: "/dashboard/onboarding", urgent: pendingOnboarding > 0, danger: false },
+          ...(overdueCount > 0 ? [{ count: overdueCount, label: "overdue tasks", href: "/dashboard/queue?filter=OVERDUE", urgent: true, danger: true }] : []),
         ].map((item) => (
           <Link
             key={item.label}
             href={item.href}
             className={`rounded-lg border-l-[3px] bg-white p-4 transition-colors hover:bg-zinc-50 ${
-              item.urgent ? "border-l-amber-400" : "border-l-zinc-200"
+              item.danger ? "border-l-red-500" : item.urgent ? "border-l-amber-400" : "border-l-zinc-200"
             }`}
           >
-            <p className={`text-2xl font-semibold ${item.urgent ? "text-amber-700" : "text-zinc-900"}`}>{item.count}</p>
+            <p className={`text-2xl font-semibold ${item.danger ? "text-red-700" : item.urgent ? "text-amber-700" : "text-zinc-900"}`}>{item.count}</p>
             <p className="mt-0.5 text-xs font-medium text-zinc-500">{item.label}</p>
           </Link>
         ))}
