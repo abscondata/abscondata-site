@@ -26,7 +26,7 @@ export async function updateTaskStatus(
     const { data: { user } } = await supabase.auth.getUser();
 
     // Fetch current task to validate transition
-    const { data: task } = await supabase.from("tasks").select("status, ai_draft, edited_draft").eq("id", taskId).single();
+    const { data: task } = await supabase.from("tasks").select("status, ai_draft, edited_draft, client_id, service_key, recipient_name, recipient_email").eq("id", taskId).single();
     if (!task) return { success: false, message: "Task not found" };
 
     const currentStatus = task.status || "NEW";
@@ -66,6 +66,22 @@ export async function updateTaskStatus(
       actor_id: user?.id || null,
       notes: eventNotes,
     });
+
+    // Capture send_log when transitioning to SENT
+    if (newStatus === "SENT") {
+      const sentContent = extra?.edited_draft || task.edited_draft || task.ai_draft || "";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const dbAny = supabase as unknown as { from: (table: string) => any };
+      await dbAny.from("send_log").insert({
+        task_id: taskId,
+        client_id: task.client_id,
+        service_key: task.service_key,
+        recipient_name: task.recipient_name,
+        recipient_email: task.recipient_email,
+        sent_content: sentContent,
+        sent_by: user?.id || null,
+      }).catch(() => {});
+    }
 
     revalidatePath("/dashboard/queue");
     revalidatePath("/dashboard");

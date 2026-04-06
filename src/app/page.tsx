@@ -269,9 +269,51 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-12">
-        <div className="h-px bg-[#D6D3CD]" />
-      </div>
+      {/* Social Proof */}
+      <section className="border-y border-[#E5E2DC] bg-[#F4F3F0]">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+          <div className="flex flex-col gap-16 lg:flex-row lg:gap-20">
+            <div className="lg:w-64 lg:shrink-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B8956A]">
+                Built for Businesses Like Yours
+              </p>
+            </div>
+            <div className="flex-1">
+              <div className="grid gap-8 sm:grid-cols-3">
+                {[
+                  {
+                    promise: "Invoice follow-ups sent within 24 hours of due date",
+                  },
+                  {
+                    promise: "Review requests sent within 48 hours of service completion",
+                  },
+                  {
+                    promise: "Weekly operations reports delivered every Monday",
+                  },
+                ].map((item) => (
+                  <div key={item.promise} className="flex items-start gap-3">
+                    <span className="mt-[3px] flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0F1A2E]">
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </span>
+                    <p className="text-[15px] leading-[1.55] text-[#3D3A35]">{item.promise}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+                <p className="text-[15px] font-medium text-[#0F1A2E]">
+                  Currently accepting new clients in Florida.
+                </p>
+                <Link
+                  href="/onboarding"
+                  className="inline-flex items-center justify-center rounded-sm bg-[#B8956A] px-10 py-4 text-[12px] font-semibold uppercase tracking-[0.1em] text-white shadow-md transition-all hover:bg-[#A68455] hover:shadow-lg"
+                >
+                  Get Started
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Terms */}
       <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">

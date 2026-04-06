@@ -34,6 +34,38 @@ export async function updatePlatformUrl(platformId: string, url: string): Promis
   }
 }
 
+export async function markSopReviewed(clientId: number, reviewed: boolean): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = await createClient();
+    // onboarding_sop_reviewed column added by migration 009
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from("clients") as any)
+      .update({ onboarding_sop_reviewed: reviewed })
+      .eq("id", clientId);
+    if (error) return { success: false, message: error.message };
+    revalidatePath(`/dashboard/clients/${clientId}`);
+    return { success: true, message: reviewed ? "SOP marked as reviewed" : "SOP marked as not reviewed" };
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : "Failed to update" };
+  }
+}
+
+export async function setClientActive(clientId: number): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("clients")
+      .update({ status: "active" })
+      .eq("id", clientId);
+    if (error) return { success: false, message: error.message };
+    revalidatePath(`/dashboard/clients/${clientId}`);
+    revalidatePath("/dashboard/clients");
+    return { success: true, message: "Client marked as active" };
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : "Failed to update client" };
+  }
+}
+
 export async function updatePlatformStatus(platformId: string, status: string): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = await createClient();

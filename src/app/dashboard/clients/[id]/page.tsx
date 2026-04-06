@@ -13,6 +13,8 @@ import { BatchDraftButton } from "./batch-draft-button";
 import { ClientInvoices } from "./invoices";
 import { ClientNotes } from "./client-notes";
 import { PlatformUrl } from "./platform-url";
+import { SendLog } from "./send-log";
+import { OnboardingChecklist } from "./onboarding-checklist";
 
 const SERVICE_LABELS: Record<string, string> = {
   invoice_ops: "Invoice Operations",
@@ -72,6 +74,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     .select("*")
     .eq("client_id", client.id)
     .order("invoice_date", { ascending: false }) ?? { data: [] };
+
+  // Fetch send log
+  const { data: sendLogEntries } = await db.from("send_log")
+    .select("id, service_key, recipient_name, recipient_email, sent_content, sent_at")
+    .eq("client_id", client.id)
+    .order("sent_at", { ascending: false })
+    .limit(50) ?? { data: [] };
 
   const taskIds = (tasks ?? []).map((t) => t.id);
   const { data: sourceData } = taskIds.length > 0
@@ -184,39 +193,18 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         )}
       </div>
 
-      {/* Onboarding Progress */}
-      {platforms && platforms.length > 0 && (() => {
-        const connected = platforms.filter((p) => p.connection_status === "connected").length;
-        const total = platforms.length;
-        const allConnected = connected === total;
-
-        if (allConnected) return null;
-
-        const statusDot: Record<string, string> = {
-          connected: "bg-emerald-500",
-          credentials_received: "bg-amber-400",
-          error: "bg-red-500",
-          not_connected: "bg-zinc-300",
-        };
-
-        return (
-          <section className="rounded-lg border border-amber-200 bg-amber-50 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">Onboarding Progress</h3>
-              <span className="text-xs font-semibold text-amber-700">{connected} of {total} platforms connected</span>
-            </div>
-            <div className="space-y-2">
-              {platforms.map((p) => (
-                <div key={p.id} className="flex items-center gap-3">
-                  <span className={`h-2 w-2 shrink-0 rounded-full ${statusDot[p.connection_status || "not_connected"] || statusDot.not_connected}`} />
-                  <span className="text-sm text-zinc-900">{PLATFORM_LABELS[p.platform_key] || p.platform_key}</span>
-                  <span className="text-xs text-zinc-500">{(p.connection_status || "not_connected").replace(/_/g, " ")}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        );
-      })()}
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist
+        clientId={client.id}
+        clientStatus={client.status || ""}
+        hasContactInfo={!!(client.primary_contact_email && client.primary_contact_name)}
+        hasServices={(services ?? []).some((s) => s.enabled)}
+        credentialsReceived={(platforms ?? []).every((p) => p.connection_status !== "not_connected")}
+        allPlatformsConnected={(platforms ?? []).length > 0 && (platforms ?? []).every((p) => p.connection_status === "connected")}
+        hasFirstTasks={(tasks ?? []).length > 0}
+        sopReviewed={!!(client as unknown as Record<string, unknown>).onboarding_sop_reviewed}
+        platformCount={(platforms ?? []).length}
+      />
 
       {/* Services */}
       <section>
@@ -329,6 +317,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       {/* Completed Work */}
       <section>
         <CompletedWork tasks={completedWorkTasks} />
+      </section>
+
+      {/* Send Log */}
+      <section>
+        <SendLog entries={sendLogEntries ?? []} />
       </section>
 
       {/* Billing */}
