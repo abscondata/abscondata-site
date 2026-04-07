@@ -8,6 +8,10 @@ export async function batchGenerateDrafts(
   clientId: number
 ): Promise<{ success: boolean; message: string; generated: number; failed: number }> {
   try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return { success: false, message: "AI drafts not configured. Add ANTHROPIC_API_KEY to environment variables.", generated: 0, failed: 0 };
+    }
+
     const supabase = await createClient();
 
     const { data: tasks } = await supabase

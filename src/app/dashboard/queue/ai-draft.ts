@@ -62,7 +62,7 @@ export async function generateAiDraft(
 ): Promise<{ success: boolean; message: string; draft?: string }> {
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return { success: false, message: "ANTHROPIC_API_KEY not configured" };
+    if (!apiKey) return { success: false, message: "AI drafts not configured. Add ANTHROPIC_API_KEY to environment variables." };
 
     const supabase = await createClient();
 

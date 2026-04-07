@@ -145,6 +145,18 @@ export function OutreachDashboard({
 
   return (
     <div className="space-y-8">
+      {/* Send Time Guidance */}
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+        <p className="text-xs font-semibold text-zinc-700 mb-1">Optimal Send Times (Eastern)</p>
+        <p className="text-sm text-zinc-600 leading-relaxed">
+          Service business owners check email at:
+          {" "}6:00–7:30 AM (before job sites)
+          {" · "}12:00–1:00 PM (lunch break)
+          {" · "}7:30–9:00 PM (end of day).
+          {" "}Set Instantly send windows to these for best reply rates.
+        </p>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-zinc-900">Outreach</h2>

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { OutreachDashboard } from "./outreach-dashboard";
 import { SequenceVariants } from "./sequences";
+import { classifySegment, generatePersonalizationLine } from "@/lib/lead-classification";
 
 export default async function OutreachPage() {
   const supabase = await createClient();
@@ -58,9 +59,29 @@ export default async function OutreachPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  // Pipeline stats — response_status column from migration 010
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dbAny = supabase as unknown as { from: (table: string) => any };
+
+  // Auto-backfill: segment any leads missing classification (fire-and-forget)
+  (async () => {
+    try {
+      const { data: unsegmented } = await supabase
+        .from("outreach_leads")
+        .select("id, industry, employee_count, company_name")
+        .is("segment" as never, null)
+        .limit(200);
+      if (unsegmented && unsegmented.length > 0) {
+        for (const lead of unsegmented) {
+          const empNum = lead.employee_count ? parseInt(lead.employee_count, 10) || null : null;
+          const segment = classifySegment(lead.industry, empNum);
+          const line = generatePersonalizationLine(segment, lead.industry, empNum, lead.company_name);
+          await dbAny.from("outreach_leads").update({ segment, personalization_line: line }).eq("id", lead.id);
+        }
+      }
+    } catch {}
+  })();
+
+  // Pipeline stats — response_status column from migration 010
   const [
     { count: replied },
     { count: interested },
