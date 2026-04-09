@@ -40,14 +40,20 @@ export async function convertSubmission(submissionId: string): Promise<{ success
     const services = (payload.services as string[]) || [];
     const platforms = (payload.platforms as Array<{ key: string; access_method?: string; name?: string }>) || [];
 
+    const warnings: string[] = [];
+
     if (services.length > 0) {
-      await supabase.from("client_services").insert(
+      const { error: servicesErr } = await supabase.from("client_services").insert(
         services.map((key) => ({ client_id: clientId, service_key: key, enabled: true }))
       );
+      if (servicesErr) {
+        console.error("[convertSubmission] client_services insert failed", { clientId, error: servicesErr.message });
+        warnings.push(`services not saved: ${servicesErr.message}`);
+      }
     }
 
     if (platforms.length > 0) {
-      await supabase.from("client_platforms").insert(
+      const { error: platformsErr } = await supabase.from("client_platforms").insert(
         platforms.map((p) => ({
           client_id: clientId,
           platform_key: p.key,
@@ -56,17 +62,24 @@ export async function convertSubmission(submissionId: string): Promise<{ success
           notes: p.name || null,
         }))
       );
+      if (platformsErr) {
+        console.error("[convertSubmission] client_platforms insert failed", { clientId, error: platformsErr.message });
+        warnings.push(`platforms not saved: ${platformsErr.message}`);
+      }
     }
 
     if (services.length > 0) {
-      const { data: templates } = await supabase
+      const { data: templates, error: templatesErr } = await supabase
         .from("task_templates")
         .select("*")
         .in("service_key", services)
         .order("sort_order", { ascending: true });
 
-      if (templates && templates.length > 0) {
-        await supabase.from("tasks").insert(
+      if (templatesErr) {
+        console.error("[convertSubmission] task_templates fetch failed", { error: templatesErr.message });
+        warnings.push(`templates fetch failed: ${templatesErr.message}`);
+      } else if (templates && templates.length > 0) {
+        const { error: tasksErr } = await supabase.from("tasks").insert(
           templates.map((t) => ({
             client_id: clientId,
             title: t.title,
@@ -76,18 +89,29 @@ export async function convertSubmission(submissionId: string): Promise<{ success
             task_type: t.service_key,
           }))
         );
+        if (tasksErr) {
+          console.error("[convertSubmission] starter tasks insert failed", { clientId, error: tasksErr.message });
+          warnings.push(`starter tasks not created: ${tasksErr.message}`);
+        }
       }
     }
 
-    await supabase
+    const { error: subUpdateErr } = await supabase
       .from("onboarding_submissions")
       .update({ status: "converted", client_id: clientId })
       .eq("id", submissionId);
+    if (subUpdateErr) {
+      console.error("[convertSubmission] submission status update failed", { submissionId, error: subUpdateErr.message });
+      warnings.push(`submission status not updated: ${subUpdateErr.message}`);
+    }
 
     revalidatePath("/dashboard/onboarding");
     revalidatePath("/dashboard/clients");
     revalidatePath("/dashboard");
-    return { success: true, message: "Submission converted to client", clientId };
+    const message = warnings.length > 0
+      ? `Submission converted to client (warnings: ${warnings.join("; ")})`
+      : "Submission converted to client";
+    return { success: true, message, clientId };
   } catch (err) {
     return { success: false, message: err instanceof Error ? err.message : "Conversion failed" };
   }
