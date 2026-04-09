@@ -30,6 +30,7 @@ export async function batchGenerateDrafts(
 
     let generated = 0;
     let failed = 0;
+    const failedTasks: Array<{ taskId: number; reason: string }> = [];
 
     for (const task of eligible) {
       const result = await generateAiDraft(task.id);
@@ -37,6 +38,8 @@ export async function batchGenerateDrafts(
         generated++;
       } else {
         failed++;
+        failedTasks.push({ taskId: task.id, reason: result.message });
+        console.error("[batchGenerateDrafts] task failed", { taskId: task.id, reason: result.message });
       }
       // 500ms delay between calls to avoid rate limits
       if (generated + failed < eligible.length) {
@@ -47,9 +50,16 @@ export async function batchGenerateDrafts(
     revalidatePath(`/dashboard/clients/${clientId}`);
     revalidatePath("/dashboard/queue");
 
+    let message = `Generated ${generated} drafts`;
+    if (failed > 0) {
+      const failedIds = failedTasks.slice(0, 5).map((f) => `#${f.taskId}`).join(", ");
+      const truncated = failedTasks.length > 5 ? ` (+${failedTasks.length - 5} more)` : "";
+      message += `. ${failed} failed: ${failedIds}${truncated}`;
+    }
+
     return {
       success: true,
-      message: `Generated ${generated} drafts${failed > 0 ? `, ${failed} failed` : ""}`,
+      message,
       generated,
       failed,
     };
