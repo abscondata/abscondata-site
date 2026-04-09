@@ -106,13 +106,21 @@ export async function generateAiDraft(
       ? `${userPrompt}\n\nFollow these operational guidelines:\n${sopContent}`
       : userPrompt;
 
-    const anthropic = new Anthropic({ apiKey });
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: fullPrompt }],
-    });
+    // 30s timeout per attempt; one retry on transient failure (5xx, 429, network)
+    const anthropic = new Anthropic({ apiKey, timeout: 30_000, maxRetries: 1 });
+    let response;
+    try {
+      response = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: fullPrompt }],
+      });
+    } catch (apiErr) {
+      console.error("[generateAiDraft] Anthropic API call failed", { taskId, error: apiErr instanceof Error ? apiErr.message : String(apiErr) });
+      const msg = apiErr instanceof Error ? apiErr.message : "Anthropic API error";
+      return { success: false, message: `AI draft generation failed: ${msg}` };
+    }
 
     const draft = response.content
       .filter((block) => block.type === "text")
