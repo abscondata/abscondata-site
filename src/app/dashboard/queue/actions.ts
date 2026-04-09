@@ -59,13 +59,17 @@ export async function updateTaskStatus(
     let eventNotes = extra?.rejection_reason ? `Rejected: ${extra.rejection_reason}` : null;
     if (extra?.notes) eventNotes = extra.notes;
 
-    await supabase.from("task_events").insert({
+    const { error: eventErr } = await supabase.from("task_events").insert({
       task_id: taskId,
       event_type: `status_change:${currentStatus}→${newStatus}`,
       actor_type: "user",
       actor_id: user?.id || null,
       notes: eventNotes,
     });
+    if (eventErr) {
+      console.error("[updateTaskStatus] task_events insert failed", { taskId, currentStatus, newStatus, error: eventErr.message });
+      // Non-fatal: status was already updated successfully. Surface warning.
+    }
 
     // Capture send_log when transitioning to SENT
     let sendLogWarning: string | null = null;
