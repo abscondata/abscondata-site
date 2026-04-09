@@ -68,11 +68,12 @@ export async function updateTaskStatus(
     });
 
     // Capture send_log when transitioning to SENT
+    let sendLogWarning: string | null = null;
     if (newStatus === "SENT") {
       const sentContent = extra?.edited_draft || task.edited_draft || task.ai_draft || "";
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const dbAny = supabase as unknown as { from: (table: string) => any };
-      await dbAny.from("send_log").insert({
+      const { error: sendLogErr } = await dbAny.from("send_log").insert({
         task_id: taskId,
         client_id: task.client_id,
         service_key: task.service_key,
@@ -80,7 +81,11 @@ export async function updateTaskStatus(
         recipient_email: task.recipient_email,
         sent_content: sentContent,
         sent_by: user?.id || null,
-      }).catch(() => {});
+      });
+      if (sendLogErr) {
+        console.error("[updateTaskStatus] send_log insert failed", { taskId, error: sendLogErr.message });
+        sendLogWarning = ` (warning: send log not written — ${sendLogErr.message})`;
+      }
     }
 
     revalidatePath("/dashboard/queue");
@@ -95,7 +100,8 @@ export async function updateTaskStatus(
       CLOSED: "Task closed",
       EXCEPTION: "Task rejected",
     };
-    return { success: true, message: statusLabels[newStatus] || "Status updated" };
+    const baseMessage = statusLabels[newStatus] || "Status updated";
+    return { success: true, message: baseMessage + (sendLogWarning || "") };
   } catch (err) {
     return { success: false, message: err instanceof Error ? err.message : "Failed to update status" };
   }
