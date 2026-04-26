@@ -1,389 +1,595 @@
 import Link from "next/link";
 
-const services = [
+const COLORS = {
+  cream: "#F3F1EC",
+  ink: "#151515",
+  muted: "#5A5751",
+  rule: "#D7D2C7",
+  panel: "#E9E5DC",
+  dark: "#20201D",
+  darkMuted: "rgba(255,255,255,0.68)",
+  white: "#FFFFFF",
+};
+
+const CALENDLY_URL = "https://calendly.com/abscondata";
+
+const queues = [
   {
-    title: "Invoice Operations",
-    description:
-      "We create, send, and track invoices inside your existing system. Target same-day sending when job data is complete.",
-    key: "invoice_ops",
+    title: "Invoice Queue",
+    body: "Open invoices, payment follow-up, estimate tracking, and receivables reporting.",
   },
   {
-    title: "Payment Follow-Up",
-    description:
-      "Overdue accounts get followed up on a set schedule. Each touch documented, outcomes logged until the balance is resolved.",
-    key: "payment_followup",
+    title: "Scheduling Queue",
+    body: "Appointments, confirmations, reminders, reschedules, cancellations, and post-service follow-up.",
   },
   {
-    title: "Review Requests",
-    description:
-      "After completed jobs, review requests are queued, sent, and tracked consistently so they do not get forgotten.",
-    key: "review_requests",
+    title: "Intake Queue",
+    body: "New requests, missing details, service notes, customer records, and handoff items.",
   },
   {
-    title: "Weekly Business Summary",
-    description:
-      "Every Monday: invoices sent, payments collected, reviews received, tasks completed. Full visibility into what happened and what needs attention.",
-    key: "weekly_summary",
+    title: "Records & Reporting",
+    body: "Document updates, contract dates, renewal tracking, weekly summaries, and exception logs.",
   },
 ];
 
-const process_steps = [
+const cycle = [
+  "Review open queues.",
+  "Assign status and next step.",
+  "Work approved items.",
+  "Hold exceptions for owner review.",
+  "Report completed work and open decisions.",
+];
+
+const fitSignals = [
+  "jobs are being completed but invoicing drifts",
+  "scheduling changes create loose ends",
+  "customer intake is inconsistent",
+  "follow-up depends on owner memory",
+  "reporting happens only when someone asks",
+  "exceptions sit unresolved",
+];
+
+const terms = [
   {
-    number: "01",
-    title: "You create a separate login for our team",
-    description:
-      "In the systems you already use: QuickBooks, Jobber, ServiceTitan, Google Workspace. No new software. No migration.",
+    label: "Monthly scope",
+    value: "Flat monthly rate based on queue volume and operating scope.",
   },
   {
-    number: "02",
-    title: "We operate on a weekly schedule",
-    description:
-      "Our team logs in, pulls data, drafts communications, and executes tasks. Where needed, drafts are held for your review before anything goes out.",
+    label: "Cadence",
+    value: "Fixed weekly operating cycle.",
   },
   {
-    number: "03",
-    title: "You see everything we did",
-    description:
-      "Weekly report every Monday. Every action documented. What was completed, what's outstanding, what needs your input.",
+    label: "Commitment",
+    value: "Month to month. 30-day cancellation.",
   },
   {
-    number: "04",
-    title: "You stay in control",
-    description:
-      "Separate login for our team. Every action documented. Sensitive operations held for your review before anything goes out. Access revocable at any time.",
+    label: "Onboarding",
+    value: "Onboarding begins within one week.",
+  },
+  {
+    label: "Visibility",
+    value: "Weekly summary of completed work, held items, and owner decisions needed.",
   },
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#FAFAF8]" style={{ fontFamily: "var(--font-sans)" }}>
-      {/* Navigation */}
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-6 sm:px-8 lg:px-12">
-        <Link href="/" className="text-[22px] font-semibold tracking-[-0.02em] text-[#0F1A2E]" style={{ fontFamily: "var(--font-serif)" }}>
+    <div
+      style={{
+        backgroundColor: COLORS.cream,
+        color: COLORS.ink,
+        minHeight: "100vh",
+        fontFamily: "var(--font-sans)",
+        fontSize: "15px",
+        lineHeight: 1.65,
+      }}
+    >
+      <nav
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "24px",
+          padding: "24px 48px",
+          maxWidth: "1120px",
+          margin: "0 auto",
+          borderBottom: `1px solid ${COLORS.rule}`,
+        }}
+      >
+        <div
+          style={{
+            fontSize: "13px",
+            fontWeight: 600,
+            letterSpacing: "2.4px",
+            textTransform: "uppercase" as const,
+          }}
+        >
           Abscondata
-        </Link>
-        <div className="flex items-center gap-6 sm:gap-8">
-          <Link href="/onboarding" className="text-[13px] font-semibold text-[#B8956A] transition-colors hover:text-[#0F1A2E]">
-            Tell Us About Your Business
-          </Link>
-          <Link href="/login" className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#0F1A2E] border-b border-[#0F1A2E]/30 pb-[2px] hover:border-[#0F1A2E]">
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
+          <a
+            href={CALENDLY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "1.8px",
+              textTransform: "uppercase" as const,
+            }}
+          >
+            Call
+          </a>
+          <Link
+            href="/login"
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "1.8px",
+              textTransform: "uppercase" as const,
+              color: COLORS.muted,
+            }}
+          >
             Sign In
           </Link>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-12">
-        <div className="pb-20 pt-24 sm:pt-32 lg:pt-40 lg:pb-28">
-          <div className="max-w-3xl">
-            <h1
-              className="text-[36px] font-medium leading-[1.12] tracking-[-0.03em] text-[#0F1A2E] sm:text-[48px] lg:text-[60px]"
-              style={{ fontFamily: "var(--font-serif)" }}
+      <header
+        style={{
+          maxWidth: "1120px",
+          margin: "0 auto",
+          padding: "96px 48px 88px",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 360px)",
+          gap: "64px",
+          alignItems: "end",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              margin: "0 0 20px",
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "2px",
+              textTransform: "uppercase" as const,
+              color: COLORS.muted,
+            }}
+          >
+            Service-business queue control
+          </p>
+          <h1
+            style={{
+              margin: "0 0 28px",
+              maxWidth: "760px",
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(44px, 7vw, 82px)",
+              fontWeight: 500,
+              lineHeight: 0.98,
+              letterSpacing: "0",
+            }}
+          >
+            Operating control for service-business administration.
+          </h1>
+          <p
+            style={{
+              margin: "0",
+              maxWidth: "680px",
+              fontSize: "18px",
+              color: COLORS.muted,
+              lineHeight: 1.7,
+            }}
+          >
+            Abscondata runs the recurring queues that service businesses let
+            drift: invoices, scheduling, intake, records, exceptions, and
+            weekly reporting.
+          </p>
+        </div>
+        <div
+          style={{
+            borderTop: `1px solid ${COLORS.ink}`,
+            paddingTop: "24px",
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 28px",
+              color: COLORS.muted,
+              lineHeight: 1.75,
+            }}
+          >
+            Work stays inside the systems the business already uses. Open items
+            are reviewed, assigned, followed through, and reported on a fixed
+            weekly cadence.
+          </p>
+          <a
+            href={CALENDLY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-block",
+              backgroundColor: COLORS.ink,
+              color: COLORS.white,
+              padding: "15px 28px",
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "1.8px",
+              textTransform: "uppercase" as const,
+            }}
+          >
+            Schedule a Call
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section
+          style={{
+            borderTop: `1px solid ${COLORS.rule}`,
+            borderBottom: `1px solid ${COLORS.rule}`,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "1120px",
+              margin: "0 auto",
+              padding: "72px 48px",
+              display: "grid",
+              gridTemplateColumns: "minmax(240px, 360px) minmax(0, 1fr)",
+              gap: "64px",
+            }}
+          >
+            <h2
+              style={{
+                margin: 0,
+                fontFamily: "var(--font-serif)",
+                fontSize: "38px",
+                fontWeight: 500,
+                lineHeight: 1.08,
+                letterSpacing: "0",
+              }}
             >
-              Your back office,
-              <br />
-              handled.
-            </h1>
-            <p className="mt-7 max-w-xl text-[17px] font-light leading-[1.7] text-[#5A564F] sm:text-[18px]">
-              Abscondata runs invoicing, payment follow-up, review requests, and
-              weekly reporting for small service businesses inside the systems
-              you already use.
-            </p>
-            <p className="mt-4 max-w-lg text-[15px] leading-[1.7] text-[#8A8680]">
-              When invoicing, follow-up, and reporting keep getting pushed to
-              the end of the day, cash slows down and things fall through. We
-              take that work off your plate and run it on a repeatable weekly
-              rhythm.
-            </p>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-              <Link
-                href="/onboarding"
-                className="inline-flex items-center justify-center rounded-sm bg-[#B8956A] px-12 py-5 text-[13px] font-semibold uppercase tracking-[0.1em] text-white shadow-lg transition-all hover:bg-[#A68455] hover:shadow-xl"
+              The work does not disappear. It waits.
+            </h2>
+            <div>
+              <p
+                style={{
+                  margin: "0 0 18px",
+                  maxWidth: "640px",
+                  fontSize: "17px",
+                  color: COLORS.muted,
+                  lineHeight: 1.75,
+                }}
               >
-                Tell Us About Your Business
-              </Link>
-              <span className="text-[13px] text-[#8A8680]">
-                Initial review within 24 hours. Service launch within one week.
-              </span>
+                Invoices wait for follow-up. Appointments move. Intake details
+                go missing. Records stay half-updated. Exceptions sit with the
+                owner because no one else owns the next step.
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: "640px",
+                  fontSize: "17px",
+                  color: COLORS.ink,
+                  lineHeight: 1.75,
+                }}
+              >
+                Abscondata gives those queues a weekly operating owner.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Trust Strip */}
-      <section className="border-y border-[#E5E2DC] bg-[#F4F3F0]">
-        <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-12 lg:px-12">
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
-            {[
-              "No new software to learn",
-              "Work done inside your tools",
-              "Weekly reporting every Monday",
-              "Month-to-month engagement",
-              "Separate access for our team",
-              "Sensitive actions held for approval",
-            ].map((item) => (
-              <div key={item} className="flex items-start gap-2.5">
-                <span className="mt-[5px] h-[6px] w-[6px] shrink-0 rounded-full bg-[#0F1A2E]" />
-                <p className="text-[13px] leading-[1.45] text-[#3D3A35]">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Services */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
-        <div className="flex flex-col gap-16 lg:flex-row lg:gap-20">
-          <div className="lg:w-64 lg:shrink-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B8956A]">
-              What We Handle
-            </p>
-            <p className="mt-4 text-[15px] leading-[1.7] text-[#8A8680] lg:max-w-[220px]">
-              Four core services. Each runs on a repeatable weekly cycle inside
-              your existing tools.
-            </p>
-          </div>
-          <div className="flex-1">
-            {services.map((s, i) => (
+        <section
+          style={{
+            maxWidth: "1120px",
+            margin: "0 auto",
+            padding: "80px 48px",
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 24px",
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "2px",
+              textTransform: "uppercase" as const,
+              color: COLORS.muted,
+            }}
+          >
+            What Abscondata controls
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+              borderTop: `1px solid ${COLORS.rule}`,
+              borderLeft: `1px solid ${COLORS.rule}`,
+            }}
+          >
+            {queues.map((queue) => (
               <div
-                key={s.key}
-                className={`flex flex-col gap-1 py-7 sm:flex-row sm:items-baseline sm:gap-8 ${
-                  i < services.length - 1 ? "border-b border-[#E5E2DC]" : ""
-                }`}
+                key={queue.title}
+                style={{
+                  minHeight: "210px",
+                  padding: "28px",
+                  borderRight: `1px solid ${COLORS.rule}`,
+                  borderBottom: `1px solid ${COLORS.rule}`,
+                  backgroundColor: "rgba(255,255,255,0.22)",
+                }}
               >
-                <h3 className="text-[17px] font-semibold text-[#0F1A2E] sm:w-56 sm:shrink-0">
-                  {s.title}
+                <h3
+                  style={{
+                    margin: "0 0 14px",
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {queue.title}
                 </h3>
-                <p className="text-[14px] leading-[1.65] text-[#6B6762]">
-                  {s.description}
+                <p style={{ margin: 0, color: COLORS.muted, lineHeight: 1.7 }}>
+                  {queue.body}
                 </p>
               </div>
             ))}
-            <div className="mt-6 rounded border border-dashed border-[#D6D3CD] px-6 py-5">
-              <div className="flex items-center gap-3">
-                <h3 className="text-[14px] font-medium text-[#8A8680]">
-                  Lead &amp; Intake Admin
-                </h3>
-                <span className="rounded-full border border-[#D6D3CD] px-2 py-[1px] text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A8680]">
-                  Optional add-on
-                </span>
-              </div>
-              <p className="mt-2 text-[13px] leading-[1.6] text-[#A09D97]">
-                New inquiry response and intake processing. Available when core
-                services are running smoothly.
-              </p>
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-12">
-        <div className="h-px bg-[#D6D3CD]" />
-      </div>
-
-      {/* How It Works */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
-        <div className="flex flex-col gap-16 lg:flex-row lg:gap-20">
-          <div className="lg:w-64 lg:shrink-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B8956A]">
-              How It Works
-            </p>
-          </div>
-          <div className="flex-1">
-            <div className="grid gap-12 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
-              {process_steps.map((step) => (
-                <div key={step.number}>
-                  <span className="text-[13px] font-semibold text-[#B8956A]">
-                    {step.number}
-                  </span>
-                  <h3 className="mt-3 text-[17px] font-semibold leading-[1.35] text-[#0F1A2E]">
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-[14px] leading-[1.65] text-[#6B6762]">
-                    {step.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Who We Work With */}
-      <section className="bg-[#0F1A2E]">
-        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
-          <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-20">
-            <div className="lg:w-64 lg:shrink-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D4B896]">
-                Who We Work With
-              </p>
-            </div>
-            <div className="max-w-2xl flex-1">
-              <h2
-                className="text-[28px] font-medium leading-[1.25] text-white sm:text-[36px]"
-                style={{ fontFamily: "var(--font-serif)" }}
-              >
-                Built for service businesses where admin keeps getting pushed to
-                the end of the day.
-              </h2>
-              <p className="mt-6 text-[15px] leading-[1.75] text-white/70">
-                Trades, construction, facilities, and home service businesses
-                with 2 to 50 employees where invoicing, payment follow-up, and
-                reporting are too important to keep doing ad hoc at night.
-              </p>
-              <p className="mt-4 text-[15px] leading-[1.75] text-white/70">
-                When those tasks keep getting pushed, cash slows down, reviews
-                get missed, and the owner ends up doing admin at 9 PM because
-                there&apos;s no one else to do it. We put that work on a repeatable
-                operating rhythm so it stops falling through.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Abscondata */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
-        <div className="flex flex-col gap-16 lg:flex-row lg:gap-20">
-          <div className="lg:w-64 lg:shrink-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B8956A]">
-              Why Abscondata
-            </p>
-          </div>
-          <div className="max-w-2xl flex-1">
+        <section style={{ backgroundColor: COLORS.panel }}>
+          <div
+            style={{
+              maxWidth: "1120px",
+              margin: "0 auto",
+              padding: "72px 48px",
+              display: "grid",
+              gridTemplateColumns: "minmax(240px, 360px) minmax(0, 1fr)",
+              gap: "64px",
+            }}
+          >
             <h2
-              className="text-[24px] font-medium leading-[1.3] text-[#0F1A2E] sm:text-[28px]"
-              style={{ fontFamily: "var(--font-serif)" }}
+              style={{
+                margin: 0,
+                fontFamily: "var(--font-serif)",
+                fontSize: "38px",
+                fontWeight: 500,
+                lineHeight: 1.08,
+                letterSpacing: "0",
+              }}
             >
-              Built like an operating function, not an afterthought.
+              Weekly control cycle
             </h2>
-            <p className="mt-5 text-[14px] leading-[1.7] text-[#6B6762]">
-              Abscondata runs a defined set of back-office processes on a fixed
-              rhythm inside your existing systems. Invoicing, payment follow-up,
-              review requests, and reporting are handled consistently, documented
-              clearly, and kept visible to you at every step. You keep control.
-              The work gets done. Nothing falls through because it was left for
-              the end of the day.
-            </p>
+            <ol
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+                gap: 0,
+                margin: 0,
+                padding: 0,
+                listStyle: "none",
+                borderTop: `1px solid ${COLORS.rule}`,
+                borderLeft: `1px solid ${COLORS.rule}`,
+              }}
+            >
+              {cycle.map((step, index) => (
+                <li
+                  key={step}
+                  style={{
+                    minHeight: "150px",
+                    padding: "22px",
+                    borderRight: `1px solid ${COLORS.rule}`,
+                    borderBottom: `1px solid ${COLORS.rule}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      marginBottom: "18px",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "12px",
+                      color: COLORS.muted,
+                    }}
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </div>
+                  <div style={{ fontWeight: 500, lineHeight: 1.45 }}>
+                    {step}
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Social Proof */}
-      <section className="border-y border-[#E5E2DC] bg-[#F4F3F0]">
-        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
-          <div className="flex flex-col gap-16 lg:flex-row lg:gap-20">
-            <div className="lg:w-64 lg:shrink-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B8956A]">
-                Built for Businesses Like Yours
-              </p>
-            </div>
-            <div className="flex-1">
-              <div className="grid gap-8 sm:grid-cols-3">
-                {[
-                  {
-                    promise: "Invoice follow-ups sent within 24 hours of due date",
-                  },
-                  {
-                    promise: "Review requests sent within 48 hours of service completion",
-                  },
-                  {
-                    promise: "Weekly operations reports delivered every Monday",
-                  },
-                ].map((item) => (
-                  <div key={item.promise} className="flex items-start gap-3">
-                    <span className="mt-[3px] flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0F1A2E]">
-                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </span>
-                    <p className="text-[15px] leading-[1.55] text-[#3D3A35]">{item.promise}</p>
+        <section
+          style={{
+            maxWidth: "1120px",
+            margin: "0 auto",
+            padding: "80px 48px",
+            display: "grid",
+            gridTemplateColumns: "minmax(240px, 360px) minmax(0, 1fr)",
+            gap: "64px",
+            borderBottom: `1px solid ${COLORS.rule}`,
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontFamily: "var(--font-serif)",
+              fontSize: "38px",
+              fontWeight: 500,
+              lineHeight: 1.08,
+              letterSpacing: "0",
+            }}
+          >
+            Inside the tools already in use.
+          </h2>
+          <p
+            style={{
+              margin: 0,
+              maxWidth: "720px",
+              fontSize: "17px",
+              color: COLORS.muted,
+              lineHeight: 1.75,
+            }}
+          >
+            Abscondata does not require a new platform. Work is performed inside
+            the client's existing systems, inboxes, calendars, invoicing tools,
+            CRMs, spreadsheets, and field-service software.
+          </p>
+        </section>
+
+        <section style={{ backgroundColor: COLORS.dark, color: COLORS.white }}>
+          <div
+            style={{
+              maxWidth: "1120px",
+              margin: "0 auto",
+              padding: "80px 48px",
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(260px, 460px) minmax(0, 1fr)",
+                gap: "64px",
+                alignItems: "start",
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: "0 0 24px",
+                    fontFamily: "var(--font-serif)",
+                    fontSize: "40px",
+                    fontWeight: 500,
+                    lineHeight: 1.08,
+                    letterSpacing: "0",
+                  }}
+                >
+                  For service businesses where operations compete with billable
+                  work.
+                </h2>
+                <p
+                  style={{
+                    margin: 0,
+                    color: COLORS.darkMuted,
+                    lineHeight: 1.75,
+                  }}
+                >
+                  Trades, facilities, home services, health and wellness, local
+                  operators, and other service businesses where the people doing
+                  the work are also managing the queues around the work.
+                </p>
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 0,
+                  borderTop: "1px solid rgba(255,255,255,0.18)",
+                  borderLeft: "1px solid rgba(255,255,255,0.18)",
+                }}
+              >
+                {fitSignals.map((signal) => (
+                  <div
+                    key={signal}
+                    style={{
+                      minHeight: "106px",
+                      padding: "20px",
+                      color: COLORS.darkMuted,
+                      borderRight: "1px solid rgba(255,255,255,0.18)",
+                      borderBottom: "1px solid rgba(255,255,255,0.18)",
+                    }}
+                  >
+                    {signal}
                   </div>
                 ))}
               </div>
-              <div className="mt-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
-                <p className="text-[15px] font-medium text-[#0F1A2E]">
-                  Currently accepting new clients in Florida.
-                </p>
-                <Link
-                  href="/onboarding"
-                  className="inline-flex items-center justify-center rounded-sm bg-[#B8956A] px-10 py-4 text-[12px] font-semibold uppercase tracking-[0.1em] text-white shadow-md transition-all hover:bg-[#A68455] hover:shadow-lg"
-                >
-                  Get Started
-                </Link>
-              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Terms */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
-        <div className="flex flex-col gap-16 lg:flex-row lg:gap-20">
-          <div className="lg:w-64 lg:shrink-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B8956A]">
-              Engagement Terms
-            </p>
-          </div>
-          <div className="flex-1">
-            <div className="grid grid-cols-2 gap-y-10 gap-x-12 sm:grid-cols-4 sm:gap-x-8">
-              {[
-                { label: "Pricing", value: "Flat monthly rate based on scope" },
-                { label: "Commitment", value: "Month-to-month. 30-day cancellation." },
-                { label: "Onboarding", value: "Services begin within one week" },
-                { label: "Reporting", value: "Weekly summary every Monday" },
-              ].map((t) => (
-                <div key={t.label}>
-                  <p className="text-[13px] font-semibold text-[#0F1A2E]">{t.label}</p>
-                  <p className="mt-2 text-[14px] leading-[1.6] text-[#6B6762]">{t.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-12">
-        <div className="h-px bg-[#D6D3CD]" />
-      </div>
-
-      {/* Bottom CTA */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2
-            className="text-[28px] font-medium leading-[1.2] tracking-[-0.02em] text-[#0F1A2E] sm:text-[36px]"
-            style={{ fontFamily: "var(--font-serif)" }}
+        <section
+          style={{
+            maxWidth: "1120px",
+            margin: "0 auto",
+            padding: "80px 48px",
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 24px",
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "2px",
+              textTransform: "uppercase" as const,
+              color: COLORS.muted,
+            }}
           >
-            Ready to get invoicing, follow-up, and reporting off your plate?
-          </h2>
-          <p className="mt-5 text-[15px] leading-[1.7] text-[#8A8680]">
-            Tell us what tools you use, what work you want off your plate, and
-            where the bottlenecks are. We review every submission personally
-            and respond within 24 hours.
+            Engagement terms
           </p>
-          <Link
-            href="/onboarding"
-            className="mt-8 inline-flex items-center justify-center rounded-sm bg-[#B8956A] px-12 py-5 text-[13px] font-semibold uppercase tracking-[0.1em] text-white shadow-lg transition-all hover:bg-[#A68455] hover:shadow-xl"
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+              borderTop: `1px solid ${COLORS.rule}`,
+              borderLeft: `1px solid ${COLORS.rule}`,
+            }}
           >
-            Tell Us About Your Business
-          </Link>
-        </div>
-      </section>
+            {terms.map((term) => (
+              <div
+                key={term.label}
+                style={{
+                  minHeight: "150px",
+                  padding: "22px",
+                  borderRight: `1px solid ${COLORS.rule}`,
+                  borderBottom: `1px solid ${COLORS.rule}`,
+                }}
+              >
+                <h3
+                  style={{
+                    margin: "0 0 12px",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                  }}
+                >
+                  {term.label}
+                </h3>
+                <p
+                  style={{
+                    margin: 0,
+                    color: COLORS.muted,
+                    fontSize: "14px",
+                    lineHeight: 1.65,
+                  }}
+                >
+                  {term.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#E5E2DC]">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row sm:px-8 lg:px-12">
-          <span className="text-[13px] text-[#8A8680]">&copy; 2026 Abscondata</span>
-          <div className="flex items-center gap-5 text-[13px] text-[#6B6762]">
-            <a href="mailto:robin@abscondata.com" className="transition-colors hover:text-[#0F1A2E]">
-              robin@abscondata.com
-            </a>
-            <span className="text-[#D6D3CD]">&middot;</span>
-            <a href="tel:+17724868112" className="transition-colors hover:text-[#0F1A2E]">
-              (772) 486-8112
-            </a>
-            <span className="text-[#D6D3CD]">&middot;</span>
-            <Link href="/agreement" className="transition-colors hover:text-[#0F1A2E]">
-              Agreement
-            </Link>
+      <footer style={{ borderTop: `1px solid ${COLORS.rule}` }}>
+        <div
+          style={{
+            maxWidth: "1120px",
+            margin: "0 auto",
+            padding: "30px 48px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "24px",
+            color: COLORS.muted,
+            fontSize: "13px",
+          }}
+        >
+          <div>© 2026 Abscondata</div>
+          <div style={{ display: "flex", gap: "18px", alignItems: "center" }}>
+            <a href="mailto:info@abscondata.com">info@abscondata.com</a>
+            <span>·</span>
+            <a href="tel:+17724868112">(772) 486-8112</a>
           </div>
         </div>
       </footer>

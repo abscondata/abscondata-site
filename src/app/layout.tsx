@@ -24,11 +24,8 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: "Abscondata",
-    template: "Abscondata | %s",
-  },
-  description: "Managed back-office operations for service businesses",
+  title: "Abscondata | Service-Business Operations",
+  description: "Operating control for service-business administration.",
   icons: {
     icon: "/favicon.svg",
   },
