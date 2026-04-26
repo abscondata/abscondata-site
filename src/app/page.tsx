@@ -6,47 +6,36 @@ const COLORS = {
   muted: "#5A5751",
   rule: "#D7D2C7",
   panel: "#E9E5DC",
-  dark: "#20201D",
-  darkMuted: "rgba(255,255,255,0.68)",
   white: "#FFFFFF",
 };
 
 const CALENDLY_URL = "https://calendly.com/abscondata";
 
-const queues = [
+const controls = [
   {
-    title: "Invoice Queue",
+    title: "Invoice queue",
     body: "Open invoices, payment follow-up, estimate tracking, and receivables reporting.",
   },
   {
-    title: "Scheduling Queue",
+    title: "Schedule queue",
     body: "Appointments, confirmations, reminders, reschedules, cancellations, and post-service follow-up.",
   },
   {
-    title: "Intake Queue",
+    title: "Intake queue",
     body: "New requests, missing details, service notes, customer records, and handoff items.",
   },
   {
-    title: "Records & Reporting",
-    body: "Document updates, contract dates, renewal tracking, weekly summaries, and exception logs.",
+    title: "Records and exceptions",
+    body: "Document updates, contract dates, renewal tracking, weekly summaries, and items requiring owner review.",
   },
 ];
 
-const cycle = [
-  "Review open queues.",
-  "Assign status and next step.",
-  "Work approved items.",
-  "Hold exceptions for owner review.",
-  "Report completed work and open decisions.",
-];
-
-const fitSignals = [
-  "jobs are being completed but invoicing drifts",
-  "scheduling changes create loose ends",
-  "customer intake is inconsistent",
-  "follow-up depends on owner memory",
-  "reporting happens only when someone asks",
-  "exceptions sit unresolved",
+const method = [
+  "Review the open work.",
+  "Assign status and owner.",
+  "Move routine items.",
+  "Hold exceptions.",
+  "Report what changed.",
 ];
 
 const terms = [
@@ -63,14 +52,27 @@ const terms = [
     value: "Month to month. 30-day cancellation.",
   },
   {
-    label: "Onboarding",
-    value: "Onboarding begins within one week.",
-  },
-  {
     label: "Visibility",
-    value: "Weekly summary of completed work, held items, and owner decisions needed.",
+    value: "Weekly summary of completed work, held items, and decisions needed.",
   },
 ];
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2
+      style={{
+        margin: 0,
+        fontFamily: "var(--font-serif)",
+        fontSize: "36px",
+        fontWeight: 500,
+        lineHeight: 1.08,
+        letterSpacing: "0",
+      }}
+    >
+      {children}
+    </h2>
+  );
+}
 
 export default function Home() {
   return (
@@ -81,7 +83,7 @@ export default function Home() {
         minHeight: "100vh",
         fontFamily: "var(--font-sans)",
         fontSize: "15px",
-        lineHeight: 1.65,
+        lineHeight: 1.62,
       }}
     >
       <nav
@@ -139,17 +141,17 @@ export default function Home() {
         style={{
           maxWidth: "1120px",
           margin: "0 auto",
-          padding: "96px 48px 88px",
+          padding: "88px 48px 76px",
           display: "grid",
           gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 360px)",
-          gap: "64px",
+          gap: "56px",
           alignItems: "end",
         }}
       >
         <div>
           <p
             style={{
-              margin: "0 0 20px",
+              margin: "0 0 18px",
               fontSize: "12px",
               fontWeight: 600,
               letterSpacing: "2px",
@@ -157,51 +159,39 @@ export default function Home() {
               color: COLORS.muted,
             }}
           >
-            Service-business queue control
+            Service-business operations
           </p>
           <h1
             style={{
-              margin: "0 0 28px",
-              maxWidth: "760px",
+              margin: "0 0 26px",
+              maxWidth: "720px",
               fontFamily: "var(--font-serif)",
-              fontSize: "clamp(44px, 7vw, 82px)",
+              fontSize: "clamp(44px, 7vw, 78px)",
               fontWeight: 500,
-              lineHeight: 0.98,
+              lineHeight: 1,
               letterSpacing: "0",
             }}
           >
-            Operating control for service-business administration.
+            Back-office control for service businesses.
           </h1>
           <p
             style={{
-              margin: "0",
-              maxWidth: "680px",
+              margin: 0,
+              maxWidth: "690px",
               fontSize: "18px",
               color: COLORS.muted,
               lineHeight: 1.7,
             }}
           >
-            Abscondata runs the recurring queues that service businesses let
-            drift: invoices, scheduling, intake, records, exceptions, and
-            weekly reporting.
+            Abscondata works the invoices, scheduling changes, intake details,
+            records, and exceptions that drift inside the tools a service
+            business already uses.
           </p>
         </div>
-        <div
-          style={{
-            borderTop: `1px solid ${COLORS.ink}`,
-            paddingTop: "24px",
-          }}
-        >
-          <p
-            style={{
-              margin: "0 0 28px",
-              color: COLORS.muted,
-              lineHeight: 1.75,
-            }}
-          >
-            Work stays inside the systems the business already uses. Open items
-            are reviewed, assigned, followed through, and reported on a fixed
-            weekly cadence.
+        <div style={{ borderTop: `1px solid ${COLORS.ink}`, paddingTop: "22px" }}>
+          <p style={{ margin: "0 0 26px", color: COLORS.muted, lineHeight: 1.7 }}>
+            Routine items move on a weekly cadence. Exceptions stay visible for
+            owner review.
           </p>
           <a
             href={CALENDLY_URL}
@@ -226,114 +216,55 @@ export default function Home() {
       <main>
         <section
           style={{
-            borderTop: `1px solid ${COLORS.rule}`,
-            borderBottom: `1px solid ${COLORS.rule}`,
-          }}
-        >
-          <div
-            style={{
-              maxWidth: "1120px",
-              margin: "0 auto",
-              padding: "72px 48px",
-              display: "grid",
-              gridTemplateColumns: "minmax(240px, 360px) minmax(0, 1fr)",
-              gap: "64px",
-            }}
-          >
-            <h2
-              style={{
-                margin: 0,
-                fontFamily: "var(--font-serif)",
-                fontSize: "38px",
-                fontWeight: 500,
-                lineHeight: 1.08,
-                letterSpacing: "0",
-              }}
-            >
-              The work does not disappear. It waits.
-            </h2>
-            <div>
-              <p
-                style={{
-                  margin: "0 0 18px",
-                  maxWidth: "640px",
-                  fontSize: "17px",
-                  color: COLORS.muted,
-                  lineHeight: 1.75,
-                }}
-              >
-                Invoices wait for follow-up. Appointments move. Intake details
-                go missing. Records stay half-updated. Exceptions sit with the
-                owner because no one else owns the next step.
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  maxWidth: "640px",
-                  fontSize: "17px",
-                  color: COLORS.ink,
-                  lineHeight: 1.75,
-                }}
-              >
-                Abscondata gives those queues a weekly operating owner.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section
-          style={{
             maxWidth: "1120px",
             margin: "0 auto",
-            padding: "80px 48px",
+            padding: "68px 48px",
+            borderTop: `1px solid ${COLORS.rule}`,
           }}
         >
-          <p
-            style={{
-              margin: "0 0 24px",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "2px",
-              textTransform: "uppercase" as const,
-              color: COLORS.muted,
-            }}
-          >
-            What Abscondata controls
-          </p>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-              borderTop: `1px solid ${COLORS.rule}`,
-              borderLeft: `1px solid ${COLORS.rule}`,
+              gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
+              gap: "56px",
             }}
           >
-            {queues.map((queue) => (
-              <div
-                key={queue.title}
-                style={{
-                  minHeight: "210px",
-                  padding: "28px",
-                  borderRight: `1px solid ${COLORS.rule}`,
-                  borderBottom: `1px solid ${COLORS.rule}`,
-                  backgroundColor: "rgba(255,255,255,0.22)",
-                }}
-              >
-                <h3
+            <SectionTitle>What Abscondata controls</SectionTitle>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                borderTop: `1px solid ${COLORS.rule}`,
+                borderLeft: `1px solid ${COLORS.rule}`,
+              }}
+            >
+              {controls.map((item) => (
+                <div
+                  key={item.title}
                   style={{
-                    margin: "0 0 14px",
-                    fontSize: "18px",
-                    fontWeight: 600,
-                    lineHeight: 1.25,
+                    minHeight: "185px",
+                    padding: "24px",
+                    borderRight: `1px solid ${COLORS.rule}`,
+                    borderBottom: `1px solid ${COLORS.rule}`,
+                    backgroundColor: "rgba(255,255,255,0.22)",
                   }}
                 >
-                  {queue.title}
-                </h3>
-                <p style={{ margin: 0, color: COLORS.muted, lineHeight: 1.7 }}>
-                  {queue.body}
-                </p>
-              </div>
-            ))}
+                  <h3
+                    style={{
+                      margin: "0 0 12px",
+                      fontSize: "17px",
+                      fontWeight: 600,
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {item.title}
+                  </h3>
+                  <p style={{ margin: 0, color: COLORS.muted, lineHeight: 1.65 }}>
+                    {item.body}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -342,169 +273,37 @@ export default function Home() {
             style={{
               maxWidth: "1120px",
               margin: "0 auto",
-              padding: "72px 48px",
+              padding: "60px 48px",
               display: "grid",
-              gridTemplateColumns: "minmax(240px, 360px) minmax(0, 1fr)",
-              gap: "64px",
+              gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
+              gap: "56px",
+              alignItems: "start",
             }}
           >
-            <h2
-              style={{
-                margin: 0,
-                fontFamily: "var(--font-serif)",
-                fontSize: "38px",
-                fontWeight: 500,
-                lineHeight: 1.08,
-                letterSpacing: "0",
-              }}
-            >
-              Weekly control cycle
-            </h2>
-            <ol
+            <SectionTitle>Operating method</SectionTitle>
+            <div
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-                gap: 0,
-                margin: 0,
-                padding: 0,
-                listStyle: "none",
                 borderTop: `1px solid ${COLORS.rule}`,
                 borderLeft: `1px solid ${COLORS.rule}`,
               }}
             >
-              {cycle.map((step, index) => (
-                <li
+              {method.map((step) => (
+                <div
                   key={step}
                   style={{
-                    minHeight: "150px",
-                    padding: "22px",
+                    minHeight: "90px",
+                    padding: "20px",
                     borderRight: `1px solid ${COLORS.rule}`,
                     borderBottom: `1px solid ${COLORS.rule}`,
-                  }}
-                >
-                  <div
-                    style={{
-                      marginBottom: "18px",
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "12px",
-                      color: COLORS.muted,
-                    }}
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </div>
-                  <div style={{ fontWeight: 500, lineHeight: 1.45 }}>
-                    {step}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section
-          style={{
-            maxWidth: "1120px",
-            margin: "0 auto",
-            padding: "80px 48px",
-            display: "grid",
-            gridTemplateColumns: "minmax(240px, 360px) minmax(0, 1fr)",
-            gap: "64px",
-            borderBottom: `1px solid ${COLORS.rule}`,
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              fontFamily: "var(--font-serif)",
-              fontSize: "38px",
-              fontWeight: 500,
-              lineHeight: 1.08,
-              letterSpacing: "0",
-            }}
-          >
-            Inside the tools already in use.
-          </h2>
-          <p
-            style={{
-              margin: 0,
-              maxWidth: "720px",
-              fontSize: "17px",
-              color: COLORS.muted,
-              lineHeight: 1.75,
-            }}
-          >
-            Abscondata does not require a new platform. Work is performed inside
-            the client's existing systems, inboxes, calendars, invoicing tools,
-            CRMs, spreadsheets, and field-service software.
-          </p>
-        </section>
-
-        <section style={{ backgroundColor: COLORS.dark, color: COLORS.white }}>
-          <div
-            style={{
-              maxWidth: "1120px",
-              margin: "0 auto",
-              padding: "80px 48px",
-            }}
-          >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(260px, 460px) minmax(0, 1fr)",
-                gap: "64px",
-                alignItems: "start",
-              }}
-            >
-              <div>
-                <h2
-                  style={{
-                    margin: "0 0 24px",
-                    fontFamily: "var(--font-serif)",
-                    fontSize: "40px",
                     fontWeight: 500,
-                    lineHeight: 1.08,
-                    letterSpacing: "0",
+                    lineHeight: 1.45,
                   }}
                 >
-                  For service businesses where operations compete with billable
-                  work.
-                </h2>
-                <p
-                  style={{
-                    margin: 0,
-                    color: COLORS.darkMuted,
-                    lineHeight: 1.75,
-                  }}
-                >
-                  Trades, facilities, home services, health and wellness, local
-                  operators, and other service businesses where the people doing
-                  the work are also managing the queues around the work.
-                </p>
-              </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 0,
-                  borderTop: "1px solid rgba(255,255,255,0.18)",
-                  borderLeft: "1px solid rgba(255,255,255,0.18)",
-                }}
-              >
-                {fitSignals.map((signal) => (
-                  <div
-                    key={signal}
-                    style={{
-                      minHeight: "106px",
-                      padding: "20px",
-                      color: COLORS.darkMuted,
-                      borderRight: "1px solid rgba(255,255,255,0.18)",
-                      borderBottom: "1px solid rgba(255,255,255,0.18)",
-                    }}
-                  >
-                    {signal}
-                  </div>
-                ))}
-              </div>
+                  {step}
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -513,60 +312,78 @@ export default function Home() {
           style={{
             maxWidth: "1120px",
             margin: "0 auto",
-            padding: "80px 48px",
+            padding: "64px 48px",
+            display: "grid",
+            gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
+            gap: "56px",
+            borderBottom: `1px solid ${COLORS.rule}`,
           }}
         >
+          <SectionTitle>Inside existing systems</SectionTitle>
           <p
             style={{
-              margin: "0 0 24px",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "2px",
-              textTransform: "uppercase" as const,
+              margin: 0,
+              maxWidth: "720px",
+              fontSize: "17px",
               color: COLORS.muted,
+              lineHeight: 1.72,
             }}
           >
-            Engagement terms
+            Abscondata does not require a new platform. Work is performed inside
+            the client&apos;s existing inboxes, calendars, invoicing tools,
+            CRMs, spreadsheets, and field-service software.
           </p>
+        </section>
+
+        <section
+          style={{
+            maxWidth: "1120px",
+            margin: "0 auto",
+            padding: "68px 48px",
+          }}
+        >
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-              borderTop: `1px solid ${COLORS.rule}`,
-              borderLeft: `1px solid ${COLORS.rule}`,
+              gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
+              gap: "56px",
             }}
           >
-            {terms.map((term) => (
-              <div
-                key={term.label}
-                style={{
-                  minHeight: "150px",
-                  padding: "22px",
-                  borderRight: `1px solid ${COLORS.rule}`,
-                  borderBottom: `1px solid ${COLORS.rule}`,
-                }}
-              >
-                <h3
+            <SectionTitle>Engagement terms</SectionTitle>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                borderTop: `1px solid ${COLORS.rule}`,
+                borderLeft: `1px solid ${COLORS.rule}`,
+              }}
+            >
+              {terms.map((term) => (
+                <div
+                  key={term.label}
                   style={{
-                    margin: "0 0 12px",
-                    fontSize: "14px",
-                    fontWeight: 600,
+                    minHeight: "135px",
+                    padding: "22px",
+                    borderRight: `1px solid ${COLORS.rule}`,
+                    borderBottom: `1px solid ${COLORS.rule}`,
                   }}
                 >
-                  {term.label}
-                </h3>
-                <p
-                  style={{
-                    margin: 0,
-                    color: COLORS.muted,
-                    fontSize: "14px",
-                    lineHeight: 1.65,
-                  }}
-                >
-                  {term.value}
-                </p>
-              </div>
-            ))}
+                  <h3 style={{ margin: "0 0 10px", fontSize: "14px", fontWeight: 600 }}>
+                    {term.label}
+                  </h3>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: COLORS.muted,
+                      fontSize: "14px",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {term.value}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </main>
