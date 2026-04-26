@@ -5,74 +5,9 @@ const COLORS = {
   ink: "#151515",
   muted: "#5A5751",
   rule: "#D7D2C7",
-  panel: "#E9E5DC",
-  white: "#FFFFFF",
 };
 
 const CALENDLY_URL = "https://calendly.com/abscondata";
-
-const controls = [
-  {
-    title: "Invoice state",
-    body: "Open invoices, payment follow-up, estimates, and receivables visibility.",
-  },
-  {
-    title: "Schedule state",
-    body: "Appointments, confirmations, reminders, reschedules, cancellations, and post-service follow-up.",
-  },
-  {
-    title: "Intake state",
-    body: "New requests, missing details, service notes, records, and handoffs.",
-  },
-  {
-    title: "Exception state",
-    body: "Unclear items, stalled decisions, record gaps, and owner-dependent work.",
-  },
-];
-
-const method = [
-  "Read the source record.",
-  "Assign the state.",
-  "Move routine items.",
-  "Hold exceptions.",
-  "Report what changed.",
-];
-
-const terms = [
-  {
-    label: "Scope",
-    value: "Flat monthly rate based on operating volume and queue coverage.",
-  },
-  {
-    label: "Cadence",
-    value: "Fixed weekly control cycle.",
-  },
-  {
-    label: "Term",
-    value: "Month to month. 30-day cancellation.",
-  },
-  {
-    label: "Visibility",
-    value: "Completed work, held items, and decisions needed.",
-  },
-];
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2
-      style={{
-        margin: 0,
-        fontFamily: "var(--font-serif)",
-        fontSize: "36px",
-        fontWeight: 500,
-        lineHeight: 1.08,
-        letterSpacing: "0",
-      }}
-    >
-      {children}
-    </h2>
-  );
-}
 
 export default function Home() {
   return (
@@ -82,8 +17,8 @@ export default function Home() {
         color: COLORS.ink,
         minHeight: "100vh",
         fontFamily: "var(--font-sans)",
-        fontSize: "15px",
-        lineHeight: 1.62,
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <nav
@@ -94,6 +29,7 @@ export default function Home() {
           gap: "24px",
           padding: "24px 48px",
           maxWidth: "1120px",
+          width: "100%",
           margin: "0 auto",
           borderBottom: `1px solid ${COLORS.rule}`,
         }}
@@ -137,260 +73,74 @@ export default function Home() {
         </div>
       </nav>
 
-      <header
+      <main
         style={{
+          flex: 1,
           maxWidth: "1120px",
+          width: "100%",
           margin: "0 auto",
-          padding: "88px 48px 76px",
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 360px)",
-          gap: "56px",
-          alignItems: "end",
+          padding: "132px 48px 96px",
+          display: "flex",
+          alignItems: "center",
         }}
       >
         <div>
-          <p
-            style={{
-              margin: "0 0 18px",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "2px",
-              textTransform: "uppercase" as const,
-              color: COLORS.muted,
-            }}
-          >
-            Operating state
-          </p>
           <h1
             style={{
-              margin: "0 0 26px",
-              maxWidth: "720px",
+              margin: "0 0 28px",
               fontFamily: "var(--font-serif)",
-              fontSize: "clamp(44px, 7vw, 78px)",
+              fontSize: "clamp(54px, 8vw, 104px)",
               fontWeight: 500,
-              lineHeight: 1,
+              lineHeight: 0.96,
               letterSpacing: "0",
             }}
           >
-            Administrative drift becomes margin drag.
+            Administrative operations.
           </h1>
           <p
             style={{
-              margin: 0,
-              maxWidth: "690px",
-              fontSize: "18px",
+              margin: "0 0 16px",
               color: COLORS.muted,
-              lineHeight: 1.7,
+              fontSize: "clamp(20px, 2.4vw, 30px)",
+              lineHeight: 1.3,
             }}
           >
-            Abscondata operates the recurring work that slips between source
-            systems, staff memory, and owner attention.
+            Invoices. Scheduling. Intake. Records. Exceptions.
           </p>
-        </div>
-        <div style={{ borderTop: `1px solid ${COLORS.ink}`, paddingTop: "22px" }}>
-          <p style={{ margin: "0 0 26px", color: COLORS.muted, lineHeight: 1.7 }}>
-            Invoices. Scheduling changes. Intake records. Exceptions. Weekly
-            reporting.
+          <p
+            style={{
+              margin: "0 0 36px",
+              color: COLORS.muted,
+              fontSize: "clamp(20px, 2.4vw, 30px)",
+              lineHeight: 1.3,
+            }}
+          >
+            Inside existing systems.
           </p>
           <a
             href={CALENDLY_URL}
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              display: "inline-block",
-              backgroundColor: COLORS.ink,
-              color: COLORS.white,
-              padding: "15px 28px",
+              color: COLORS.ink,
               fontSize: "12px",
               fontWeight: 600,
               letterSpacing: "1.8px",
               textTransform: "uppercase" as const,
+              borderBottom: `1px solid ${COLORS.ink}`,
+              paddingBottom: "3px",
             }}
           >
-            Schedule a Call
+            Call
           </a>
         </div>
-      </header>
-
-      <main>
-        <section
-          style={{
-            maxWidth: "1120px",
-            margin: "0 auto",
-            padding: "68px 48px",
-            borderTop: `1px solid ${COLORS.rule}`,
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
-              gap: "56px",
-            }}
-          >
-            <SectionTitle>What degrades</SectionTitle>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                borderTop: `1px solid ${COLORS.rule}`,
-                borderLeft: `1px solid ${COLORS.rule}`,
-              }}
-            >
-              {controls.map((item) => (
-                <div
-                  key={item.title}
-                  style={{
-                    minHeight: "185px",
-                    padding: "24px",
-                    borderRight: `1px solid ${COLORS.rule}`,
-                    borderBottom: `1px solid ${COLORS.rule}`,
-                    backgroundColor: "rgba(255,255,255,0.22)",
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: "0 0 12px",
-                      fontSize: "17px",
-                      fontWeight: 600,
-                      lineHeight: 1.25,
-                    }}
-                  >
-                    {item.title}
-                  </h3>
-                  <p style={{ margin: 0, color: COLORS.muted, lineHeight: 1.65 }}>
-                    {item.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section style={{ backgroundColor: COLORS.panel }}>
-          <div
-            style={{
-              maxWidth: "1120px",
-              margin: "0 auto",
-              padding: "60px 48px",
-              display: "grid",
-              gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
-              gap: "56px",
-              alignItems: "start",
-            }}
-          >
-            <SectionTitle>Control layer</SectionTitle>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-                borderTop: `1px solid ${COLORS.rule}`,
-                borderLeft: `1px solid ${COLORS.rule}`,
-              }}
-            >
-              {method.map((step) => (
-                <div
-                  key={step}
-                  style={{
-                    minHeight: "90px",
-                    padding: "20px",
-                    borderRight: `1px solid ${COLORS.rule}`,
-                    borderBottom: `1px solid ${COLORS.rule}`,
-                    fontWeight: 500,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {step}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section
-          style={{
-            maxWidth: "1120px",
-            margin: "0 auto",
-            padding: "64px 48px",
-            display: "grid",
-            gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
-            gap: "56px",
-            borderBottom: `1px solid ${COLORS.rule}`,
-          }}
-        >
-          <SectionTitle>Inside existing systems</SectionTitle>
-          <p
-            style={{
-              margin: 0,
-              maxWidth: "720px",
-              fontSize: "17px",
-              color: COLORS.muted,
-              lineHeight: 1.72,
-            }}
-          >
-            Abscondata does not require a new platform. Work is performed inside
-            the systems already in use: inboxes, calendars, invoicing tools,
-            CRMs, spreadsheets, and field-service software.
-          </p>
-        </section>
-
-        <section
-          style={{
-            maxWidth: "1120px",
-            margin: "0 auto",
-            padding: "68px 48px",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
-              gap: "56px",
-            }}
-          >
-            <SectionTitle>Engagement</SectionTitle>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                borderTop: `1px solid ${COLORS.rule}`,
-                borderLeft: `1px solid ${COLORS.rule}`,
-              }}
-            >
-              {terms.map((term) => (
-                <div
-                  key={term.label}
-                  style={{
-                    minHeight: "135px",
-                    padding: "22px",
-                    borderRight: `1px solid ${COLORS.rule}`,
-                    borderBottom: `1px solid ${COLORS.rule}`,
-                  }}
-                >
-                  <h3 style={{ margin: "0 0 10px", fontSize: "14px", fontWeight: 600 }}>
-                    {term.label}
-                  </h3>
-                  <p
-                    style={{
-                      margin: 0,
-                      color: COLORS.muted,
-                      fontSize: "14px",
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {term.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
 
       <footer style={{ borderTop: `1px solid ${COLORS.rule}` }}>
         <div
           style={{
             maxWidth: "1120px",
+            width: "100%",
             margin: "0 auto",
             padding: "30px 48px",
             display: "flex",
