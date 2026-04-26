@@ -24,8 +24,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Abscondata | Administrative Operations",
-  description: "Administrative operations inside existing business systems.",
+  title: "Abscondata | Client Operations",
+  description:
+    "Operating coverage for lead response, invoices, payment follow-up, review requests, and weekly reporting.",
   icons: {
     icon: "/favicon.svg",
   },
