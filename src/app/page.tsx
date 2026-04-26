@@ -13,26 +13,26 @@ const CALENDLY_URL = "https://calendly.com/abscondata";
 
 const controls = [
   {
-    title: "Invoice queue",
-    body: "Open invoices, payment follow-up, estimate tracking, and receivables reporting.",
+    title: "Invoice state",
+    body: "Open invoices, payment follow-up, estimates, and receivables visibility.",
   },
   {
-    title: "Schedule queue",
+    title: "Schedule state",
     body: "Appointments, confirmations, reminders, reschedules, cancellations, and post-service follow-up.",
   },
   {
-    title: "Intake queue",
-    body: "New requests, missing details, service notes, customer records, and handoff items.",
+    title: "Intake state",
+    body: "New requests, missing details, service notes, records, and handoffs.",
   },
   {
-    title: "Records and exceptions",
-    body: "Document updates, contract dates, renewal tracking, weekly summaries, and items requiring owner review.",
+    title: "Exception state",
+    body: "Unclear items, stalled decisions, record gaps, and owner-dependent work.",
   },
 ];
 
 const method = [
-  "Review the open work.",
-  "Assign status and owner.",
+  "Read the source record.",
+  "Assign the state.",
   "Move routine items.",
   "Hold exceptions.",
   "Report what changed.",
@@ -40,20 +40,20 @@ const method = [
 
 const terms = [
   {
-    label: "Monthly scope",
-    value: "Flat monthly rate based on queue volume and operating scope.",
+    label: "Scope",
+    value: "Flat monthly rate based on operating volume and queue coverage.",
   },
   {
     label: "Cadence",
-    value: "Fixed weekly operating cycle.",
+    value: "Fixed weekly control cycle.",
   },
   {
-    label: "Commitment",
+    label: "Term",
     value: "Month to month. 30-day cancellation.",
   },
   {
     label: "Visibility",
-    value: "Weekly summary of completed work, held items, and decisions needed.",
+    value: "Completed work, held items, and decisions needed.",
   },
 ];
 
@@ -159,7 +159,7 @@ export default function Home() {
               color: COLORS.muted,
             }}
           >
-            Service-business operations
+            Operating state
           </p>
           <h1
             style={{
@@ -172,7 +172,7 @@ export default function Home() {
               letterSpacing: "0",
             }}
           >
-            Back-office control for service businesses.
+            Administrative drift becomes margin drag.
           </h1>
           <p
             style={{
@@ -183,15 +183,14 @@ export default function Home() {
               lineHeight: 1.7,
             }}
           >
-            Abscondata works the invoices, scheduling changes, intake details,
-            records, and exceptions that drift inside the tools a service
-            business already uses.
+            Abscondata operates the recurring work that slips between source
+            systems, staff memory, and owner attention.
           </p>
         </div>
         <div style={{ borderTop: `1px solid ${COLORS.ink}`, paddingTop: "22px" }}>
           <p style={{ margin: "0 0 26px", color: COLORS.muted, lineHeight: 1.7 }}>
-            Routine items move on a weekly cadence. Exceptions stay visible for
-            owner review.
+            Invoices. Scheduling changes. Intake records. Exceptions. Weekly
+            reporting.
           </p>
           <a
             href={CALENDLY_URL}
@@ -229,7 +228,7 @@ export default function Home() {
               gap: "56px",
             }}
           >
-            <SectionTitle>What Abscondata controls</SectionTitle>
+            <SectionTitle>What degrades</SectionTitle>
             <div
               style={{
                 display: "grid",
@@ -280,7 +279,7 @@ export default function Home() {
               alignItems: "start",
             }}
           >
-            <SectionTitle>Operating method</SectionTitle>
+            <SectionTitle>Control layer</SectionTitle>
             <div
               style={{
                 display: "grid",
@@ -330,7 +329,7 @@ export default function Home() {
             }}
           >
             Abscondata does not require a new platform. Work is performed inside
-            the client&apos;s existing inboxes, calendars, invoicing tools,
+            the systems already in use: inboxes, calendars, invoicing tools,
             CRMs, spreadsheets, and field-service software.
           </p>
         </section>
@@ -349,7 +348,7 @@ export default function Home() {
               gap: "56px",
             }}
           >
-            <SectionTitle>Engagement terms</SectionTitle>
+            <SectionTitle>Engagement</SectionTitle>
             <div
               style={{
                 display: "grid",

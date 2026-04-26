@@ -24,8 +24,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Abscondata | Service-Business Operations",
-  description: "Back-office control inside the tools service businesses already use.",
+  title: "Abscondata | Administrative Drift Operations",
+  description:
+    "Operations on recurring administrative drift inside existing business systems.",
   icons: {
     icon: "/favicon.svg",
   },
