@@ -185,7 +185,7 @@ export default function Home() {
               letterSpacing: "0",
             }}
           >
-            Operating coverage for small service companies.
+            We run one office task off your team's plate while you hire.
           </h1>
           <p
             style={{
@@ -196,20 +196,18 @@ export default function Home() {
               lineHeight: 1.68,
             }}
           >
-            Abscondata runs the recurring work that follows the job: lead
-            response, invoice generation, payment follow-up, review requests,
-            and weekly reporting.
+            One recurring task: lead follow-up, invoice follow-up, review
+            requests, or weekly backlog reporting, handled by us inside the
+            tools you already use. Weekly summary every Friday.
           </p>
         </div>
         <div style={{ borderTop: `1px solid ${COLORS.ink}`, paddingTop: "22px" }}>
           <p style={{ margin: "0 0 28px", color: COLORS.muted, lineHeight: 1.7 }}>
-            Work is handled inside the systems already in use, with approval
-            control, activity logs, and a weekly summary.
+            Built for companies adding admin or operations help but still
+            dealing with work that slips during the week.
           </p>
-          <a
-            href={CALENDLY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/pilot"
             style={{
               color: COLORS.ink,
               fontSize: "12px",
@@ -220,8 +218,8 @@ export default function Home() {
               paddingBottom: "3px",
             }}
           >
-            Call
-          </a>
+            See the 30-day pilot
+          </Link>
         </div>
       </header>
 
