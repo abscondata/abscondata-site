@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 const COLORS = {
   cream: "#F3F1EC",
@@ -11,11 +12,11 @@ const COLORS = {
 const CALENDLY_URL = "https://calendly.com/abscondata";
 
 const tasks = [
-  "Lead follow-up",
-  "Estimate follow-up",
-  "Invoice follow-up",
-  "Review requests",
-  "Customer follow-up lists",
+  "Lead response and follow-up",
+  "Invoice generation from completed work",
+  "Payment follow-up on open invoices",
+  "Review request preparation",
+  "Customer follow-up",
   "Weekly backlog reporting",
 ];
 
@@ -23,29 +24,21 @@ const sections = [
   {
     title: "How the pilot works",
     body: [
-      "Week 1: Choose one task. Define rules. Review the source list. Agree on what we send versus what you approve first.",
-      "Weeks 2-4: We work the list weekly, draft or send actions based on the approval rules, log every touch, flag exceptions, and send a weekly summary.",
-      "End of pilot: Keep it, expand it, or stop.",
+      "Week 1: We pick one task together, agree on the rules, review the source list, and decide what gets sent versus what waits for your sign-off.",
+      "Weeks 2 through 4: We work the list each week. Drafts and prepared actions flow through the approval rules we set. Every action gets logged. Anything unusual gets flagged. A summary lands in your inbox every Friday.",
+      "After 30 days: You decide whether to continue or end it.",
     ],
   },
   {
     title: "What you provide",
     body: [
-      "Whatever you already have: a spreadsheet, a CRM export, or an aging report works. Approved rules. One point of contact. A weekly check-in.",
+      "A source list or report you already have. Approved rules for follow-up. One point of contact. A weekly check-in.",
     ],
   },
   {
     title: "What we deliver",
     body: [
-      "A worked list. An action log. Exceptions flagged. A weekly summary every Friday.",
-    ],
-  },
-  {
-    title: "Price",
-    body: [
-      "$750 for 30 days.",
-      "$1,500/month after, for one recurring task.",
-      "No contract.",
+      "A worked list. An action log. A weekly summary every Friday. Exceptions flagged before they become problems.",
     ],
   },
 ];
@@ -83,6 +76,47 @@ export default function PilotPage() {
         lineHeight: 1.62,
       }}
     >
+      <nav
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "24px",
+          padding: "24px 48px",
+          maxWidth: "1120px",
+          width: "100%",
+          margin: "0 auto",
+          borderBottom: `1px solid ${COLORS.rule}`,
+        }}
+      >
+        <Link
+          href="/"
+          style={{
+            fontSize: "13px",
+            fontWeight: 600,
+            letterSpacing: "2.4px",
+            textTransform: "uppercase" as const,
+          }}
+        >
+          Abscondata
+        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
+          <a
+            href={CALENDLY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "1.8px",
+              textTransform: "uppercase" as const,
+            }}
+          >
+            Call
+          </a>
+        </div>
+      </nav>
+
       <main>
         <header
           style={{
@@ -91,24 +125,12 @@ export default function PilotPage() {
             margin: "0 auto",
             padding: "96px 48px 74px",
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 360px)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
             gap: "58px",
             alignItems: "end",
           }}
         >
           <div>
-            <p
-              style={{
-                margin: "0 0 18px",
-                color: COLORS.muted,
-                fontSize: "12px",
-                fontWeight: 600,
-                letterSpacing: "2.2px",
-                textTransform: "uppercase" as const,
-              }}
-            >
-              Abscondata
-            </p>
             <h1
               style={{
                 margin: "0 0 28px",
@@ -131,31 +153,9 @@ export default function PilotPage() {
                 lineHeight: 1.68,
               }}
             >
-              We run one recurring office task off your team's plate for 30
-              days.
+              One recurring task off your team's plate for 30 days, run inside
+              the tools you already use.
             </p>
-          </div>
-          <div style={{ borderTop: `1px solid ${COLORS.ink}`, paddingTop: "22px" }}>
-            <p style={{ margin: "0 0 28px", color: COLORS.muted, lineHeight: 1.7 }}>
-              We work inside the systems you already use. No new platform
-              required.
-            </p>
-            <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: COLORS.ink,
-                fontSize: "12px",
-                fontWeight: 600,
-                letterSpacing: "1.8px",
-                textTransform: "uppercase" as const,
-                borderBottom: `1px solid ${COLORS.ink}`,
-                paddingBottom: "3px",
-              }}
-            >
-              Request the pilot outline
-            </a>
           </div>
         </header>
 
@@ -171,7 +171,7 @@ export default function PilotPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(220px, 300px) minmax(0, 1fr)",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "56px",
             }}
           >
@@ -179,7 +179,7 @@ export default function PilotPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
                 borderTop: `1px solid ${COLORS.rule}`,
                 borderLeft: `1px solid ${COLORS.rule}`,
               }}
@@ -220,7 +220,7 @@ export default function PilotPage() {
                 margin: "0 auto",
                 padding: "60px 48px",
                 display: "grid",
-                gridTemplateColumns: "minmax(220px, 300px) minmax(0, 1fr)",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
                 gap: "56px",
               }}
             >
@@ -244,6 +244,46 @@ export default function PilotPage() {
             </div>
           </section>
         ))}
+
+        <section
+          style={{
+            maxWidth: "1120px",
+            width: "100%",
+            margin: "0 auto",
+            padding: "0 48px 72px",
+            borderTop: `1px solid ${COLORS.rule}`,
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+              gap: "56px",
+              paddingTop: "62px",
+            }}
+          >
+            <div />
+            <div style={{ display: "grid", gap: "16px" }}>
+              <a
+                href={CALENDLY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: COLORS.ink,
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  letterSpacing: "1.8px",
+                  textTransform: "uppercase" as const,
+                  borderBottom: `1px solid ${COLORS.ink}`,
+                  paddingBottom: "3px",
+                  width: "fit-content",
+                }}
+              >
+                Start the pilot
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer style={{ borderTop: `1px solid ${COLORS.rule}` }}>
@@ -257,7 +297,8 @@ export default function PilotPage() {
             fontSize: "13px",
           }}
         >
-          We work inside the systems you already use. No new platform required.
+          We work inside the systems you already use. Nothing new gets
+          installed.
         </div>
       </footer>
     </div>

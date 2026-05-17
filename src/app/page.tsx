@@ -13,23 +13,23 @@ const CALENDLY_URL = "https://calendly.com/abscondata";
 const coverage = [
   {
     title: "Lead response",
-    body: "New inquiries reviewed, drafted, and routed before they go cold.",
+    body: "new inquiries handled before they go cold.",
   },
   {
     title: "Invoice generation",
-    body: "Completed work turned into invoice drafts from the records you already keep.",
+    body: "completed work turned into invoice drafts from records you already keep.",
   },
   {
     title: "Payment follow-up",
-    body: "Open invoices worked through approved follow-up rules, every touch logged.",
+    body: "open invoices worked through your approved rules, with every touch logged.",
   },
   {
     title: "Review requests",
-    body: "Completed jobs prepared for review outreach when the timing's right.",
+    body: "completed jobs prepared for outreach when the timing is right.",
   },
   {
     title: "Weekly backlog reporting",
-    body: "What got done, what's open, what needs a decision.",
+    body: "a clear weekly view of what got done and what still needs your attention.",
   },
 ];
 
@@ -75,7 +75,8 @@ export default function Home() {
           borderBottom: `1px solid ${COLORS.rule}`,
         }}
       >
-        <div
+        <Link
+          href="/"
           style={{
             fontSize: "13px",
             fontWeight: 600,
@@ -84,7 +85,7 @@ export default function Home() {
           }}
         >
           Abscondata
-        </div>
+        </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
           <a
             href={CALENDLY_URL}
@@ -99,18 +100,6 @@ export default function Home() {
           >
             Call
           </a>
-          <Link
-            href="/login"
-            style={{
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "1.8px",
-              textTransform: "uppercase" as const,
-              color: COLORS.muted,
-            }}
-          >
-            Sign In
-          </Link>
         </div>
       </nav>
 
@@ -121,7 +110,7 @@ export default function Home() {
           margin: "0 auto",
           padding: "86px 48px 74px",
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 360px)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
           gap: "58px",
           alignItems: "end",
         }}
@@ -149,10 +138,10 @@ export default function Home() {
               lineHeight: 1.68,
             }}
           >
-            Invoice follow-up, lead response, review requests — the recurring
-            tasks that get pushed to "next week" every week. We run one of them
-            off your team's plate for 30 days. Inside the tools you already use.
-            Weekly summary every Friday.
+            Invoice follow-up, lead response, customer outreach. The work that
+            keeps getting pushed to next week when your team is short-handed. We
+            take one of these off the plate for 30 days, working inside the tools
+            you already use, and send a summary every Friday.
           </p>
         </div>
         <div style={{ borderTop: `1px solid ${COLORS.ink}`, paddingTop: "22px" }}>
@@ -186,19 +175,19 @@ export default function Home() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(220px, 300px) minmax(0, 1fr)",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "56px",
             }}
           >
             <SectionTitle>What we run</SectionTitle>
             <div style={{ display: "grid", gap: "18px" }}>
               <p style={{ margin: 0, color: COLORS.muted, fontSize: "17px" }}>
-                Pick one to start:
+                Pick one task to start.
               </p>
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 170px), 1fr))",
                   borderTop: `1px solid ${COLORS.rule}`,
                   borderLeft: `1px solid ${COLORS.rule}`,
                 }}
@@ -235,7 +224,7 @@ export default function Home() {
               margin: "0 auto",
               padding: "60px 48px",
               display: "grid",
-              gridTemplateColumns: "minmax(220px, 300px) minmax(0, 1fr)",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "56px",
               alignItems: "start",
             }}
@@ -251,32 +240,10 @@ export default function Home() {
                   lineHeight: 1.7,
                 }}
               >
-                You hand us one task and the records that already exist.
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  maxWidth: "720px",
-                  color: COLORS.muted,
-                  fontSize: "17px",
-                  lineHeight: 1.7,
-                }}
-              >
-                We work it weekly, hold anything sensitive for your approval,
-                and send you a summary every Friday showing exactly what
-                happened.
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  maxWidth: "720px",
-                  color: COLORS.muted,
-                  fontSize: "17px",
-                  lineHeight: 1.7,
-                }}
-              >
-                That's it. No new tools. No new login. No new process for your
-                team.
+                You hand us one task and the records that already exist. We work
+                the list weekly. Anything sensitive stays held for your approval
+                before going out, and every Friday you get a summary showing
+                what we touched. Nothing new gets installed on your end.
               </p>
             </div>
           </div>
@@ -293,7 +260,7 @@ export default function Home() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(220px, 300px) minmax(0, 1fr)",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "56px",
             }}
           >
@@ -308,21 +275,10 @@ export default function Home() {
                   lineHeight: 1.7,
                 }}
               >
-                Service businesses with 11-200 employees that are hiring for
-                admin or operations help and have work piling up while they
-                wait.
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  maxWidth: "720px",
-                  color: COLORS.muted,
-                  fontSize: "17px",
-                  lineHeight: 1.7,
-                }}
-              >
-                If your records live in email, a CRM, a spreadsheet, or an
-                invoicing tool — we can work inside it.
+                Service businesses between 11 and 200 employees that are hiring
+                for admin or operations help and have work piling up while they
+                wait. If your records live in email, a CRM, a spreadsheet, or an
+                invoicing tool, we can work inside it.
               </p>
             </div>
           </div>
@@ -340,7 +296,7 @@ export default function Home() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(220px, 300px) minmax(0, 1fr)",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "56px",
               paddingTop: "62px",
             }}
@@ -356,18 +312,8 @@ export default function Home() {
                   lineHeight: 1.7,
                 }}
               >
-                $750 for 30 days. One task.
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  maxWidth: "720px",
-                  color: COLORS.muted,
-                  fontSize: "17px",
-                  lineHeight: 1.7,
-                }}
-              >
-                If it works, ongoing coverage is $1,500/month. No contract.
+                A 30-day pilot built around one task. Designed to prove whether
+                this fits before any ongoing arrangement gets discussed.
               </p>
               <Link
                 href="/pilot"
@@ -399,6 +345,7 @@ export default function Home() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            flexWrap: "wrap",
             gap: "24px",
             color: COLORS.muted,
             fontSize: "13px",
