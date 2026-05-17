@@ -24,9 +24,7 @@ const sections = [
   {
     title: "How the pilot works",
     body: [
-      "Week 1: We pick one task together, agree on the rules, review the source list, and decide what gets sent versus what waits for your sign-off.",
-      "Weeks 2 through 4: We work the list each week. Drafts and prepared actions flow through the approval rules we set. Every action gets logged. Anything unusual gets flagged. A summary lands in your inbox every Friday.",
-      "After 30 days: You decide whether to continue or end it.",
+      "We agree on the task and the rules together. The work runs inside the tools you already use, with anything sensitive held for your approval before going out. Every action gets logged. Anything unusual gets flagged. A summary lands in your inbox every Friday. After thirty days you decide whether to keep it going.",
     ],
   },
   {

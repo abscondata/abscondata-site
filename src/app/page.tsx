@@ -181,9 +181,6 @@ export default function Home() {
           >
             <SectionTitle>What we run</SectionTitle>
             <div style={{ display: "grid", gap: "18px" }}>
-              <p style={{ margin: 0, color: COLORS.muted, fontSize: "17px" }}>
-                Pick one task to start.
-              </p>
               <div
                 style={{
                   display: "grid",
