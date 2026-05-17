@@ -13,58 +13,23 @@ const CALENDLY_URL = "https://calendly.com/abscondata";
 const coverage = [
   {
     title: "Lead response",
-    body: "New inquiries reviewed, drafted, and routed before they sit untouched.",
+    body: "New inquiries reviewed, drafted, and routed before they go cold.",
   },
   {
     title: "Invoice generation",
-    body: "Completed work turned into invoice drafts from the records already available.",
+    body: "Completed work turned into invoice drafts from the records you already keep.",
   },
   {
     title: "Payment follow-up",
-    body: "Open invoices worked through approved follow-up rules and logged status.",
+    body: "Open invoices worked through approved follow-up rules, every touch logged.",
   },
   {
     title: "Review requests",
-    body: "Completed jobs prepared for review outreach when the timing is right.",
+    body: "Completed jobs prepared for review outreach when the timing's right.",
   },
   {
-    title: "Weekly summary",
-    body: "Completed work, open items, held exceptions, and owner decisions reported back.",
-  },
-];
-
-const model = [
-  "Validate the source.",
-  "Draft the action.",
-  "Hold for approval.",
-  "Send through the approved channel.",
-  "Log the result.",
-  "Report the week.",
-];
-
-const goodFit = [
-  "Digital records",
-  "Email-based workflows",
-  "Recurring invoice or lead volume",
-  "Owner willing to approve rules",
-  "Work that can be standardized",
-];
-
-const notFit = [
-  "Phone-only operations",
-  "No process discipline",
-  "Custom everything",
-  "No usable records",
-  "Financial books, calendar dispatching, supplier coordination, or cost accounting needs",
-];
-
-const terms = [
-  { label: "Scope", value: "Fixed monthly scope." },
-  { label: "Cadence", value: "Weekly operating cycle." },
-  { label: "Control", value: "Sensitive actions held for approval." },
-  {
-    label: "Visibility",
-    value: "Weekly summary of work completed, open items, and decisions needed.",
+    title: "Weekly backlog reporting",
+    body: "What got done, what's open, what needs a decision.",
   },
 ];
 
@@ -162,18 +127,6 @@ export default function Home() {
         }}
       >
         <div>
-          <p
-            style={{
-              margin: "0 0 18px",
-              color: COLORS.muted,
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "2.2px",
-              textTransform: "uppercase" as const,
-            }}
-          >
-            Client operations
-          </p>
           <h1
             style={{
               margin: "0 0 28px",
@@ -185,7 +138,7 @@ export default function Home() {
               letterSpacing: "0",
             }}
           >
-            We run one office task off your team's plate while you hire.
+            Work is slipping through the cracks. We catch it.
           </h1>
           <p
             style={{
@@ -196,16 +149,13 @@ export default function Home() {
               lineHeight: 1.68,
             }}
           >
-            One recurring task: lead follow-up, invoice follow-up, review
-            requests, or weekly backlog reporting, handled by us inside the
-            tools you already use. Weekly summary every Friday.
+            Invoice follow-up, lead response, review requests — the recurring
+            tasks that get pushed to "next week" every week. We run one of them
+            off your team's plate for 30 days. Inside the tools you already use.
+            Weekly summary every Friday.
           </p>
         </div>
         <div style={{ borderTop: `1px solid ${COLORS.ink}`, paddingTop: "22px" }}>
-          <p style={{ margin: "0 0 28px", color: COLORS.muted, lineHeight: 1.7 }}>
-            Built for companies adding admin or operations help but still
-            dealing with work that slips during the week.
-          </p>
           <Link
             href="/pilot"
             style={{
@@ -240,34 +190,39 @@ export default function Home() {
               gap: "56px",
             }}
           >
-            <SectionTitle>Coverage</SectionTitle>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-                borderTop: `1px solid ${COLORS.rule}`,
-                borderLeft: `1px solid ${COLORS.rule}`,
-              }}
-            >
-              {coverage.map((item) => (
-                <div
-                  key={item.title}
-                  style={{
-                    minHeight: "186px",
-                    padding: "22px",
-                    borderRight: `1px solid ${COLORS.rule}`,
-                    borderBottom: `1px solid ${COLORS.rule}`,
-                    backgroundColor: "rgba(255,255,255,0.18)",
-                  }}
-                >
-                  <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 600 }}>
-                    {item.title}
-                  </h3>
-                  <p style={{ margin: 0, color: COLORS.muted, lineHeight: 1.62 }}>
-                    {item.body}
-                  </p>
-                </div>
-              ))}
+            <SectionTitle>What we run</SectionTitle>
+            <div style={{ display: "grid", gap: "18px" }}>
+              <p style={{ margin: 0, color: COLORS.muted, fontSize: "17px" }}>
+                Pick one to start:
+              </p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+                  borderTop: `1px solid ${COLORS.rule}`,
+                  borderLeft: `1px solid ${COLORS.rule}`,
+                }}
+              >
+                {coverage.map((item) => (
+                  <div
+                    key={item.title}
+                    style={{
+                      minHeight: "186px",
+                      padding: "22px",
+                      borderRight: `1px solid ${COLORS.rule}`,
+                      borderBottom: `1px solid ${COLORS.rule}`,
+                      backgroundColor: "rgba(255,255,255,0.18)",
+                    }}
+                  >
+                    <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 600 }}>
+                      {item.title}
+                    </h3>
+                    <p style={{ margin: 0, color: COLORS.muted, lineHeight: 1.62 }}>
+                      {item.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -285,61 +240,46 @@ export default function Home() {
               alignItems: "start",
             }}
           >
-            <SectionTitle>Operating model</SectionTitle>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-                borderTop: `1px solid ${COLORS.rule}`,
-                borderLeft: `1px solid ${COLORS.rule}`,
-              }}
-            >
-              {model.map((step) => (
-                <div
-                  key={step}
-                  style={{
-                    minHeight: "94px",
-                    padding: "18px",
-                    borderRight: `1px solid ${COLORS.rule}`,
-                    borderBottom: `1px solid ${COLORS.rule}`,
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {step}
-                </div>
-              ))}
+            <SectionTitle>How it works</SectionTitle>
+            <div style={{ display: "grid", gap: "16px" }}>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: "720px",
+                  color: COLORS.muted,
+                  fontSize: "17px",
+                  lineHeight: 1.7,
+                }}
+              >
+                You hand us one task and the records that already exist.
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: "720px",
+                  color: COLORS.muted,
+                  fontSize: "17px",
+                  lineHeight: 1.7,
+                }}
+              >
+                We work it weekly, hold anything sensitive for your approval,
+                and send you a summary every Friday showing exactly what
+                happened.
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: "720px",
+                  color: COLORS.muted,
+                  fontSize: "17px",
+                  lineHeight: 1.7,
+                }}
+              >
+                That's it. No new tools. No new login. No new process for your
+                team.
+              </p>
             </div>
           </div>
-        </section>
-
-        <section
-          style={{
-            maxWidth: "1120px",
-            width: "100%",
-            margin: "0 auto",
-            padding: "62px 48px",
-            display: "grid",
-            gridTemplateColumns: "minmax(220px, 300px) minmax(0, 1fr)",
-            gap: "56px",
-            borderBottom: `1px solid ${COLORS.rule}`,
-          }}
-        >
-          <SectionTitle>Inside existing systems</SectionTitle>
-          <p
-            style={{
-              margin: 0,
-              maxWidth: "720px",
-              color: COLORS.muted,
-              fontSize: "17px",
-              lineHeight: 1.7,
-            }}
-          >
-            Abscondata does not require a new platform. Work is performed inside
-            the client&apos;s existing inboxes, invoicing tools, CRMs,
-            field-service systems, spreadsheets, and shared records.
-          </p>
         </section>
 
         <section
@@ -357,38 +297,33 @@ export default function Home() {
               gap: "56px",
             }}
           >
-            <SectionTitle>Fit</SectionTitle>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                borderTop: `1px solid ${COLORS.rule}`,
-                borderLeft: `1px solid ${COLORS.rule}`,
-              }}
-            >
-              {[
-                { title: "Good fit", items: goodFit },
-                { title: "Not a fit", items: notFit },
-              ].map((group) => (
-                <div
-                  key={group.title}
-                  style={{
-                    padding: "24px",
-                    borderRight: `1px solid ${COLORS.rule}`,
-                    borderBottom: `1px solid ${COLORS.rule}`,
-                    minHeight: "228px",
-                  }}
-                >
-                  <h3 style={{ margin: "0 0 18px", fontSize: "16px", fontWeight: 600 }}>
-                    {group.title}
-                  </h3>
-                  <div style={{ display: "grid", gap: "8px", color: COLORS.muted }}>
-                    {group.items.map((item) => (
-                      <div key={item}>{item}</div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <SectionTitle>Who this is for</SectionTitle>
+            <div style={{ display: "grid", gap: "16px" }}>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: "720px",
+                  color: COLORS.muted,
+                  fontSize: "17px",
+                  lineHeight: 1.7,
+                }}
+              >
+                Service businesses with 11-200 employees that are hiring for
+                admin or operations help and have work piling up while they
+                wait.
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: "720px",
+                  color: COLORS.muted,
+                  fontSize: "17px",
+                  lineHeight: 1.7,
+                }}
+              >
+                If your records live in email, a CRM, a spreadsheet, or an
+                invoicing tool — we can work inside it.
+              </p>
             </div>
           </div>
         </section>
@@ -399,6 +334,7 @@ export default function Home() {
             width: "100%",
             margin: "0 auto",
             padding: "0 48px 72px",
+            borderTop: `1px solid ${COLORS.rule}`,
           }}
         >
           <div
@@ -406,42 +342,48 @@ export default function Home() {
               display: "grid",
               gridTemplateColumns: "minmax(220px, 300px) minmax(0, 1fr)",
               gap: "56px",
+              paddingTop: "62px",
             }}
           >
-            <SectionTitle>Terms</SectionTitle>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                borderTop: `1px solid ${COLORS.rule}`,
-                borderLeft: `1px solid ${COLORS.rule}`,
-              }}
-            >
-              {terms.map((term) => (
-                <div
-                  key={term.label}
-                  style={{
-                    minHeight: "132px",
-                    padding: "22px",
-                    borderRight: `1px solid ${COLORS.rule}`,
-                    borderBottom: `1px solid ${COLORS.rule}`,
-                  }}
-                >
-                  <h3 style={{ margin: "0 0 10px", fontSize: "14px", fontWeight: 600 }}>
-                    {term.label}
-                  </h3>
-                  <p
-                    style={{
-                      margin: 0,
-                      color: COLORS.muted,
-                      fontSize: "14px",
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {term.value}
-                  </p>
-                </div>
-              ))}
+            <SectionTitle>The pilot</SectionTitle>
+            <div style={{ display: "grid", gap: "16px" }}>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: "720px",
+                  color: COLORS.muted,
+                  fontSize: "17px",
+                  lineHeight: 1.7,
+                }}
+              >
+                $750 for 30 days. One task.
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: "720px",
+                  color: COLORS.muted,
+                  fontSize: "17px",
+                  lineHeight: 1.7,
+                }}
+              >
+                If it works, ongoing coverage is $1,500/month. No contract.
+              </p>
+              <Link
+                href="/pilot"
+                style={{
+                  color: COLORS.ink,
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  letterSpacing: "1.8px",
+                  textTransform: "uppercase" as const,
+                  borderBottom: `1px solid ${COLORS.ink}`,
+                  paddingBottom: "3px",
+                  width: "fit-content",
+                }}
+              >
+                Start the pilot
+              </Link>
             </div>
           </div>
         </section>
